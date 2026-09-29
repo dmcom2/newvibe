@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제품 원가 계산기 | PCB 제조</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--border:#d1d9e0;
+  --text:#1a202c;--sub:#4a5568;--mute:#a0aec0;
+  --blue:#2563eb;--green:#059669;--amber:#d97706;--red:#dc2626;--rose:#be185d;
+  --rad:10px;--shadow:0 1px 3px rgba(0,0,0,.1),0 2px 8px rgba(0,0,0,.06);
+}
+body{font-family:'맑은 고딕','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.header{background:linear-gradient(135deg,#4a044e,#be185d);color:#fff;padding:0 28px;height:58px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+.header h1{font-size:1rem;font-weight:700;flex:1;}
+.btn{padding:7px 16px;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn:hover{filter:brightness(.92);}
+.btn-white{background:#fff;color:var(--rose);}
+.btn-ghost{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);}
+.btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border);}
+.layout{padding:18px 28px;display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start;}
+.panel{background:var(--surface);border-radius:var(--rad);box-shadow:var(--shadow);overflow:hidden;}
+.panel-header{padding:12px 16px;background:var(--bg);border-bottom:2px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.panel-title{font-size:.85rem;font-weight:800;}
+.panel-body{padding:16px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.field{display:flex;flex-direction:column;gap:3px;}
+.field label{font-size:.72rem;font-weight:700;color:var(--sub);}
+.field input,.field select{padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:.83rem;outline:none;width:100%;}
+.field input:focus,.field select:focus{border-color:var(--rose);}
+.field-unit{display:flex;align-items:center;gap:4px;}
+.field-unit input{flex:1;}
+.field-unit span{font-size:.75rem;color:var(--mute);white-space:nowrap;}
+.material-row{display:grid;grid-template-columns:1fr 80px 80px 70px 24px;gap:4px;align-items:center;margin-bottom:4px;}
+.material-row input,.material-row select{padding:5px 7px;border:1px solid var(--border);border-radius:5px;font-size:.75rem;font-family:inherit;width:100%;}
+.del-btn{width:24px;height:24px;background:#fee2e2;color:var(--red);border:none;border-radius:4px;cursor:pointer;font-size:.85rem;font-family:inherit;}
+.total-box{background:linear-gradient(135deg,#fdf2f8,#fce7f3);border:2px solid var(--rose);border-radius:10px;padding:14px 16px;text-align:center;margin-bottom:12px;}
+.total-label{font-size:.75rem;color:var(--sub);}
+.total-unit{font-size:1.8rem;font-weight:900;color:var(--rose);}
+.total-batch{font-size:.75rem;color:var(--sub);}
+.breakdown{border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.breakdown-row{display:grid;grid-template-columns:1fr 1fr 60px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:.78rem;}
+.breakdown-row:last-child{border-bottom:none;}
+.breakdown-row.header{background:var(--bg);font-size:.72rem;font-weight:700;color:var(--sub);}
+.breakdown-row.total-row{background:#fdf2f8;font-weight:800;}
+.saved-list{max-height:200px;overflow-y:auto;}
+.saved-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border);font-size:.78rem;cursor:pointer;}
+.saved-item:hover{background:var(--bg);}
+.saved-item-name{font-weight:700;}
+.saved-item-cost{color:var(--rose);font-weight:700;}
+.donut-wrap{position:relative;width:140px;height:140px;margin:0 auto 12px;}
+.donut-wrap svg{width:100%;height:100%;}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.donut-center span{font-size:.65rem;color:var(--mute);}
+.donut-center b{font-size:.85rem;font-weight:900;color:var(--text);}
+.legend-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:.75rem;}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+@keyframes blink-cost{0%,100%{opacity:1}50%{opacity:.88}}
+.cost-alert-banner{padding:9px 28px;background:linear-gradient(90deg,#fdf2f8,#fff1f2);border-bottom:2px solid #f9a8d4;color:#7f1d1d;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:10px;animation:blink-cost 2s infinite;}
+.cost-alert-banner span{background:#be185d;color:#fff;padding:2px 8px;border-radius:10px;font-size:.72rem;}
+.compare-bar{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.compare-bar-label{width:100px;font-size:.73rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.compare-bar-track{flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;}
+.compare-bar-fill{height:100%;border-radius:4px;background:var(--rose);}
+.compare-bar-val{width:80px;text-align:right;font-size:.72rem;font-weight:700;color:var(--rose);}
+.cost-grade-badge{display:inline-block;padding:4px 12px;border-radius:10px;font-size:.76rem;font-weight:700;}
+.cost-grade-a{background:#dcfce7;color:#059669;}
+.cost-grade-b{background:#fef9c3;color:#d97706;}
+.cost-grade-c{background:#fee2e2;color:#dc2626;}
+.toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:10px 18px;border-radius:9px;font-size:.82rem;font-weight:600;z-index:999;opacity:0;pointer-events:none;transition:opacity .3s;}
+.toast.show{opacity:1;}
+@media print{.cost-alert-banner,.toast{display:none;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>💰 제품 원가 계산기 <span style="font-size:.8rem;opacity:.7;font-weight:400;"> — PCB Manufacturing</span></h1>
+  <button class="btn btn-ghost" onclick="exportCSV()">📥 저장</button>
+  <button class="btn btn-white" onclick="saveCalc()">💾 비교 저장</button>
+</div>
+
+<div class="cost-alert-banner" id="costAlertBanner" style="display:none;"></div>
+
+<div class="layout">
+  <div>
+    <div class="panel" style="margin-bottom:14px">
+      <div class="panel-header"><span class="panel-title">🔖 기본 정보</span></div>
+      <div class="panel-body">
+        <div class="field-row">
+          <div class="field"><label>제품명/모델</label><input id="productName" value="PCB-A2401 (4층, 양면)" oninput="calc()"></div>
+          <div class="field"><label>생산 배치 수량 (매)</label><div class="field-unit"><input type="number" id="batchQty" value="1000" oninput="calc()"><span>매</span></div></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>층수</label><select id="layerCnt" onchange="calc()"><option value="1">단면(1층)</option><option value="2">양면(2층)</option><option value="4" selected>4층</option><option value="6">6층</option><option value="8">8층</option></select></div>
+          <div class="field"><label>기판 크기 (mm)</label>
+            <div style="display:flex;gap:4px;align-items:center">
+              <input type="number" id="bW" value="200" oninput="calc()" style="flex:1"><span style="font-size:.75rem;color:var(--mute)">×</span>
+              <input type="number" id="bH" value="150" oninput="calc()" style="flex:1"><span style="font-size:.75rem;color:var(--mute)">mm</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:14px">
+      <div class="panel-header">
+        <span class="panel-title" style="color:#2563eb">📦 재료비 (원/매)</span>
+        <button class="btn btn-outline" style="font-size:.75rem;padding:4px 10px" onclick="addMaterial()">+ 항목 추가</button>
+      </div>
+      <div class="panel-body">
+        <div style="display:grid;grid-template-columns:1fr 80px 80px 70px 24px;gap:4px;margin-bottom:6px;font-size:.7rem;font-weight:700;color:var(--mute)">
+          <span>재료명</span><span>소모량</span><span>단가(원)</span><span>금액</span><span></span>
+        </div>
+        <div id="materialRows"></div>
+        <div style="text-align:right;margin-top:6px;font-size:.82rem;font-weight:700">재료비 합계: <span id="matTotal" style="color:var(--blue)">₩0</span></div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:14px">
+      <div class="panel-header"><span class="panel-title" style="color:var(--green)">⚙ 공정비 (원/매)</span></div>
+      <div class="panel-body">
+        <div id="processRows"></div>
+        <div style="text-align:right;margin-top:6px;font-size:.82rem;font-weight:700">공정비 합계: <span id="procTotal" style="color:var(--green)">₩0</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title" style="color:var(--amber)">🏭 간접비 설정</span></div>
+      <div class="panel-body">
+        <div class="field-row">
+          <div class="field"><label>제조간접비율 (%)</label><div class="field-unit"><input type="number" id="ohRate" value="25" oninput="calc()"><span>%</span></div></div>
+          <div class="field"><label>판관비율 (%)</label><div class="field-unit"><input type="number" id="sgaRate" value="10" oninput="calc()"><span>%</span></div></div>
+        </div>
+        <div style="font-size:.75rem;color:var(--mute)">제조간접비 = (재료비+공정비) × 제조간접비율 / 100</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel" style="margin-bottom:14px">
+      <div class="panel-header"><span class="panel-title">📊 원가 분석 결과</span></div>
+      <div class="panel-body">
+        <div class="total-box">
+          <div class="total-label">제품 단가 (매당)</div>
+          <div class="total-unit" id="unitCost">₩0</div>
+          <div class="total-batch" id="batchCost">배치 합계: ₩0</div>
+          <div id="costGrade" style="text-align:center;margin-top:8px;"></div>
+        </div>
+        <div class="donut-wrap" id="donutWrap"></div>
+        <div id="costLegend"></div>
+        <div class="breakdown" style="margin-top:14px">
+          <div class="breakdown-row header"><span>항목</span><span style="text-align:right">단가</span><span style="text-align:right">비율</span></div>
+          <div id="breakdownRows"></div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px;margin-top:12px">
+          <div style="font-size:.78rem;font-weight:700;margin-bottom:8px">목표 마진 계산</div>
+          <div class="field-row">
+            <div class="field"><label>목표 마진율 (%)</label><div class="field-unit"><input type="number" id="marginRate" value="20" oninput="calcMargin()"><span>%</span></div></div>
+            <div class="field"><label>제안 판매 단가</label><input id="sellPrice" readonly style="background:#f9fafb;font-weight:700;color:var(--rose)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">🗃 비교 저장 목록</span><button class="btn btn-outline" style="font-size:.72rem;padding:3px 8px" onclick="clearSaved()">전체삭제</button></div>
+      <div class="saved-list" id="savedList">
+        <div style="text-align:center;padding:20px;color:var(--mute);font-size:.8rem">저장된 항목이 없습니다</div>
+      </div>
+      <div id="compareChart"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// 제품 원가 계산기 앱 스크립트
+const PROCESS_ITEMS=[
+  {id:'drill',name:'드릴링',base:120,perLayer:20},
+  {id:'etch',name:'에칭',base:80,perLayer:30},
+  {id:'plate',name:'도금',base:150,perLayer:50},
+  {id:'mask',name:'솔더마스크',base:60,perLayer:0},
+  {id:'silk',name:'실크인쇄',base:30,perLayer:0},
+  {id:'test',name:'전기검사',base:40,perLayer:0},
+  {id:'cut',name:'외형가공',base:50,perLayer:0},
+  {id:'final',name:'최종검사',base:30,perLayer:0},
+];
+const MAT_DEFAULTS=[
+  {name:'동박적층판(CCL)',qty:1,unit:'장',price:3800},
+  {name:'드라이필름',qty:1,unit:'Roll/매',price:250},
+  {name:'솔더마스크잉크',qty:10,unit:'g',price:18},
+  {name:'드릴비트(소모)',qty:0.2,unit:'개',price:800},
+];
+const COST_COLORS=['#2563eb','#059669','#d97706','#be185d'];
+let matRows=[],saved=JSON.parse(localStorage.getItem('pcbCostSaved')||'[]');
+let matCounter=0;
+
+function showToast(msg){
+  const t=document.getElementById('toast');clearTimeout(t._tid);
+  t.textContent=msg;t.classList.add('show');
+  t._tid=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+function initMaterials(){MAT_DEFAULTS.forEach(m=>addMaterial(m));}
+
+function addMaterial(preset=null){
+  matCounter++;
+  const id=matCounter;
+  const row={id,name:preset?.name||'',qty:preset?.qty||1,unit:preset?.unit||'개',price:preset?.price||0};
+  matRows.push(row);renderMaterialRows();
+}
+
+function renderMaterialRows(){
+  document.getElementById('materialRows').innerHTML=matRows.map(r=>`
+    <div class="material-row" id="mr-${r.id}">
+      <input value="${r.name}" oninput="updateMat(${r.id},'name',this.value)" placeholder="재료명">
+      <input type="number" value="${r.qty}" oninput="updateMat(${r.id},'qty',this.value)" min="0" step="0.01">
+      <input type="number" value="${r.price}" oninput="updateMat(${r.id},'price',this.value)" min="0">
+      <span style="font-size:.75rem;font-weight:700;color:var(--blue);text-align:right">₩${Math.round(r.qty*r.price).toLocaleString()}</span>
+      <button class="del-btn" onclick="delMat(${r.id})">✕</button>
+    </div>`).join('');
+  calc();
+}
+
+function updateMat(id,field,val){
+  const row=matRows.find(r=>r.id===id);
+  if(row){row[field]=field==='name'?val:parseFloat(val)||0;const el=document.querySelector(`#mr-${id} span`);if(el)el.textContent=`₩${Math.round(row.qty*row.price).toLocaleString()}`;}
+  calc();
+}
+function delMat(id){matRows=matRows.filter(r=>r.id!==id);renderMaterialRows();}
+
+function renderProcessRows(){
+  const layers=parseInt(document.getElementById('layerCnt').value)||2;
+  document.getElementById('processRows').innerHTML=PROCESS_ITEMS.map(p=>{
+    const cost=p.base+p.perLayer*(layers-1);
+    return `<div style="display:grid;grid-template-columns:1fr 90px 80px;gap:6px;align-items:center;margin-bottom:6px;font-size:.78rem">
+      <label style="font-weight:600">${p.name}</label>
+      <div style="display:flex;align-items:center;gap:4px"><input type="number" id="proc-${p.id}" value="${cost}" oninput="calc()" style="width:80px;padding:5px 7px;border:1px solid var(--border);border-radius:5px;font-size:.78rem"><span style="color:var(--mute);font-size:.7rem">원</span></div>
+      <span style="text-align:right;font-size:.7rem;color:var(--mute)">${p.perLayer>0?`×${layers}층`:'고정'}</span>
+    </div>`;
+  }).join('');
+}
+
+function getCostGrade(matPct){
+  if(matPct<=45) return {label:'A등급',cls:'cost-grade-a',desc:'원가 우수'};
+  if(matPct<=55) return {label:'B등급',cls:'cost-grade-b',desc:'원가 보통'};
+  return {label:'C등급',cls:'cost-grade-c',desc:'원가 개선 필요'};
+}
+
+function renderCostAlertBanner(matPct){
+  const banner=document.getElementById('costAlertBanner');
+  if(matPct>55){
+    banner.innerHTML=`⚠ <span>재료비 과다</span> 재료비 비중이 ${matPct}%로 목표(55%)를 초과했습니다. 원가 구조 개선이 필요합니다.`;
+    banner.style.display='flex';
+  } else {
+    banner.style.display='none';
+  }
+}
+
+function calc(){
+  const matTotal=matRows.reduce((s,r)=>s+r.qty*r.price,0);
+  const procTotal=PROCESS_ITEMS.reduce((s,p)=>{const el=document.getElementById(`proc-${p.id}`);return s+(el?parseFloat(el.value)||0:0);},0);
+  const sub=matTotal+procTotal;
+  const ohRate=(parseFloat(document.getElementById('ohRate').value)||0)/100;
+  const sgaRate=(parseFloat(document.getElementById('sgaRate').value)||0)/100;
+  const overhead=sub*ohRate;const manuf=sub+overhead;const sga=manuf*sgaRate;const total=manuf+sga;
+  const batch=parseInt(document.getElementById('batchQty').value)||1;
+  const matPct=sub>0?Math.round(matTotal/sub*100):0;
+
+  document.getElementById('matTotal').textContent=`₩${Math.round(matTotal).toLocaleString()}`;
+  document.getElementById('procTotal').textContent=`₩${Math.round(procTotal).toLocaleString()}`;
+  document.getElementById('unitCost').textContent=`₩${Math.round(total).toLocaleString()}`;
+  document.getElementById('batchCost').textContent=`배치 합계: ₩${Math.round(total*batch).toLocaleString()}`;
+
+  const grade=getCostGrade(matPct);
+  document.getElementById('costGrade').innerHTML=`<span class="cost-grade-badge ${grade.cls}">${grade.label} — ${grade.desc}</span>`;
+
+  const items=[{name:'재료비',amount:matTotal,color:COST_COLORS[0]},{name:'공정비',amount:procTotal,color:COST_COLORS[1]},{name:'제조간접비',amount:overhead,color:COST_COLORS[2]},{name:'판관비',amount:sga,color:COST_COLORS[3]}];
+  renderDonut(items,total);renderBreakdown(items,total);calcMargin();renderCostAlertBanner(matPct);
+}
+
+function renderDonut(items,total){
+  if(!total){document.getElementById('donutWrap').innerHTML='';return;}
+  const R=60,C=70,stroke=18;let offset=0;
+  const arcs=items.filter(i=>i.amount>0).map(i=>{
+    const pct=i.amount/total;const arc=pct*2*Math.PI*R;const dash=`${arc} ${2*Math.PI*R-arc}`;
+    const el=`<circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="${i.color}" stroke-width="${stroke}" stroke-dasharray="${dash}" stroke-dashoffset="${-(offset)}" transform="rotate(-90 ${C} ${C})"/>`;
+    offset+=arc;return el;
+  }).join('');
+  document.getElementById('donutWrap').innerHTML=`<svg viewBox="0 0 140 140"><circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="#e2e8f0" stroke-width="${stroke}"/>${arcs}</svg><div class="donut-center"><span>단가</span><b>₩${Math.round(total).toLocaleString()}</b></div>`;
+  document.getElementById('costLegend').innerHTML=items.filter(i=>i.amount>0).map(i=>`<div class="legend-row"><div class="legend-dot" style="background:${i.color}"></div><span style="flex:1">${i.name}</span><span style="font-weight:700;color:${i.color}">${Math.round(i.amount/total*100)}%</span></div>`).join('');
+}
+
+function renderBreakdown(items,total){
+  document.getElementById('breakdownRows').innerHTML=items.map(i=>`<div class="breakdown-row"><span>${i.name}</span><span style="text-align:right;font-weight:700">₩${Math.round(i.amount).toLocaleString()}</span><span style="text-align:right;color:var(--mute)">${total?Math.round(i.amount/total*100):0}%</span></div>`).join('')+
+    `<div class="breakdown-row total-row"><span>합 계</span><span style="text-align:right;color:var(--rose)">₩${Math.round(total).toLocaleString()}</span><span style="text-align:right">100%</span></div>`;
+}
+
+function calcMargin(){
+  const cost=parseFloat(document.getElementById('unitCost').textContent.replace(/[₩,]/g,''))||0;
+  const margin=(parseFloat(document.getElementById('marginRate').value)||0)/100;
+  document.getElementById('sellPrice').value=`₩${Math.round(cost/(1-margin)).toLocaleString()}`;
+}
+
+function saveCalc(){
+  const name=document.getElementById('productName').value||'이름없음';
+  const cost=document.getElementById('unitCost').textContent;
+  const sell=document.getElementById('sellPrice').value;
+  saved.push({id:Date.now(),name,cost,sell,time:new Date().toLocaleTimeString()});
+  localStorage.setItem('pcbCostSaved',JSON.stringify(saved));renderSaved();
+  showToast(`"${name}" 원가가 비교 목록에 저장되었습니다.`);
+}
+function clearSaved(){if(!confirm('모두 삭제하시겠습니까?'))return;saved=[];localStorage.setItem('pcbCostSaved','[]');renderSaved();}
+
+function renderSaved(){
+  if(saved.length===0){
+    document.getElementById('savedList').innerHTML='<div style="text-align:center;padding:20px;color:var(--mute);font-size:.8rem">저장된 항목이 없습니다</div>';
+    document.getElementById('compareChart').innerHTML='';return;
+  }
+  document.getElementById('savedList').innerHTML=saved.map(s=>`<div class="saved-item"><div><div class="saved-item-name">${s.name}</div><div style="font-size:.7rem;color:var(--mute)">${s.time}</div></div><div style="text-align:right"><div class="saved-item-cost">${s.cost}</div><div style="font-size:.7rem;color:var(--sub)">판매가: ${s.sell}</div></div></div>`).join('');
+  const costVals=saved.map(s=>parseInt(s.cost.replace(/[₩,]/g,''))||0);
+  const maxCost=Math.max(...costVals,1);
+  document.getElementById('compareChart').innerHTML=`<div style="padding:10px 10px 4px;border-top:1px solid var(--border)"><div style="font-size:.75rem;font-weight:700;color:var(--sub);margin-bottom:8px">단가 비교</div>${saved.map((s,i)=>`<div class="compare-bar"><span class="compare-bar-label" title="${s.name}">${s.name}</span><div class="compare-bar-track"><div class="compare-bar-fill" style="width:${Math.round(costVals[i]/maxCost*100)}%"></div></div><span class="compare-bar-val">${s.cost}</span></div>`).join('')}</div>`;
+}
+
+function exportCSV(){
+  const name=document.getElementById('productName').value;const batch=document.getElementById('batchQty').value;
+  const unit=document.getElementById('unitCost').textContent;const sell=document.getElementById('sellPrice').value;
+  const mat=matRows.map(r=>`${r.name}: ₩${Math.round(r.qty*r.price).toLocaleString()}`).join(' / ');
+  const csv=`제품명,배치수량,재료비내역,단가,판매가\n${name},${batch},"${mat}",${unit},${sell}`;
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='원가계산.csv';a.click();
+}
+
+renderSaved();initMaterials();renderProcessRows();
+document.getElementById('layerCnt').addEventListener('change',()=>{renderProcessRows();calc();});
+calc();
+</script>
+</body>
+</html>

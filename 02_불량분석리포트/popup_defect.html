@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>불량 분석 리포트 | PCB 제조</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* 불량 분석 리포트 스타일시트 */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--border:#d1d9e0;--border2:#c4cdd6;
+  --text:#1a202c;--sub:#4a5568;--mute:#a0aec0;
+  --blue:#2563eb;--green:#059669;--amber:#d97706;--red:#dc2626;--orange:#ea580c;
+  --rad:10px;--shadow:0 1px 3px rgba(0,0,0,.1),0 2px 8px rgba(0,0,0,.06);
+}
+body{font-family:'맑은 고딕','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.header{background:linear-gradient(135deg,#7c1d1d,#dc2626 60%,#b91c1c);color:#fff;padding:0 28px;height:58px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,.2);}
+.header h1{font-size:1rem;font-weight:700;flex:1;}
+.header h1 small{font-weight:400;opacity:.7;font-size:.8rem;margin-left:8px;}
+.btn{padding:7px 16px;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
+.btn-white{background:#fff;color:var(--red);}
+.btn-white:hover{background:#fff1f1;}
+.btn-ghost{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);}
+.btn-ghost:hover{background:rgba(255,255,255,.25);}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-blue:hover{background:#1d4ed8;}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover{background:#b91c1c;}
+.btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border2);}
+.btn-outline:hover{background:var(--bg);}
+.pareto-alert{background:linear-gradient(90deg,#7c1d1d,#dc2626);color:#fff;padding:10px 28px;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:10px;animation:blink-alert 2s infinite;}
+@keyframes blink-alert{0%,100%{opacity:1;}50%{opacity:.85;}}
+.filter-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.filter-bar label{font-size:.82rem;color:var(--sub);}
+.filter-bar input[type=date],.filter-bar select{padding:6px 10px;border:1px solid var(--border2);border-radius:7px;font-family:inherit;font-size:.83rem;outline:none;background:var(--bg);color:var(--text);transition:border-color .15s;}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--red);}
+.layout{padding:18px 28px;display:flex;flex-direction:column;gap:14px;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
+.kpi.k1::after{background:var(--red);}
+.kpi.k2::after{background:#b91c1c;}
+.kpi.k3::after{background:var(--amber);}
+.kpi.k4::after{background:var(--blue);}
+.kpi-l{font-size:.72rem;color:var(--mute);margin-bottom:4px;}
+.kpi-v{font-size:1.5rem;font-weight:900;}
+.kpi-sub{font-size:.72rem;color:var(--mute);margin-top:3px;}
+.chart-grid{display:grid;grid-template-columns:2fr 1fr;gap:14px;}
+.chart-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:16px 18px;box-shadow:var(--shadow);}
+.panel-title{font-size:.88rem;font-weight:700;margin-bottom:14px;}
+.panel canvas{max-height:240px;}
+.heatmap-table{border-collapse:collapse;font-size:.75rem;min-width:100%;}
+.heatmap-table th{padding:5px 10px;background:var(--bg);font-weight:700;color:var(--sub);border:1px solid var(--border);white-space:nowrap;text-align:center;}
+.heatmap-table td{padding:5px 10px;border:1px solid var(--border);text-align:center;font-weight:600;min-width:72px;transition:opacity .2s;}
+.hm-date{text-align:left!important;font-weight:400!important;color:var(--sub);white-space:nowrap;}
+.hm-0{background:#fff;color:var(--mute);}
+.hm-total{background:var(--bg);font-weight:800;}
+.pareto-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.pareto-table th{background:var(--bg);padding:8px 10px;text-align:left;font-weight:700;color:var(--sub);border-bottom:2px solid var(--border);}
+.pareto-table td{padding:8px 10px;border-bottom:1px solid var(--border);}
+.pareto-bar{height:8px;background:#fee2e2;border-radius:4px;overflow:hidden;margin-top:4px;}
+.pareto-fill{height:100%;background:var(--red);border-radius:4px;}
+.cum-cell{font-weight:700;}
+.defect-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.defect-table th{background:var(--bg);padding:9px 10px;text-align:left;font-weight:700;color:var(--sub);border-bottom:2px solid var(--border);white-space:nowrap;}
+.defect-table td{padding:9px 10px;border-bottom:1px solid var(--border);}
+.defect-table tr:hover td{background:#fff5f5;}
+.sev-chip{padding:2px 8px;border-radius:5px;font-size:.72rem;font-weight:700;}
+.sev-critical{background:#fee2e2;color:#b91c1c;}
+.sev-major{background:#fef3c7;color:#b45309;}
+.sev-minor{background:#dcfce7;color:#15803d;}
+.line-badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:.72rem;font-weight:700;color:#fff;}
+.edit-btn{padding:3px 8px;border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:.75rem;background:var(--bg);font-family:inherit;transition:background .15s;}
+.edit-btn:hover{background:#fee2e2;border-color:var(--red);color:var(--red);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--surface);border-radius:14px;padding:24px;width:500px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.2);}
+.modal h2{font-size:.95rem;font-weight:800;margin-bottom:16px;}
+.form-group{margin-bottom:10px;}
+.form-group label{display:block;font-size:.75rem;font-weight:700;color:var(--sub);margin-bottom:3px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:7px;font-family:inherit;font-size:.85rem;outline:none;background:var(--bg);color:var(--text);}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--red);background:#fff;}
+.form-group textarea{height:70px;resize:none;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:#1e293b;color:#f1f5f9;padding:10px 22px;border-radius:30px;font-size:.85rem;opacity:0;transition:all .3s;pointer-events:none;z-index:500;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.btn-report{background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.4);}
+.btn-report:hover{background:rgba(255,255,255,.32);}
+.rpt-overlay{display:none;position:fixed;inset:0;z-index:200;background:#6b7280;overflow-y:auto;}
+.rpt-overlay.show{display:block;}
+.rpt-toolbar{position:sticky;top:0;z-index:10;background:#374151;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+.rpt-page{width:210mm;min-height:297mm;margin:20px auto;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.25);padding:18mm 16mm 18mm 20mm;font-family:'맑은 고딕','Malgun Gothic','Segoe UI',sans-serif;font-size:9pt;color:#111;line-height:1.5;}
+.rpt-company{text-align:right;font-size:8pt;color:#555;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:14px;}
+.rpt-company strong{font-size:10pt;color:#111;}
+.rpt-doc-title{text-align:center;margin-bottom:16px;}
+.rpt-doc-title h1{font-size:16pt;font-weight:900;letter-spacing:2px;color:#111;margin-bottom:4px;}
+.rpt-doc-title p{font-size:9pt;color:#555;}
+.rpt-info-box{border:1px solid #bbb;border-collapse:collapse;width:100%;margin-bottom:16px;}
+.rpt-info-box td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;}
+.rpt-info-box .rpt-label{background:#f5f5f5;font-weight:700;width:80px;color:#333;}
+.rpt-sec{margin-bottom:14px;}
+.rpt-sec-title{font-size:10pt;font-weight:900;background:#1e3a5f;color:#fff;padding:5px 10px;margin-bottom:8px;letter-spacing:.5px;}
+.rpt-table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:4px;}
+.rpt-table th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:center;font-weight:700;border:1px solid #bbb;}
+.rpt-table td{padding:5px 8px;border:1px solid #ddd;text-align:center;vertical-align:middle;}
+.rpt-table tr:nth-child(even) td{background:#f8f9fa;}
+.rpt-table .rpt-total td{background:#e8edf5;font-weight:800;border-top:2px solid #1e3a5f;}
+.rpt-table .num{text-align:right;}
+.rpt-table .rpt-good{color:#059669;font-weight:700;}
+.rpt-table .rpt-bad{color:#dc2626;font-weight:700;}
+.rpt-table .rpt-warn{color:#d97706;font-weight:700;}
+.rpt-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.rpt-kpi-card{border:1px solid #bbb;border-top:3px solid #1e3a5f;padding:8px;text-align:center;border-radius:2px;}
+.rpt-kpi-card .rk-label{font-size:7.5pt;color:#555;margin-bottom:4px;}
+.rpt-kpi-card .rk-val{font-size:13pt;font-weight:900;color:#1e3a5f;line-height:1;}
+.rpt-kpi-card .rk-unit{font-size:7pt;color:#888;margin-top:2px;}
+.rpt-sign{width:100%;border-collapse:collapse;margin-top:16px;}
+.rpt-sign td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;text-align:center;}
+.rpt-sign .rpt-label{background:#f5f5f5;font-weight:700;width:70px;}
+.rpt-sign .sign-box{height:48px;vertical-align:bottom;padding-bottom:4px;}
+.rpt-footer{margin-top:18px;border-top:1px solid #ccc;padding-top:6px;font-size:7.5pt;color:#888;text-align:center;}
+@media print{.no-print,.header,.filter-bar,.layout,.rpt-toolbar{display:none!important;}.rpt-overlay{display:block!important;position:static;background:none;overflow:visible;}.rpt-page{width:100%;margin:0;box-shadow:none;padding:10mm 12mm;}body{background:#fff;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🔍 불량 분석 리포트 <small>PCB Manufacturing QA</small></h1>
+  <button class="btn btn-report" onclick="openReport()">🖨 보고서 출력</button>
+  <button class="btn btn-ghost" onclick="exportCSV()">📥 CSV 저장</button>
+  <button class="btn btn-white" onclick="window.print()">🖨 인쇄</button>
+  <button class="btn btn-white" onclick="openModal()">+ 불량 등록</button>
+</div>
+
+<div class="pareto-alert" id="paretoAlert" style="display:none;"></div>
+
+<div class="filter-bar">
+  <label>기간.</label>
+  <input type="date" id="f-from"> ~ <input type="date" id="f-to">
+  <select id="f-line" onchange="renderAll()">
+    <option value="">전체 라인</option>
+    <option>1호기</option><option>2호기</option><option>3호기</option><option>4호기</option><option>5호기</option>
+  </select>
+  <select id="f-type" onchange="renderAll()">
+    <option value="">전체 불량유형</option>
+    <option>단락(Short)</option><option>개방(Open)</option><option>기공(Void)</option>
+    <option>이물(Foreign Material)</option><option>치수불량</option><option>박리(Peeling)</option>
+    <option>도금불량</option><option>변색</option><option>기타</option>
+  </select>
+  <button class="btn btn-red" onclick="renderAll()">조회</button>
+</div>
+
+<div class="layout">
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="chart-grid">
+    <div class="panel">
+      <div class="panel-title">📊 불량 유형 파레토 차트 (건수 + 누적률)</div>
+      <canvas id="paretoChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-title">🏭 라인별 불량 발생 현황</div>
+      <canvas id="lineChart"></canvas>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">🗓 불량 발생 히트맵 — 날짜 × 라인</div>
+    <div id="heatmapWrap" style="overflow-x:auto;"></div>
+  </div>
+
+  <div class="chart-grid2">
+    <div class="panel">
+      <div class="panel-title">📋 불량 유형별 파레토 분석</div>
+      <table class="pareto-table" id="paretoTable"></table>
+    </div>
+    <div class="panel">
+      <div class="panel-title">📈 일별 불량 발생 추이</div>
+      <canvas id="trendChart"></canvas>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">⚠️ 라인별 심각도 분포</div>
+    <canvas id="severityChart"></canvas>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>📝 불량 발생 목록</span>
+      <input type="text" id="searchInput" placeholder="제품·불량유형·원인·담당자 검색..."
+        style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:.8rem;outline:none;width:260px;background:var(--bg);"
+        oninput="renderDefectList()">
+    </div>
+    <table class="defect-table" id="defectTable"></table>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">불량 발생 등록</h2>
+    <div class="form-row">
+      <div class="form-group"><label>발생 날짜</label><input type="date" id="d-date"></div>
+      <div class="form-group"><label>라인</label>
+        <select id="d-line"><option>1호기</option><option>2호기</option><option>3호기</option><option>4호기</option><option>5호기</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>제품명</label><input id="d-product" placeholder="PCB-A2401"></div>
+      <div class="form-group"><label>불량 유형</label>
+        <select id="d-type">
+          <option>단락(Short)</option><option>개방(Open)</option><option>기공(Void)</option>
+          <option>이물(Foreign Material)</option><option>치수불량</option><option>박리(Peeling)</option>
+          <option>도금불량</option><option>변색</option><option>기타</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>불량 수량 (매)</label><input type="number" id="d-qty" placeholder="5"></div>
+      <div class="form-group"><label>심각도</label>
+        <select id="d-severity">
+          <option value="critical">심각(Critical)</option>
+          <option value="major">주의(Major)</option>
+          <option value="minor" selected>경미(Minor)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>발견 공정</label>
+        <select id="d-process">
+          <option>재단</option><option>천공(드릴링)</option><option>에칭</option><option>도금</option>
+          <option>표면처리</option><option>외관검사</option><option>전기검사</option><option>출하검사</option>
+        </select>
+      </div>
+      <div class="form-group"><label>담당자</label><input id="d-worker" placeholder="홍길동"></div>
+    </div>
+    <div class="form-group"><label>발생 원인</label><textarea id="d-cause" placeholder="원인 분석 내용을 입력하세요..."></textarea></div>
+    <div class="form-group"><label>조치 내용</label><textarea id="d-action" placeholder="취해진 조치 및 재발방지 대책..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-red" id="delBtn" style="display:none" onclick="deleteDefect()">삭제</button>
+      <button class="btn btn-outline" onclick="closeModal()">취소</button>
+      <button class="btn btn-blue" onclick="saveDefect()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="rpt-overlay" id="rptOverlay">
+  <div class="rpt-toolbar no-print">
+    <span style="font-size:.85rem;font-weight:700;color:#fff">불량 분석 보고서 미리보기</span>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-white" onclick="window.print()">🖨 인쇄 / PDF 저장</button>
+      <button class="btn btn-ghost" onclick="closeReport()">✕ 닫기</button>
+    </div>
+  </div>
+  <div class="rpt-page" id="rptPage"></div>
+</div>
+
+<script>
+/* 불량 분석 리포트 전체 로직 */
+Chart.defaults.color = '#718096';
+Chart.defaults.borderColor = '#e2e8f0';
+
+const LINE_COLORS = {'1호기':'#2563eb','2호기':'#059669','3호기':'#d97706','4호기':'#7c3aed','5호기':'#dc2626'};
+const LINES = ['1호기','2호기','3호기','4호기','5호기'];
+const DEFECT_TYPES = ['단락(Short)','개방(Open)','기공(Void)','이물(Foreign Material)','치수불량','박리(Peeling)','도금불량','변색','기타'];
+
+const today = new Date().toISOString().slice(0, 10);
+const Y = today.slice(0, 4), M = today.slice(5, 7);
+
+function genSample() {
+  const arr = [];
+  const prods   = ['PCB-A2401','PCB-B1802','PCB-C3305','PCB-D0401','PCB-E0502'];
+  const procs   = ['에칭','도금','외관검사','전기검사','출하검사'];
+  const sevs    = ['critical','major','minor','minor','minor'];
+  const causes  = ['원자재 품질 이상','작업자 숙련도 부족','설비 파라미터 오류','오염물질 유입','마스크 손상'];
+  for (let d = 1; d <= 25; d++) {
+    const dd   = String(d).padStart(2, '0');
+    const date = `${Y}-${M}-${dd}`;
+    const cnt  = Math.floor(Math.random() * 5) + 1;
+    for (let i = 0; i < cnt; i++) {
+      const ti = Math.floor(Math.random() * DEFECT_TYPES.length);
+      arr.push({
+        id: Date.now() + Math.random(), date,
+        line:     LINES[Math.floor(Math.random() * LINES.length)],
+        product:  prods[Math.floor(Math.random() * prods.length)],
+        type:     DEFECT_TYPES[ti],
+        qty:      Math.floor(Math.random() * 10) + 1,
+        severity: sevs[Math.floor(Math.random() * sevs.length)],
+        process:  procs[Math.floor(Math.random() * procs.length)],
+        worker:   '검사원' + (Math.floor(Math.random() * 3) + 1),
+        cause:    causes[Math.floor(Math.random() * causes.length)],
+        action:   '',
+      });
+    }
+  }
+  return arr;
+}
+
+let defects = JSON.parse(localStorage.getItem('pcbDefects') || 'null') || genSample();
+let editId  = null;
+let nextId  = Date.now();
+let paretoChart = null, lineChart = null, trendChart = null, severityChart = null;
+
+function save() { localStorage.setItem('pcbDefects', JSON.stringify(defects)); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function getFiltered() {
+  const from = document.getElementById('f-from').value;
+  const to   = document.getElementById('f-to').value;
+  const line = document.getElementById('f-line').value;
+  const type = document.getElementById('f-type').value;
+  return defects.filter(d => {
+    if (from && d.date < from) return false;
+    if (to   && d.date > to)   return false;
+    if (line && d.line !== line) return false;
+    if (type && d.type !== type) return false;
+    return true;
+  });
+}
+
+function renderKPI() {
+  const ds       = getFiltered();
+  const total    = ds.reduce((s, d) => s + d.qty, 0);
+  const critical = ds.filter(d => d.severity === 'critical').reduce((s, d) => s + d.qty, 0);
+  const major    = ds.filter(d => d.severity === 'major').reduce((s, d) => s + d.qty, 0);
+  const types    = new Set(ds.map(d => d.type)).size;
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi k1"><div class="kpi-l">총 불량 건수</div><div class="kpi-v" style="color:var(--red)">${ds.length}</div><div class="kpi-sub">총 ${total.toLocaleString()}매</div></div>
+    <div class="kpi k2"><div class="kpi-l">심각(Critical)</div><div class="kpi-v" style="color:#b91c1c">${ds.filter(d => d.severity === 'critical').length}</div><div class="kpi-sub">${critical}매</div></div>
+    <div class="kpi k3"><div class="kpi-l">주의(Major)</div><div class="kpi-v" style="color:var(--amber)">${ds.filter(d => d.severity === 'major').length}</div><div class="kpi-sub">${major}매</div></div>
+    <div class="kpi k4"><div class="kpi-l">불량 유형 수</div><div class="kpi-v" style="color:var(--blue)">${types}</div><div class="kpi-sub">개 유형</div></div>`;
+}
+
+function renderPareto() {
+  if (paretoChart) paretoChart.destroy();
+  const ds     = getFiltered();
+  const byType = {};
+  ds.forEach(d => { byType[d.type] = (byType[d.type] || 0) + d.qty; });
+  const sorted  = Object.entries(byType).sort((a, b) => b[1] - a[1]);
+  const total   = sorted.reduce((s, [, v]) => s + v, 0);
+  let cum = 0;
+  const cumPcts = sorted.map(([, v]) => { cum += v; return +(cum / total * 100).toFixed(1); });
+  const ctx = document.getElementById('paretoChart').getContext('2d');
+  paretoChart = new Chart(ctx, {
+    data: {
+      labels: sorted.map(([k]) => k),
+      datasets: [
+        {type:'bar', label:'불량수(매)', data:sorted.map(([, v]) => v),
+          backgroundColor:'rgba(220,38,38,.7)', borderRadius:4, yAxisID:'y'},
+        {type:'line', label:'누적률(%)', data:cumPcts,
+          borderColor:'#2563eb', backgroundColor:'transparent',
+          tension:0.1, pointRadius:4, yAxisID:'y2'}
+      ]
+    },
+    options: {responsive:true, maintainAspectRatio:true,
+      scales: {y:{beginAtZero:true}, y2:{min:0, max:100, position:'right', ticks:{callback:v => v + '%'}}},
+      plugins: {legend:{labels:{font:{size:10}}}}}
+  });
+}
+
+function renderLine() {
+  if (lineChart) lineChart.destroy();
+  const ds     = getFiltered();
+  const byLine = {};
+  ds.forEach(d => { byLine[d.line] = (byLine[d.line] || 0) + d.qty; });
+  const lines = Object.keys(byLine);
+  const ctx = document.getElementById('lineChart').getContext('2d');
+  lineChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: lines,
+      datasets: [{data: lines.map(l => byLine[l]),
+        backgroundColor: lines.map(l => LINE_COLORS[l] || '#64748b'),
+        borderColor: '#fff', borderWidth: 2}]
+    },
+    options: {responsive:true, maintainAspectRatio:true,
+      plugins: {legend:{position:'right', labels:{font:{size:10}}}}}
+  });
+}
+
+function renderTrend() {
+  if (trendChart) trendChart.destroy();
+  const ds     = getFiltered();
+  const byDate = {};
+  ds.forEach(d => { byDate[d.date] = (byDate[d.date] || 0) + d.qty; });
+  const dates = Object.keys(byDate).sort();
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: dates.map(d => d.slice(5)),
+      datasets: [{label:'불량수(매)', data:dates.map(d => byDate[d]),
+        borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,.08)',
+        fill:true, tension:.3, pointRadius:3}]
+    },
+    options: {responsive:true, maintainAspectRatio:true, plugins:{legend:{display:false}}}
+  });
+}
+
+function renderParetoTable() {
+  const ds     = getFiltered();
+  const byType = {};
+  ds.forEach(d => { byType[d.type] = (byType[d.type] || 0) + d.qty; });
+  const sorted = Object.entries(byType).sort((a, b) => b[1] - a[1]);
+  const total  = sorted.reduce((s, [, v]) => s + v, 0);
+  const maxVal = sorted.length ? sorted[0][1] : 1;
+  let cum = 0;
+  document.getElementById('paretoTable').innerHTML =
+    `<thead><tr><th>불량 유형</th><th>건수(매)</th><th>비율</th><th>누적률</th></tr></thead>
+    <tbody>${sorted.map(([type, cnt]) => {
+      const pct = total ? (cnt / total * 100) : 0;
+      cum += pct;
+      return `<tr>
+        <td>${type}</td>
+        <td style="text-align:right;font-weight:700">${cnt}</td>
+        <td>${pct.toFixed(1)}%<div class="pareto-bar"><div class="pareto-fill" style="width:${cnt / maxVal * 100}%"></div></div></td>
+        <td class="cum-cell" style="color:${cum <= 80 ? 'var(--red)' : 'var(--sub)'}">${cum.toFixed(1)}%</td>
+      </tr>`;
+    }).join('')}</tbody>`;
+}
+
+function renderHeatmap() {
+  const ds     = getFiltered();
+  const byKey  = {};
+  ds.forEach(d => {
+    const k = `${d.date}|${d.line}`;
+    byKey[k] = (byKey[k] || 0) + d.qty;
+  });
+  const dates  = [...new Set(ds.map(d => d.date))].sort().slice(-20);
+  const lines  = LINES.filter(l => ds.some(d => d.line === l));
+  const maxVal = Math.max(1, ...Object.values(byKey));
+
+  const thead = `<tr><th>날짜</th>${lines.map(l =>
+    `<th style="color:${LINE_COLORS[l]||'#64748b'}">${l}</th>`).join('')}<th>합계</th></tr>`;
+
+  const tbody = dates.map(date => {
+    const cells = lines.map(line => {
+      const v = byKey[`${date}|${line}`] || 0;
+      if (!v) return `<td class="hm-0">-</td>`;
+      const intensity = Math.round(v / maxVal * 80) + 10;
+      return `<td style="background:rgba(220,38,38,${intensity / 100});color:${intensity > 50 ? '#fff' : '#7c1d1d'}">${v}</td>`;
+    });
+    const rowTotal = lines.reduce((s, l) => s + (byKey[`${date}|${l}`] || 0), 0);
+    return `<tr><td class="hm-date">${date.slice(5)}</td>${cells.join('')}<td class="hm-total">${rowTotal}</td></tr>`;
+  }).join('');
+
+  const colTotals = lines.map(l => dates.reduce((s, d) => s + (byKey[`${d}|${l}`] || 0), 0));
+  const grandTotal = colTotals.reduce((s, v) => s + v, 0);
+  const tfoot = `<tr style="background:var(--bg);font-weight:700"><td>합계</td>${colTotals.map(v => `<td>${v}</td>`).join('')}<td>${grandTotal}</td></tr>`;
+
+  document.getElementById('heatmapWrap').innerHTML =
+    `<table class="heatmap-table"><thead>${thead}</thead><tbody>${tbody}</tbody><tfoot>${tfoot}</tfoot></table>`;
+}
+
+function renderSeverityChart() {
+  if (severityChart) severityChart.destroy();
+  const ds      = getFiltered();
+  const lines   = LINES.filter(l => ds.some(d => d.line === l));
+  const sevKeys = ['critical','major','minor'];
+  const sevLabels = {'critical':'심각(Critical)','major':'주의(Major)','minor':'경미(Minor)'};
+  const sevColors = {'critical':'rgba(185,28,28,.85)','major':'rgba(217,119,6,.85)','minor':'rgba(5,150,105,.85)'};
+
+  const counts = {};
+  lines.forEach(l => { counts[l] = {critical:0, major:0, minor:0}; });
+  ds.forEach(d => { if (counts[d.line]) counts[d.line][d.severity] = (counts[d.line][d.severity] || 0) + 1; });
+
+  const ctx = document.getElementById('severityChart').getContext('2d');
+  severityChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: lines,
+      datasets: sevKeys.map(sev => ({
+        label:           sevLabels[sev],
+        data:            lines.map(l => counts[l]?.[sev] || 0),
+        backgroundColor: sevColors[sev],
+        borderRadius:    4,
+      }))
+    },
+    options: {responsive:true, maintainAspectRatio:false,
+      scales: {x:{stacked:true}, y:{stacked:true, beginAtZero:true, ticks:{stepSize:1}}},
+      plugins: {legend:{labels:{font:{size:11}}}}}
+  });
+  document.getElementById('severityChart').style.maxHeight = '220px';
+}
+
+function renderParetoAlert() {
+  const ds     = getFiltered();
+  const byType = {};
+  ds.forEach(d => { byType[d.type] = (byType[d.type] || 0) + d.qty; });
+  const sorted = Object.entries(byType).sort((a, b) => b[1] - a[1]);
+  const total  = sorted.reduce((s, [, v]) => s + v, 0);
+
+  const banner = document.getElementById('paretoAlert');
+  if (!sorted.length || !total) { banner.style.display = 'none'; return; }
+
+  const [topType, topQty] = sorted[0];
+  const topPct = (topQty / total * 100).toFixed(1);
+
+  if (topQty / total >= 0.5) {
+    banner.style.display = 'flex';
+    banner.innerHTML = `⚠️ 파레토 집중 경보
+      <span style="background:rgba(255,255,255,.2);padding:2px 12px;border-radius:5px;">
+        <strong>${topType}</strong> — 전체의 <strong>${topPct}%</strong> 집중
+      </span>
+      <span style="margin-left:auto;font-size:.78rem;font-weight:400;opacity:.85;">
+        즉시 원인 분석 및 개선조치 필요
+      </span>`;
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function renderDefectList() {
+  const q  = document.getElementById('searchInput').value.toLowerCase();
+  const ds = getFiltered()
+    .filter(d => !q || d.product.toLowerCase().includes(q) || d.type.includes(q) ||
+                 (d.cause||'').includes(q) || d.worker.includes(q))
+    .sort((a, b) => b.date.localeCompare(a.date));
+  const sevMap   = {critical:'sev-critical', major:'sev-major', minor:'sev-minor'};
+  const sevLabel = {critical:'심각', major:'주의', minor:'경미'};
+  document.getElementById('defectTable').innerHTML =
+    `<thead><tr><th>날짜</th><th>라인</th><th>제품명</th><th>불량유형</th><th>수량</th><th>심각도</th><th>발견공정</th><th>원인</th><th>담당자</th><th>편집</th></tr></thead>
+    <tbody>${ds.map(d => `<tr>
+      <td>${d.date}</td>
+      <td><span class="line-badge" style="background:${LINE_COLORS[d.line]||'#64748b'}">${d.line}</span></td>
+      <td>${d.product}</td><td>${d.type}</td>
+      <td style="text-align:right;font-weight:700;color:var(--red)">${d.qty}</td>
+      <td><span class="sev-chip ${sevMap[d.severity]||''}">${sevLabel[d.severity]||d.severity}</span></td>
+      <td>${d.process}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.cause||'-'}</td>
+      <td>${d.worker}</td>
+      <td><button class="edit-btn" onclick="editDefect(${d.id})">편집</button></td>
+    </tr>`).join('')}</tbody>`;
+}
+
+function openModal(id = null) {
+  editId = id;
+  const d = id ? defects.find(x => x.id === id) : null;
+  document.getElementById('modalTitle').textContent = id ? '불량 수정' : '불량 발생 등록';
+  document.getElementById('delBtn').style.display   = id ? 'block' : 'none';
+  document.getElementById('d-date').value     = d?.date     || today;
+  document.getElementById('d-line').value     = d?.line     || '1호기';
+  document.getElementById('d-product').value  = d?.product  || '';
+  document.getElementById('d-type').value     = d?.type     || DEFECT_TYPES[0];
+  document.getElementById('d-qty').value      = d?.qty      || '';
+  document.getElementById('d-severity').value = d?.severity || 'minor';
+  document.getElementById('d-process').value  = d?.process  || '외관검사';
+  document.getElementById('d-worker').value   = d?.worker   || '';
+  document.getElementById('d-cause').value    = d?.cause    || '';
+  document.getElementById('d-action').value   = d?.action   || '';
+  document.getElementById('modal').classList.add('show');
+}
+function editDefect(id) { openModal(id); }
+function closeModal() { document.getElementById('modal').classList.remove('show'); editId = null; }
+
+function saveDefect() {
+  const product = document.getElementById('d-product').value.trim();
+  if (!product) { showToast('❌ 제품명을 입력하세요.'); return; }
+  const rec = {
+    id:       editId || nextId++,
+    date:     document.getElementById('d-date').value,
+    line:     document.getElementById('d-line').value,
+    product,
+    type:     document.getElementById('d-type').value,
+    qty:      parseInt(document.getElementById('d-qty').value) || 1,
+    severity: document.getElementById('d-severity').value,
+    process:  document.getElementById('d-process').value,
+    worker:   document.getElementById('d-worker').value,
+    cause:    document.getElementById('d-cause').value,
+    action:   document.getElementById('d-action').value,
+  };
+  if (editId) {
+    const i = defects.findIndex(x => x.id === editId);
+    if (i >= 0) defects[i] = rec;
+  } else {
+    defects.push(rec);
+  }
+  save(); closeModal(); renderAll();
+  showToast(editId ? '✅ 불량 정보가 수정되었습니다.' : '✅ 불량이 등록되었습니다.');
+}
+
+function deleteDefect() {
+  if (!confirm('이 불량 기록을 삭제하시겠습니까?')) return;
+  defects = defects.filter(x => x.id !== editId);
+  save(); closeModal(); renderAll();
+  showToast('🗑 불량 기록이 삭제되었습니다.');
+}
+
+function exportCSV() {
+  const ds   = getFiltered();
+  const rows = ['날짜,라인,제품명,불량유형,수량,심각도,발견공정,원인,조치내용,담당자'];
+  ds.forEach(d => rows.push(
+    `${d.date},${d.line},${d.product},${d.type},${d.qty},${d.severity},${d.process},"${d.cause}","${d.action}",${d.worker}`
+  ));
+  const blob = new Blob(['﻿' + rows.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '불량분석.csv';
+  a.click();
+  showToast('📥 CSV 파일을 내보냈습니다.');
+}
+
+function renderAll() {
+  renderKPI();
+  renderParetoAlert();
+  renderPareto();
+  renderLine();
+  renderTrend();
+  renderHeatmap();
+  renderSeverityChart();
+  renderParetoTable();
+  renderDefectList();
+}
+
+function openReport() {
+  const from = document.getElementById('f-from').value;
+  const to   = document.getElementById('f-to').value;
+  const line = document.getElementById('f-line').value;
+  const type = document.getElementById('f-type').value;
+  const filtered = getFiltered();
+  const total = filtered.reduce((s, d) => s + d.qty, 0);
+  const critical = filtered.filter(d => d.severity === 'critical').length;
+  const byType = {};
+  filtered.forEach(d => { byType[d.type] = (byType[d.type] || 0) + d.qty; });
+  const sortedTypes = Object.entries(byType).sort((a, b) => b[1] - a[1]);
+  const top1 = sortedTypes[0] ? sortedTypes[0][0].split('(')[0] : '-';
+  const byLine = {};
+  LINES.forEach(l => { byLine[l] = 0; });
+  filtered.forEach(d => { byLine[d.line] = (byLine[d.line] || 0) + d.qty; });
+  const now = new Date().toLocaleDateString('ko-KR', {year:'numeric', month:'2-digit', day:'2-digit'});
+  const filterDesc = [line ? '라인: ' + line : '', type ? '유형: ' + type : ''].filter(Boolean).join(' | ');
+  document.getElementById('rptPage').innerHTML = `
+    <div class="rpt-company"><strong>PCB Manufacturing Co., Ltd.</strong><br>품질관리부</div>
+    <div class="rpt-doc-title"><h1>불 량 분 석 보 고 서</h1><p>조회기간: ${from} ~ ${to}${filterDesc ? ' | ' + filterDesc : ''}</p></div>
+    <table class="rpt-info-box">
+      <tr><td class="rpt-label">작성일</td><td>${now}</td><td class="rpt-label">작성부서</td><td>품질관리부</td></tr>
+      <tr><td class="rpt-label">작성자</td><td></td><td class="rpt-label">결재</td><td></td></tr>
+    </table>
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">■ 1. 불량 현황 KPI</div>
+      <div class="rpt-kpi-grid">
+        <div class="rpt-kpi-card"><div class="rk-label">총 불량 건수</div><div class="rk-val">${filtered.length}</div><div class="rk-unit">건</div></div>
+        <div class="rpt-kpi-card"><div class="rk-label">총 불량 수량</div><div class="rk-val">${total}</div><div class="rk-unit">매</div></div>
+        <div class="rpt-kpi-card"><div class="rk-label">심각(Critical)</div><div class="rk-val rpt-bad">${critical}</div><div class="rk-unit">건</div></div>
+        <div class="rpt-kpi-card"><div class="rk-label">최다 불량 유형</div><div class="rk-val" style="font-size:8pt">${top1}</div><div class="rk-unit">&nbsp;</div></div>
+      </div>
+    </div>
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">■ 2. 불량 유형별 현황 (파레토 순)</div>
+      <table class="rpt-table">
+        <thead><tr><th>순위</th><th>불량 유형</th><th>불량 수량 (매)</th><th>비율 (%)</th></tr></thead>
+        <tbody>
+          ${sortedTypes.map(([t, q], i) => `<tr><td>${i+1}</td><td style="text-align:left">${t}</td><td class="num">${q}</td><td>${total?((q/total)*100).toFixed(1):'0.0'}%</td></tr>`).join('')}
+          <tr class="rpt-total"><td colspan="2">합 계</td><td class="num">${total}</td><td>100%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">■ 3. 라인별 불량 현황</div>
+      <table class="rpt-table">
+        <thead><tr><th>라인</th><th>불량 수량 (매)</th><th>비율 (%)</th></tr></thead>
+        <tbody>
+          ${LINES.map(l => `<tr><td>${l}</td><td class="num">${byLine[l]}</td><td>${total?((byLine[l]/total)*100).toFixed(1):'0.0'}%</td></tr>`).join('')}
+          <tr class="rpt-total"><td>합 계</td><td class="num">${total}</td><td>100%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">■ 4. 최근 불량 발생 목록 (최근 10건)</div>
+      <table class="rpt-table">
+        <thead><tr><th>발생일</th><th>라인</th><th>불량유형</th><th>수량</th><th>심각도</th><th>공정</th></tr></thead>
+        <tbody>
+          ${[...filtered].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10).map(d=>`<tr>
+            <td>${d.date}</td><td>${d.line}</td><td style="text-align:left">${d.type}</td>
+            <td class="num">${d.qty}</td>
+            <td class="${d.severity==='critical'?'rpt-bad':d.severity==='major'?'rpt-warn':'rpt-good'}">${d.severity==='critical'?'심각':d.severity==='major'?'주의':'경미'}</td>
+            <td>${d.process}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <table class="rpt-sign">
+      <tr><td class="rpt-label">담당</td><td class="sign-box"></td><td class="rpt-label">팀장</td><td class="sign-box"></td><td class="rpt-label">부장</td><td class="sign-box"></td><td class="rpt-label">임원</td><td class="sign-box"></td></tr>
+    </table>
+    <div class="rpt-footer">본 보고서는 PCB Manufacturing QA 시스템에서 자동 생성되었습니다.</div>
+  `;
+  document.getElementById('rptOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeReport() {
+  document.getElementById('rptOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('rptOverlay').classList.contains('show')) { closeReport(); return; }
+  if (e.key === 'Escape' && document.getElementById('modal').classList.contains('show')) closeModal();
+});
+
+const firstDay = `${Y}-${M}-01`;
+document.getElementById('f-from').value = firstDay;
+document.getElementById('f-to').value   = today;
+renderAll();
+</script>
+</body>
+</html>

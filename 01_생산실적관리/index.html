@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<!-- 생산 실적 관리 시스템 메인 HTML -->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>생산 실적 관리 | PCB 제조</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+  <h1>📊 생산 실적 관리 <small>PCB Manufacturing</small></h1>
+  <button class="btn btn-report" onclick="openReport()">🖨 보고서 출력</button>
+  <button class="btn btn-ghost" onclick="exportCSV()">📥 Excel 저장</button>
+  <button class="btn btn-white" onclick="openModal()">+ 실적 입력</button>
+</div>
+
+<!-- 미션 3: 불량률 경보 배너 -->
+<div class="alert-banner" id="alertBanner" style="display:none;"></div>
+
+<div class="date-nav">
+  <button onclick="changeMonth(-1)">◀</button>
+  <div class="current-date" id="currentDateLabel"></div>
+  <button onclick="changeMonth(1)">▶</button>
+  <input type="date" id="singleDate" onchange="renderAll()">
+  <div class="view-btns">
+    <button class="vb active" id="vb-month" onclick="switchView('month',this)">월간</button>
+    <button class="vb" id="vb-day" onclick="switchView('day',this)">일간</button>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- KPI -->
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <!-- 미션 2: 라인별 실적 카드 -->
+  <div class="line-cards" id="lineCards"></div>
+
+  <!-- 차트 -->
+  <div class="mid-row">
+    <div class="panel">
+      <div class="panel-title">📈 일별 생산량 추이</div>
+      <canvas id="trendChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-title">🏭 라인별 양품률</div>
+      <canvas id="yieldChart"></canvas>
+    </div>
+  </div>
+
+  <!-- 이력 테이블 -->
+  <div class="panel">
+    <div class="panel-title" style="justify-content:space-between;">
+      <span>📋 생산 실적 이력</span>
+      <input type="text" id="tableSearch" placeholder="라인·제품명·작업자 검색..."
+        style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:.8rem;outline:none;width:220px;background:var(--bg);"
+        oninput="renderTable()">
+    </div>
+    <table class="data-table" id="recordTable"></table>
+  </div>
+</div>
+
+<!-- 입력 모달 -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">생산 실적 입력</h2>
+    <div class="form-row">
+      <div class="form-group"><label>날짜</label><input type="date" id="f-date"></div>
+      <div class="form-group"><label>라인</label>
+        <select id="f-line">
+          <option>1호기</option><option>2호기</option><option>3호기</option><option>4호기</option><option>5호기</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>제품명/모델</label><input id="f-product" placeholder="예) PCB-A2401"></div>
+      <div class="form-group"><label>층수</label>
+        <select id="f-layer"><option>단면</option><option>양면</option><option>4층</option><option>6층</option><option>8층</option><option>기타</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>생산 지시량 (매)</label><input type="number" id="f-planned" placeholder="1000" oninput="calcRealtime()"></div>
+      <div class="form-group"><label>생산량 (매)</label><input type="number" id="f-produced" placeholder="980" oninput="calcRealtime()"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>양품수 (매)</label><input type="number" id="f-good" placeholder="960" oninput="calcRealtime()"></div>
+      <div class="form-group"><label>불량수 (매)</label><input type="number" id="f-defect" placeholder="20" oninput="autoFillGood();calcRealtime()"></div>
+    </div>
+    <!-- 미션 1: 실시간 양품률 계산 결과 -->
+    <div class="realtime-calc" id="realtimeCalc"></div>
+    <div class="form-row">
+      <div class="form-group"><label>작업자</label><input id="f-worker" placeholder="홍길동"></div>
+      <div class="form-group"><label>비고</label><input id="f-note" placeholder="특이사항"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-red" id="delBtn" style="display:none" onclick="deleteRecord()">삭제</button>
+      <button class="btn btn-outline" onclick="closeModal()">취소</button>
+      <button class="btn btn-blue" onclick="saveRecord()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 보고서 출력 오버레이 -->
+<div class="rpt-overlay" id="rptOverlay">
+  <div class="rpt-toolbar no-print">
+    <span style="font-size:.85rem;font-weight:700;color:#fff">생산 실적 보고서 미리보기</span>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-white" onclick="window.print()">🖨 인쇄 / PDF 저장</button>
+      <button class="btn btn-ghost" onclick="closeReport()">✕ 닫기</button>
+    </div>
+  </div>
+  <div class="rpt-page" id="rptPage"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>

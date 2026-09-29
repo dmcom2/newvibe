@@ -1,0 +1,152 @@
+/* 불량 분석 리포트 스타일시트 */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--border:#d1d9e0;--border2:#c4cdd6;
+  --text:#1a202c;--sub:#4a5568;--mute:#a0aec0;
+  --blue:#2563eb;--green:#059669;--amber:#d97706;--red:#dc2626;--orange:#ea580c;
+  --rad:10px;--shadow:0 1px 3px rgba(0,0,0,.1),0 2px 8px rgba(0,0,0,.06);
+}
+body{font-family:'맑은 고딕','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── 헤더 ── */
+.header{background:linear-gradient(135deg,#7c1d1d,#dc2626 60%,#b91c1c);color:#fff;padding:0 28px;height:58px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,.2);}
+.header h1{font-size:1rem;font-weight:700;flex:1;}
+.header h1 small{font-weight:400;opacity:.7;font-size:.8rem;margin-left:8px;}
+.btn{padding:7px 16px;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
+.btn-white{background:#fff;color:var(--red);}
+.btn-white:hover{background:#fff1f1;}
+.btn-ghost{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);}
+.btn-ghost:hover{background:rgba(255,255,255,.25);}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-blue:hover{background:#1d4ed8;}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover{background:#b91c1c;}
+.btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border2);}
+.btn-outline:hover{background:var(--bg);}
+
+/* ── 미션 3: 파레토 집중 경보 배너 ── */
+.pareto-alert{background:linear-gradient(90deg,#7c1d1d,#dc2626);color:#fff;padding:10px 28px;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:10px;animation:blink-alert 2s infinite;}
+@keyframes blink-alert{0%,100%{opacity:1;}50%{opacity:.85;}}
+
+/* ── 필터 바 ── */
+.filter-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.filter-bar label{font-size:.82rem;color:var(--sub);}
+.filter-bar input[type=date],.filter-bar select{padding:6px 10px;border:1px solid var(--border2);border-radius:7px;font-family:inherit;font-size:.83rem;outline:none;background:var(--bg);color:var(--text);transition:border-color .15s;}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--red);}
+
+/* ── 레이아웃 ── */
+.layout{padding:18px 28px;display:flex;flex-direction:column;gap:14px;}
+
+/* ── KPI ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
+.kpi.k1::after{background:var(--red);}
+.kpi.k2::after{background:#b91c1c;}
+.kpi.k3::after{background:var(--amber);}
+.kpi.k4::after{background:var(--blue);}
+.kpi-l{font-size:.72rem;color:var(--mute);margin-bottom:4px;}
+.kpi-v{font-size:1.5rem;font-weight:900;}
+.kpi-sub{font-size:.72rem;color:var(--mute);margin-top:3px;}
+
+/* ── 차트 패널 ── */
+.chart-grid{display:grid;grid-template-columns:2fr 1fr;gap:14px;}
+.chart-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:16px 18px;box-shadow:var(--shadow);}
+.panel-title{font-size:.88rem;font-weight:700;margin-bottom:14px;}
+.panel canvas{max-height:240px;}
+
+/* ── 미션 1: 히트맵 ── */
+.heatmap-table{border-collapse:collapse;font-size:.75rem;min-width:100%;}
+.heatmap-table th{padding:5px 10px;background:var(--bg);font-weight:700;color:var(--sub);border:1px solid var(--border);white-space:nowrap;text-align:center;}
+.heatmap-table td{padding:5px 10px;border:1px solid var(--border);text-align:center;font-weight:600;min-width:72px;transition:opacity .2s;}
+.hm-date{text-align:left!important;font-weight:400!important;color:var(--sub);white-space:nowrap;}
+.hm-0{background:#fff;color:var(--mute);}
+.hm-total{background:var(--bg);font-weight:800;}
+
+/* ── 파레토 테이블 ── */
+.pareto-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.pareto-table th{background:var(--bg);padding:8px 10px;text-align:left;font-weight:700;color:var(--sub);border-bottom:2px solid var(--border);}
+.pareto-table td{padding:8px 10px;border-bottom:1px solid var(--border);}
+.pareto-bar{height:8px;background:#fee2e2;border-radius:4px;overflow:hidden;margin-top:4px;}
+.pareto-fill{height:100%;background:var(--red);border-radius:4px;}
+.cum-cell{font-weight:700;}
+
+/* ── 불량 목록 ── */
+.defect-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.defect-table th{background:var(--bg);padding:9px 10px;text-align:left;font-weight:700;color:var(--sub);border-bottom:2px solid var(--border);white-space:nowrap;}
+.defect-table td{padding:9px 10px;border-bottom:1px solid var(--border);}
+.defect-table tr:hover td{background:#fff5f5;}
+.sev-chip{padding:2px 8px;border-radius:5px;font-size:.72rem;font-weight:700;}
+.sev-critical{background:#fee2e2;color:#b91c1c;}
+.sev-major{background:#fef3c7;color:#b45309;}
+.sev-minor{background:#dcfce7;color:#15803d;}
+.line-badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:.72rem;font-weight:700;color:#fff;}
+.edit-btn{padding:3px 8px;border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:.75rem;background:var(--bg);font-family:inherit;transition:background .15s;}
+.edit-btn:hover{background:#fee2e2;border-color:var(--red);color:var(--red);}
+
+/* ── 모달 ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--surface);border-radius:14px;padding:24px;width:500px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.2);}
+.modal h2{font-size:.95rem;font-weight:800;margin-bottom:16px;}
+.form-group{margin-bottom:10px;}
+.form-group label{display:block;font-size:.75rem;font-weight:700;color:var(--sub);margin-bottom:3px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:7px;font-family:inherit;font-size:.85rem;outline:none;background:var(--bg);color:var(--text);}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--red);background:#fff;}
+.form-group textarea{height:70px;resize:none;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+
+/* ── 토스트 ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:#1e293b;color:#f1f5f9;padding:10px 22px;border-radius:30px;font-size:.85rem;opacity:0;transition:all .3s;pointer-events:none;z-index:500;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── 보고서 출력 버튼 ── */
+.btn-report{background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.4);}
+.btn-report:hover{background:rgba(255,255,255,.32);}
+
+/* ── 보고서 오버레이 ── */
+.rpt-overlay{display:none;position:fixed;inset:0;z-index:200;background:#6b7280;overflow-y:auto;}
+.rpt-overlay.show{display:block;}
+.rpt-toolbar{position:sticky;top:0;z-index:10;background:#374151;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+
+/* ── 보고서 페이지 ── */
+.rpt-page{width:210mm;min-height:297mm;margin:20px auto;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.25);padding:18mm 16mm 18mm 20mm;font-family:'맑은 고딕','Malgun Gothic','Segoe UI',sans-serif;font-size:9pt;color:#111;line-height:1.5;}
+.rpt-company{text-align:right;font-size:8pt;color:#555;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:14px;}
+.rpt-company strong{font-size:10pt;color:#111;}
+.rpt-doc-title{text-align:center;margin-bottom:16px;}
+.rpt-doc-title h1{font-size:16pt;font-weight:900;letter-spacing:2px;color:#111;margin-bottom:4px;}
+.rpt-doc-title p{font-size:9pt;color:#555;}
+.rpt-info-box{border:1px solid #bbb;border-collapse:collapse;width:100%;margin-bottom:16px;}
+.rpt-info-box td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;}
+.rpt-info-box .rpt-label{background:#f5f5f5;font-weight:700;width:80px;color:#333;}
+.rpt-sec{margin-bottom:14px;}
+.rpt-sec-title{font-size:10pt;font-weight:900;background:#1e3a5f;color:#fff;padding:5px 10px;margin-bottom:8px;letter-spacing:.5px;}
+.rpt-table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:4px;}
+.rpt-table th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:center;font-weight:700;border:1px solid #bbb;}
+.rpt-table td{padding:5px 8px;border:1px solid #ddd;text-align:center;vertical-align:middle;}
+.rpt-table tr:nth-child(even) td{background:#f8f9fa;}
+.rpt-table .rpt-total td{background:#e8edf5;font-weight:800;border-top:2px solid #1e3a5f;}
+.rpt-table .num{text-align:right;}
+.rpt-table .rpt-good{color:#059669;font-weight:700;}
+.rpt-table .rpt-bad{color:#dc2626;font-weight:700;}
+.rpt-table .rpt-warn{color:#d97706;font-weight:700;}
+.rpt-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.rpt-kpi-card{border:1px solid #bbb;border-top:3px solid #1e3a5f;padding:8px;text-align:center;border-radius:2px;}
+.rpt-kpi-card .rk-label{font-size:7.5pt;color:#555;margin-bottom:4px;}
+.rpt-kpi-card .rk-val{font-size:13pt;font-weight:900;color:#1e3a5f;line-height:1;}
+.rpt-kpi-card .rk-unit{font-size:7pt;color:#888;margin-top:2px;}
+.rpt-sign{width:100%;border-collapse:collapse;margin-top:16px;}
+.rpt-sign td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;text-align:center;}
+.rpt-sign .rpt-label{background:#f5f5f5;font-weight:700;width:70px;}
+.rpt-sign .sign-box{height:48px;vertical-align:bottom;padding-bottom:4px;}
+.rpt-footer{margin-top:18px;border-top:1px solid #ccc;padding-top:6px;font-size:7.5pt;color:#888;text-align:center;}
+
+/* ── 인쇄 시 ── */
+@media print{
+  .no-print,.header,.filter-bar,.layout,.rpt-toolbar{display:none!important;}
+  .rpt-overlay{display:block!important;position:static;background:none;overflow:visible;}
+  .rpt-page{width:100%;margin:0;box-shadow:none;padding:10mm 12mm;}
+  body{background:#fff;}
+}

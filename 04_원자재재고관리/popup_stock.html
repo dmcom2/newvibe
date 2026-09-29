@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<!-- 원자재 재고 관리 팝업 (CSS/JS 인라인 통합, Chart.js CDN 포함) -->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원자재 재고 관리 | PCB 제조</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--border:#d1d9e0;--border2:#c4cdd6;
+  --text:#1a202c;--sub:#4a5568;--mute:#a0aec0;
+  --blue:#2563eb;--green:#059669;--amber:#d97706;--red:#dc2626;--indigo:#4f46e5;
+  --rad:10px;--shadow:0 1px 3px rgba(0,0,0,.1),0 2px 8px rgba(0,0,0,.06);
+}
+body{font-family:'맑은 고딕','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.header{background:linear-gradient(135deg,#312e81,#4f46e5 60%,#4338ca);color:#fff;padding:0 28px;height:58px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,.2);}
+.header h1{font-size:1rem;font-weight:700;flex:1;}
+.header h1 small{font-weight:400;opacity:.7;font-size:.8rem;margin-left:8px;}
+.btn{padding:7px 16px;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
+.btn-white{background:#fff;color:var(--indigo);}.btn-white:hover{background:#f0f0ff;}
+.btn-ghost{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);}.btn-ghost:hover{background:rgba(255,255,255,.25);}
+.btn-blue{background:var(--blue);color:#fff;}.btn-blue:hover{background:#1d4ed8;}
+.btn-green{background:var(--green);color:#fff;}.btn-green:hover{background:#047857;}
+.btn-amber{background:var(--amber);color:#fff;}
+.btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border2);}.btn-outline:hover{background:var(--bg);}
+.btn-red{background:var(--red);color:#fff;}.btn-red:hover{background:#b91c1c;}
+.order-banner{background:linear-gradient(90deg,#7c2d12,#ea580c);color:#fff;padding:10px 28px;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap;animation:blink-order 2s infinite;}
+@keyframes blink-order{0%,100%{opacity:1;}50%{opacity:.88;}}
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;display:flex;gap:0;}
+.tab{padding:14px 20px;font-size:.85rem;font-weight:700;cursor:pointer;color:var(--sub);border-bottom:3px solid transparent;transition:all .15s;}
+.tab.active{color:var(--indigo);border-bottom-color:var(--indigo);}.tab:hover:not(.active){color:var(--text);}
+.layout{padding:18px 28px;display:flex;flex-direction:column;gap:14px;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:14px 16px;box-shadow:var(--shadow);border-left:4px solid transparent;}
+.kpi.k-blue{border-left-color:var(--blue);}.kpi.k-green{border-left-color:var(--green);}.kpi.k-amber{border-left-color:var(--amber);}.kpi.k-red{border-left-color:var(--red);}
+.kpi-l{font-size:.72rem;color:var(--mute);margin-bottom:4px;}.kpi-v{font-size:1.4rem;font-weight:900;}.kpi-sub{font-size:.72rem;color:var(--mute);margin-top:3px;}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.chart-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:14px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;}
+.chart-title{font-size:.85rem;font-weight:700;margin-bottom:10px;align-self:flex-start;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:16px 20px;box-shadow:var(--shadow);}
+.panel-title{font-size:.88rem;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
+.toolbar input,.toolbar select{padding:6px 10px;border:1px solid var(--border2);border-radius:7px;font-size:.82rem;font-family:inherit;outline:none;background:var(--bg);}
+.toolbar input:focus,.toolbar select:focus{border-color:var(--indigo);}
+table.main-table{width:100%;border-collapse:collapse;font-size:.83rem;}
+.main-table th{background:var(--bg);padding:9px 10px;text-align:left;font-weight:700;color:var(--sub);border-bottom:2px solid var(--border);white-space:nowrap;}
+.main-table td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.main-table tr:hover td{background:#f8fafc;}
+.stock-bar{height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin-top:4px;min-width:80px;position:relative;}
+.stock-fill{height:100%;border-radius:4px;transition:width .3s;}
+.stock-min-marker{position:absolute;top:0;bottom:0;width:2px;background:#dc262680;}
+.cat-badge{padding:2px 8px;border-radius:5px;font-size:.7rem;font-weight:700;white-space:nowrap;}
+.status-chip{padding:3px 9px;border-radius:6px;font-size:.72rem;font-weight:700;}
+.s-good{background:#dcfce7;color:#15803d;}.s-warn{background:#fef3c7;color:#b45309;}.s-low{background:#fee2e2;color:#b91c1c;}.s-over{background:#e0f2fe;color:#0369a1;}
+.action-btns{display:flex;gap:4px;}
+.action-btn{padding:3px 8px;border-radius:5px;font-size:.72rem;font-weight:700;cursor:pointer;border:1px solid;font-family:inherit;transition:background .15s;}
+.exhaust-day{font-size:.75rem;font-weight:700;}.ex-ok{color:var(--green);}.ex-warn{color:var(--amber);}.ex-urgent{color:var(--red);}
+.hist-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.hist-table th{background:var(--bg);padding:8px 10px;text-align:left;font-weight:700;color:var(--sub);border-bottom:2px solid var(--border);}
+.hist-table td{padding:8px 10px;border-bottom:1px solid var(--border);}
+.type-in{color:var(--green);font-weight:700;}.type-out{color:var(--red);font-weight:700;}
+.alert-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:var(--rad);padding:12px 16px;}
+.alert-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #fed7aa;}
+.alert-item:last-child{border-bottom:none;}
+.alert-icon{font-size:1.1rem;}.alert-name{font-size:.85rem;font-weight:700;}.alert-detail{font-size:.78rem;color:var(--sub);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--surface);border-radius:14px;padding:24px;width:460px;box-shadow:0 20px 50px rgba(0,0,0,.2);}
+.modal h2{font-size:.95rem;font-weight:800;margin-bottom:16px;}
+.form-group{margin-bottom:10px;}
+.form-group label{display:block;font-size:.75rem;font-weight:700;color:var(--sub);margin-bottom:3px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:7px;font-family:inherit;font-size:.85rem;outline:none;background:var(--bg);color:var(--text);}
+.form-group input:focus,.form-group select:focus{border-color:var(--indigo);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:#1e293b;color:#f1f5f9;padding:10px 22px;border-radius:30px;font-size:.85rem;opacity:0;transition:all .3s;pointer-events:none;z-index:500;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.btn-report{background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.4);}
+.btn-report:hover{background:rgba(255,255,255,.32);}
+.rpt-overlay{display:none;position:fixed;inset:0;z-index:200;background:#6b7280;overflow-y:auto;}
+.rpt-overlay.show{display:block;}
+.rpt-toolbar{position:sticky;top:0;z-index:10;background:#374151;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+.rpt-page{width:210mm;min-height:297mm;margin:20px auto;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.25);padding:18mm 16mm 18mm 20mm;font-family:'맑은 고딕','Malgun Gothic','Segoe UI',sans-serif;font-size:9pt;color:#111;line-height:1.5;}
+.rpt-company{text-align:right;font-size:8pt;color:#555;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:14px;}
+.rpt-company strong{font-size:10pt;color:#111;}
+.rpt-doc-title{text-align:center;margin-bottom:16px;}
+.rpt-doc-title h1{font-size:16pt;font-weight:900;letter-spacing:2px;color:#111;margin-bottom:4px;}
+.rpt-doc-title p{font-size:9pt;color:#555;}
+.rpt-info-box{border:1px solid #bbb;border-collapse:collapse;width:100%;margin-bottom:16px;}
+.rpt-info-box td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;}
+.rpt-info-box .rpt-label{background:#f5f5f5;font-weight:700;width:80px;color:#333;}
+.rpt-sec{margin-bottom:14px;}
+.rpt-sec-title{font-size:10pt;font-weight:900;background:#1e3a5f;color:#fff;padding:5px 10px;margin-bottom:8px;letter-spacing:.5px;}
+.rpt-table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:4px;}
+.rpt-table th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:center;font-weight:700;border:1px solid #bbb;}
+.rpt-table td{padding:5px 8px;border:1px solid #ddd;text-align:center;vertical-align:middle;}
+.rpt-table tr:nth-child(even) td{background:#f8f9fa;}
+.rpt-table .rpt-total td{background:#e8edf5;font-weight:800;border-top:2px solid #1e3a5f;}
+.rpt-table .num{text-align:right;}
+.rpt-table .rpt-good{color:#059669;font-weight:700;}
+.rpt-table .rpt-bad{color:#dc2626;font-weight:700;}
+.rpt-table .rpt-warn{color:#d97706;font-weight:700;}
+.rpt-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.rpt-kpi-card{border:1px solid #bbb;border-top:3px solid #1e3a5f;padding:8px;text-align:center;border-radius:2px;}
+.rpt-kpi-card .rk-label{font-size:7.5pt;color:#555;margin-bottom:4px;}
+.rpt-kpi-card .rk-val{font-size:13pt;font-weight:900;color:#1e3a5f;line-height:1;}
+.rpt-kpi-card .rk-unit{font-size:7pt;color:#888;margin-top:2px;}
+.rpt-sign{width:100%;border-collapse:collapse;margin-top:16px;}
+.rpt-sign td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;text-align:center;}
+.rpt-sign .rpt-label{background:#f5f5f5;font-weight:700;width:70px;}
+.rpt-sign .sign-box{height:48px;vertical-align:bottom;padding-bottom:4px;}
+.rpt-footer{margin-top:18px;border-top:1px solid #ccc;padding-top:6px;font-size:7.5pt;color:#888;text-align:center;}
+@media print{.no-print,.header,.tabs,.layout,.rpt-toolbar{display:none!important;}.rpt-overlay{display:block!important;position:static;background:none;overflow:visible;}.rpt-page{width:100%;margin:0;box-shadow:none;padding:10mm 12mm;}body{background:#fff;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📦 원자재 재고 관리 <small>PCB Manufacturing</small></h1>
+  <button class="btn btn-report" onclick="openReport()">🖨 보고서 출력</button>
+  <button class="btn btn-ghost" onclick="exportCSV()">📥 Excel 저장</button>
+  <button class="btn btn-white" onclick="openTxModal()">+ 입출고 등록</button>
+  <button class="btn btn-white" onclick="openItemModal()">+ 자재 등록</button>
+</div>
+
+<div class="order-banner" id="orderBanner" style="display:none;"></div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('stock',this)">현재 재고</div>
+  <div class="tab" onclick="switchTab('history',this)">입출고 이력</div>
+  <div class="tab" onclick="switchTab('alert',this)">재고 알림 <span id="alertBadge" style="background:var(--red);color:#fff;border-radius:10px;padding:1px 7px;font-size:.7rem;margin-left:4px;display:none;"></span></div>
+</div>
+
+<div class="layout">
+  <div class="kpi-row" id="kpiRow"></div>
+  <div class="chart-row" id="chartRow">
+    <div class="chart-panel">
+      <div class="chart-title">📊 카테고리별 재고 현황</div>
+      <div style="position:relative;height:180px;width:100%"><canvas id="catChart"></canvas></div>
+    </div>
+    <div class="chart-panel">
+      <div class="chart-title">⚠️ 재고 상태 분포</div>
+      <div style="position:relative;height:180px;width:100%"><canvas id="statusChart"></canvas></div>
+    </div>
+  </div>
+  <div id="tab-stock" class="panel">
+    <div class="toolbar">
+      <input type="text" id="stockSearch" placeholder="자재명·코드 검색..." oninput="renderStock()" style="width:200px">
+      <select id="catFilter" onchange="renderStock()">
+        <option value="">전체 카테고리</option>
+        <option>동박적층판(CCL)</option><option>드릴비트</option><option>솔더마스크</option>
+        <option>도금약품</option><option>에칭약품</option><option>필름</option><option>기타</option>
+      </select>
+      <select id="statusFilter" onchange="renderStock()">
+        <option value="">전체 상태</option>
+        <option value="low">부족</option><option value="warn">주의</option>
+        <option value="good">정상</option><option value="over">과잉</option>
+      </select>
+      <span style="margin-left:auto;font-size:.78rem;color:var(--mute)">총 <strong id="stockCount">-</strong>개 품목</span>
+    </div>
+    <table class="main-table" id="stockTable"></table>
+  </div>
+  <div id="tab-history" class="panel" style="display:none">
+    <div class="toolbar">
+      <input type="date" id="histFrom"> ~ <input type="date" id="histTo">
+      <select id="txTypeFilter" onchange="renderHistory()">
+        <option value="">전체</option><option value="in">입고</option><option value="out">출고</option>
+      </select>
+      <button class="btn btn-blue" onclick="renderHistory()" style="padding:6px 14px">조회</button>
+    </div>
+    <table class="hist-table" id="histTable"></table>
+  </div>
+  <div id="tab-alert" style="display:none;flex-direction:column;gap:10px;">
+    <div class="alert-box" id="alertList"></div>
+  </div>
+</div>
+
+<!-- 입출고 모달 -->
+<div class="modal-overlay" id="txModal">
+  <div class="modal">
+    <h2 id="txModalTitle">입출고 등록</h2>
+    <div class="form-row">
+      <div class="form-group"><label>날짜</label><input type="date" id="t-date"></div>
+      <div class="form-group"><label>구분</label><select id="t-type"><option value="in">입고</option><option value="out">출고</option></select></div>
+    </div>
+    <div class="form-group"><label>자재 선택</label><select id="t-item" onchange="updateTxUnit()"></select></div>
+    <div class="form-row">
+      <div class="form-group"><label>수량</label><input type="number" id="t-qty" placeholder="100"></div>
+      <div class="form-group"><label>단위</label><input id="t-unit" placeholder="매/kg/L/개" readonly></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>거래처/용도</label><input id="t-vendor" placeholder="(주)재료공급사"></div>
+      <div class="form-group"><label>담당자</label><input id="t-worker" placeholder="홍길동"></div>
+    </div>
+    <div class="form-group"><label>비고</label><input id="t-note" placeholder="로트번호, 주문번호 등"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeTxModal()">취소</button>
+      <button class="btn btn-blue" onclick="saveTx()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 자재 등록 모달 -->
+<div class="modal-overlay" id="itemModal">
+  <div class="modal">
+    <h2 id="itemModalTitle">자재 등록</h2>
+    <div class="form-row">
+      <div class="form-group"><label>자재 코드</label><input id="i-code" placeholder="MAT-001"></div>
+      <div class="form-group"><label>카테고리</label>
+        <select id="i-cat">
+          <option>동박적층판(CCL)</option><option>드릴비트</option><option>솔더마스크</option>
+          <option>도금약품</option><option>에칭약품</option><option>필름</option><option>기타</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>자재명</label><input id="i-name" placeholder="FR-4 1.6T 양면 CCL"></div>
+    <div class="form-row">
+      <div class="form-group"><label>단위</label><input id="i-unit" placeholder="매"></div>
+      <div class="form-group"><label>현재 재고</label><input type="number" id="i-stock" placeholder="500"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>최소 재고</label><input type="number" id="i-min" placeholder="200"></div>
+      <div class="form-group"><label>최대 재고</label><input type="number" id="i-max" placeholder="2000"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>주거래처</label><input id="i-vendor" placeholder="(주)재료공급사"></div>
+      <div class="form-group"><label>발주 리드타임 (일)</label><input type="number" id="i-lead" placeholder="7"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-red" id="itemDelBtn" style="display:none" onclick="deleteItem()">삭제</button>
+      <button class="btn btn-outline" onclick="closeItemModal()">취소</button>
+      <button class="btn btn-blue" onclick="saveItem()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="rpt-overlay" id="rptOverlay">
+  <div class="rpt-toolbar no-print">
+    <span style="font-size:.85rem;font-weight:700;color:#fff">원자재 재고 보고서 미리보기</span>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-white" onclick="window.print()">🖨 인쇄 / PDF 저장</button>
+      <button class="btn btn-ghost" onclick="closeReport()">✕ 닫기</button>
+    </div>
+  </div>
+  <div class="rpt-page" id="rptPage"></div>
+</div>
+<script>
+const CAT_COLORS = {
+  '동박적층판(CCL)':'#2563eb','드릴비트':'#059669','솔더마스크':'#d97706',
+  '도금약품':'#dc2626','에칭약품':'#7c3aed','필름':'#0891b2','기타':'#6b7280'
+};
+const SAMPLE_ITEMS = [
+  {id:'MAT001',code:'MAT-001',cat:'동박적층판(CCL)',name:'FR-4 1.6T 양면 CCL',unit:'매',stock:850,min:300,max:2000,vendor:'(주)CCL재료',lead:7,dailyUse:35},
+  {id:'MAT002',code:'MAT-002',cat:'동박적층판(CCL)',name:'FR-4 1.6T 4층 CCL',unit:'매',stock:420,min:200,max:1500,vendor:'(주)CCL재료',lead:7,dailyUse:22},
+  {id:'MAT003',code:'MAT-003',cat:'드릴비트',name:'드릴비트 Φ0.3mm',unit:'개',stock:180,min:200,max:800,vendor:'드릴코리아',lead:3,dailyUse:25},
+  {id:'MAT004',code:'MAT-004',cat:'드릴비트',name:'드릴비트 Φ0.5mm',unit:'개',stock:95,min:200,max:600,vendor:'드릴코리아',lead:3,dailyUse:18},
+  {id:'MAT005',code:'MAT-005',cat:'솔더마스크',name:'그린 솔더마스크 잉크',unit:'kg',stock:45,min:30,max:150,vendor:'잉크솔루션',lead:5,dailyUse:3.5},
+  {id:'MAT006',code:'MAT-006',cat:'도금약품',name:'황산구리 1급',unit:'kg',stock:380,min:100,max:1000,vendor:'화학약품(주)',lead:10,dailyUse:28},
+  {id:'MAT007',code:'MAT-007',cat:'도금약품',name:'황산 98%',unit:'L',stock:220,min:80,max:600,vendor:'화학약품(주)',lead:10,dailyUse:12},
+  {id:'MAT008',code:'MAT-008',cat:'에칭약품',name:'염화구리 에칭액',unit:'L',stock:60,min:100,max:500,vendor:'에칭케미칼',lead:7,dailyUse:8},
+  {id:'MAT009',code:'MAT-009',cat:'필름',name:'드라이 필름 포토레지스트',unit:'롤',stock:12,min:5,max:40,vendor:'필름코리아',lead:14,dailyUse:0.8},
+  {id:'MAT010',code:'MAT-010',cat:'기타',name:'구리박 전해동박 18μm',unit:'롤',stock:28,min:10,max:80,vendor:'동박전문',lead:21,dailyUse:1.5},
+];
+const SAMPLE_TXNS = [
+  {id:'TX001',date:'2026-08-01',type:'in',itemId:'MAT001',qty:500,vendor:'(주)CCL재료',worker:'김재고',note:'PO-2026-071'},
+  {id:'TX002',date:'2026-08-02',type:'out',itemId:'MAT001',qty:70,vendor:'1호기 생산라인',worker:'이생산',note:'WO-2026-201'},
+  {id:'TX003',date:'2026-08-03',type:'out',itemId:'MAT003',qty:50,vendor:'드릴링 라인',worker:'이생산',note:''},
+  {id:'TX004',date:'2026-08-04',type:'in',itemId:'MAT006',qty:200,vendor:'화학약품(주)',worker:'박자재',note:'로트B-22'},
+  {id:'TX005',date:'2026-08-05',type:'out',itemId:'MAT008',qty:16,vendor:'에칭라인',worker:'이생산',note:''},
+];
+let items=[],txns=[],catChart,statusChart,activeTab='stock',editItemId=null;
+function getItems(){try{return JSON.parse(localStorage.getItem('stock_items'))||SAMPLE_ITEMS;}catch{return SAMPLE_ITEMS;}}
+function getTxns(){try{return JSON.parse(localStorage.getItem('stock_txns'))||SAMPLE_TXNS;}catch{return SAMPLE_TXNS;}}
+function saveItems(){localStorage.setItem('stock_items',JSON.stringify(items));}
+function saveTxns(){localStorage.setItem('stock_txns',JSON.stringify(txns));}
+let toastTimer;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2800);}
+function calcStatus(item){
+  if(item.stock<=0||item.stock<item.min)return{key:'low',label:'부족',cls:'s-low'};
+  if(item.stock<item.min*1.3)return{key:'warn',label:'주의',cls:'s-warn'};
+  if(item.stock>item.max)return{key:'over',label:'과잉',cls:'s-over'};
+  return{key:'good',label:'정상',cls:'s-good'};
+}
+function calcExhaustDay(itemId){
+  const item=items.find(i=>i.id===itemId);
+  if(!item||!item.dailyUse||item.dailyUse<=0)return{text:'계산불가',cls:'ex-ok'};
+  const days=Math.floor(item.stock/item.dailyUse);
+  if(days<=3)return{text:`D-${days}`,cls:'ex-urgent'};
+  if(days<=7)return{text:`${days}일`,cls:'ex-warn'};
+  return{text:`${days}일`,cls:'ex-ok'};
+}
+function renderOrderBanner(){
+  const urgentItems=items.filter(i=>i.stock<i.min);
+  const el=document.getElementById('orderBanner');
+  if(!urgentItems.length){el.style.display='none';return;}
+  el.style.display='flex';
+  el.innerHTML=`🚨 <strong>긴급 발주 필요 ${urgentItems.length}건</strong> &nbsp;|&nbsp;
+    ${urgentItems.slice(0,3).map(i=>`<span style="background:rgba(255,255,255,.2);border-radius:4px;padding:2px 8px">${i.name} (${i.stock}${i.unit} / 최소 ${i.min}${i.unit})</span>`).join(' ')}
+    ${urgentItems.length>3?`<span>외 ${urgentItems.length-3}건</span>`:''}`;
+}
+function renderCharts(){
+  const byCat={};
+  items.forEach(item=>{byCat[item.cat]=(byCat[item.cat]||0)+item.stock;});
+  const catLabels=Object.keys(byCat);
+  const catData=catLabels.map(k=>byCat[k]);
+  const catColors=catLabels.map(k=>CAT_COLORS[k]||'#aaa');
+  if(catChart)catChart.destroy();
+  catChart=new Chart(document.getElementById('catChart'),{
+    type:'doughnut',
+    data:{labels:catLabels,datasets:[{data:catData,backgroundColor:catColors,borderWidth:2}]},
+    options:{plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:12}}},maintainAspectRatio:false}
+  });
+  const statusCount={정상:0,주의:0,부족:0,과잉:0};
+  items.forEach(item=>{
+    const s=calcStatus(item);
+    if(s.key==='good')statusCount['정상']++;
+    else if(s.key==='warn')statusCount['주의']++;
+    else if(s.key==='low')statusCount['부족']++;
+    else statusCount['과잉']++;
+  });
+  if(statusChart)statusChart.destroy();
+  statusChart=new Chart(document.getElementById('statusChart'),{
+    type:'doughnut',
+    data:{labels:Object.keys(statusCount),datasets:[{data:Object.values(statusCount),backgroundColor:['#059669','#d97706','#dc2626','#0891b2'],borderWidth:2}]},
+    options:{plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:12}}},maintainAspectRatio:false}
+  });
+}
+function renderKPI(){
+  const total=items.length,low=items.filter(i=>i.stock<i.min).length,warn=items.filter(i=>calcStatus(i).key==='warn').length,good=items.filter(i=>calcStatus(i).key==='good').length;
+  document.getElementById('kpiRow').innerHTML=`
+    <div class="kpi k-blue"><div class="kpi-l">총 품목 수</div><div class="kpi-v">${total}</div><div class="kpi-sub">등록 자재</div></div>
+    <div class="kpi k-green"><div class="kpi-l">정상 재고</div><div class="kpi-v">${good}</div><div class="kpi-sub">품목</div></div>
+    <div class="kpi k-amber"><div class="kpi-l">주의 재고</div><div class="kpi-v">${warn}</div><div class="kpi-sub">발주 검토 필요</div></div>
+    <div class="kpi k-red"><div class="kpi-l">긴급 발주</div><div class="kpi-v" style="color:var(--red)">${low}</div><div class="kpi-sub">즉시 발주 필요</div></div>`;
+}
+function renderStock(){
+  const search=document.getElementById('stockSearch').value.toLowerCase();
+  const cat=document.getElementById('catFilter').value;
+  const statusF=document.getElementById('statusFilter').value;
+  let filtered=items.filter(i=>{
+    const matchText=!search||i.name.toLowerCase().includes(search)||i.code.toLowerCase().includes(search);
+    const matchCat=!cat||i.cat===cat;
+    const matchStatus=!statusF||calcStatus(i).key===statusF;
+    return matchText&&matchCat&&matchStatus;
+  });
+  document.getElementById('stockCount').textContent=filtered.length;
+  const pct=item=>item.max?Math.min(item.stock/item.max*100,100):0;
+  const fillColor=item=>{const s=calcStatus(item);return s.key==='low'?'var(--red)':s.key==='warn'?'var(--amber)':s.key==='over'?'var(--blue)':'var(--green)';};
+  const minPct=item=>item.max?Math.min(item.min/item.max*100,100):0;
+  const catColor=cat=>CAT_COLORS[cat]||'#aaa';
+  const ex=item=>calcExhaustDay(item.id);
+  document.getElementById('stockTable').innerHTML=`
+    <thead><tr><th>코드</th><th>자재명</th><th>카테고리</th><th>재고</th><th>재고 현황</th><th>상태</th><th>소진예상일</th><th>거래처</th><th>조작</th></tr></thead>
+    <tbody>${filtered.map(item=>{
+      const s=calcStatus(item);const e=ex(item);
+      return`<tr>
+        <td style="font-family:monospace;font-size:.78rem">${item.code}</td>
+        <td style="font-weight:700">${item.name}</td>
+        <td><span class="cat-badge" style="background:${catColor(item.cat)}22;color:${catColor(item.cat)}">${item.cat}</span></td>
+        <td style="font-weight:700">${item.stock.toLocaleString()} ${item.unit}</td>
+        <td style="min-width:100px">
+          <div class="stock-bar"><div class="stock-fill" style="width:${pct(item)}%;background:${fillColor(item)}"></div><div class="stock-min-marker" style="left:${minPct(item)}%"></div></div>
+          <div style="font-size:.65rem;color:var(--mute);margin-top:2px">최소 ${item.min} / 최대 ${item.max}</div>
+        </td>
+        <td><span class="status-chip ${s.cls}">${s.label}</span></td>
+        <td><span class="exhaust-day ${e.cls}">${e.text}</span></td>
+        <td style="font-size:.78rem">${item.vendor}</td>
+        <td><div class="action-btns">
+          <button class="action-btn" style="color:var(--indigo);border-color:var(--indigo)" onclick="openItemModal('${item.id}')">수정</button>
+          <button class="action-btn" style="color:var(--green);border-color:var(--green)" onclick="quickIn('${item.id}')">입고+</button>
+        </div></td>
+      </tr>`;
+    }).join('')}</tbody>`;
+}
+function renderHistory(){
+  const from=document.getElementById('histFrom').value,to=document.getElementById('histTo').value,typeF=document.getElementById('txTypeFilter').value;
+  let filtered=txns.filter(t=>{
+    const matchDate=(!from||t.date>=from)&&(!to||t.date<=to);
+    return matchDate&&(!typeF||t.type===typeF);
+  }).sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('histTable').innerHTML=`
+    <thead><tr><th>날짜</th><th>구분</th><th>자재명</th><th>수량</th><th>거래처/용도</th><th>담당자</th><th>비고</th></tr></thead>
+    <tbody>${filtered.map(t=>{const item=items.find(i=>i.id===t.itemId);return`<tr>
+      <td>${t.date}</td>
+      <td><span class="${t.type==='in'?'type-in':'type-out'}">${t.type==='in'?'▲ 입고':'▼ 출고'}</span></td>
+      <td>${item?item.name:t.itemId}</td>
+      <td style="font-weight:700">${t.qty.toLocaleString()} ${item?item.unit:''}</td>
+      <td>${t.vendor}</td><td>${t.worker}</td><td style="color:var(--mute)">${t.note}</td>
+    </tr>`;}).join('')}</tbody>`;
+}
+function renderAlerts(){
+  const lowItems=items.filter(i=>calcStatus(i).key!=='good');
+  document.getElementById('alertBadge').textContent=lowItems.length;
+  document.getElementById('alertBadge').style.display=lowItems.length?'':'none';
+  const iconMap={low:'🔴',warn:'🟡',over:'🔵'};
+  document.getElementById('alertList').innerHTML=lowItems.length
+    ?lowItems.map(i=>{const s=calcStatus(i);const e=calcExhaustDay(i.id);return`<div class="alert-item">
+      <span class="alert-icon">${iconMap[s.key]||'⚪'}</span>
+      <div><div class="alert-name">${i.name} <span class="status-chip ${s.cls}" style="font-size:.68rem">${s.label}</span></div>
+      <div class="alert-detail">현재 ${i.stock}${i.unit} / 최소 ${i.min}${i.unit} | 소진예상 ${e.text} | 리드타임 ${i.lead}일</div></div>
+    </div>`;}).join('')
+    :'<div style="color:var(--mute);font-size:.85rem;text-align:center;padding:20px">모든 재고가 정상입니다.</div>';
+}
+function switchTab(tab,el){
+  activeTab=tab;
+  ['stock','history','alert'].forEach(t=>{const e=document.getElementById(`tab-${t}`);if(e)e.style.display=t===tab?(t==='alert'?'flex':'block'):'none';});
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if(tab==='history')renderHistory();
+  if(tab==='alert')renderAlerts();
+}
+function openTxModal(){
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('t-date').value=today;
+  const sel=document.getElementById('t-item');
+  sel.innerHTML=items.map(i=>`<option value="${i.id}">${i.name} (${i.stock}${i.unit})</option>`).join('');
+  updateTxUnit();
+  document.getElementById('txModal').classList.add('show');
+}
+function closeTxModal(){document.getElementById('txModal').classList.remove('show');}
+function updateTxUnit(){const itemId=document.getElementById('t-item').value;const item=items.find(i=>i.id===itemId);document.getElementById('t-unit').value=item?item.unit:'';}
+function saveTx(){
+  const itemId=document.getElementById('t-item').value,type=document.getElementById('t-type').value,qty=parseFloat(document.getElementById('t-qty').value);
+  if(!qty||qty<=0){showToast('수량을 입력해 주세요.');return;}
+  const item=items.find(i=>i.id===itemId);if(!item)return;
+  if(type==='out'&&item.stock<qty){showToast('재고 부족으로 출고할 수 없습니다.');return;}
+  const tx={id:'TX'+Date.now(),date:document.getElementById('t-date').value,type,itemId,qty,vendor:document.getElementById('t-vendor').value,worker:document.getElementById('t-worker').value,note:document.getElementById('t-note').value};
+  if(type==='in')item.stock+=qty;else item.stock-=qty;
+  txns.push(tx);saveItems();saveTxns();closeTxModal();renderAll();
+  showToast(`${type==='in'?'입고':'출고'} 등록 완료 (${qty}${item.unit})`);
+}
+function quickIn(itemId){
+  const item=items.find(i=>i.id===itemId);if(!item)return;
+  const qty=parseFloat(prompt(`${item.name} 입고 수량 입력 (단위: ${item.unit})`));
+  if(!qty||qty<=0)return;
+  item.stock+=qty;
+  txns.push({id:'TX'+Date.now(),date:new Date().toISOString().split('T')[0],type:'in',itemId,qty,vendor:'',worker:'',note:'빠른 입고'});
+  saveItems();saveTxns();renderAll();showToast(`빠른 입고 처리: ${qty}${item.unit}`);
+}
+function openItemModal(itemId){
+  editItemId=itemId||null;
+  const el=document.getElementById('itemModal'),delBtn=document.getElementById('itemDelBtn');
+  if(itemId){
+    const item=items.find(i=>i.id===itemId);
+    document.getElementById('itemModalTitle').textContent='자재 수정';
+    document.getElementById('i-code').value=item.code;document.getElementById('i-cat').value=item.cat;
+    document.getElementById('i-name').value=item.name;document.getElementById('i-unit').value=item.unit;
+    document.getElementById('i-stock').value=item.stock;document.getElementById('i-min').value=item.min;
+    document.getElementById('i-max').value=item.max;document.getElementById('i-vendor').value=item.vendor;
+    document.getElementById('i-lead').value=item.lead;delBtn.style.display='';
+  }else{
+    document.getElementById('itemModalTitle').textContent='자재 등록';
+    ['i-code','i-name','i-unit','i-stock','i-min','i-max','i-vendor','i-lead'].forEach(id=>document.getElementById(id).value='');
+    delBtn.style.display='none';
+  }
+  el.classList.add('show');
+}
+function closeItemModal(){document.getElementById('itemModal').classList.remove('show');}
+function saveItem(){
+  const name=document.getElementById('i-name').value.trim();
+  if(!name){showToast('자재명을 입력해 주세요.');return;}
+  const data={code:document.getElementById('i-code').value,cat:document.getElementById('i-cat').value,name,unit:document.getElementById('i-unit').value||'개',stock:parseFloat(document.getElementById('i-stock').value)||0,min:parseFloat(document.getElementById('i-min').value)||0,max:parseFloat(document.getElementById('i-max').value)||9999,vendor:document.getElementById('i-vendor').value,lead:parseInt(document.getElementById('i-lead').value)||7,dailyUse:10};
+  if(editItemId){const idx=items.findIndex(i=>i.id===editItemId);items[idx]={...items[idx],...data};showToast('자재 정보가 수정되었습니다.');}
+  else{data.id='MAT'+Date.now();items.push(data);showToast('자재가 등록되었습니다.');}
+  saveItems();closeItemModal();renderAll();
+}
+function deleteItem(){
+  if(!confirm('자재를 삭제하시겠습니까?'))return;
+  items=items.filter(i=>i.id!==editItemId);
+  saveItems();closeItemModal();renderAll();showToast('자재가 삭제되었습니다.');
+}
+function exportCSV(){
+  let csv='코드,자재명,카테고리,재고,단위,최소재고,최대재고,상태,거래처\n';
+  items.forEach(i=>{const s=calcStatus(i);csv+=`"${i.code}","${i.name}","${i.cat}",${i.stock},"${i.unit}",${i.min},${i.max},"${s.label}","${i.vendor}"\n`;});
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`재고현황_${new Date().toISOString().split('T')[0]}.csv`;a.click();
+  showToast('Excel 파일이 저장되었습니다.');
+}
+function renderAll(){renderOrderBanner();renderKPI();renderCharts();renderStock();renderAlerts();}
+function init(){
+  items=getItems();txns=getTxns();
+  const today=new Date().toISOString().split('T')[0];
+  const weekAgo=new Date(Date.now()-7*86400000).toISOString().split('T')[0];
+  document.getElementById('histFrom').value=weekAgo;document.getElementById('histTo').value=today;
+  renderAll();
+}
+function openReport() {
+  const lowItems  = items.filter(i => calcStatus(i).key==='low');
+  const warnItems = items.filter(i => calcStatus(i).key==='warn');
+  const goodItems = items.filter(i => calcStatus(i).key==='good');
+  const now = new Date().toLocaleDateString('ko-KR', {year:'numeric', month:'2-digit', day:'2-digit'});
+  document.getElementById('rptPage').innerHTML = `
+    <div class="rpt-company"><strong>PCB Manufacturing Co., Ltd.</strong><br>자재관리부</div>
+    <div class="rpt-doc-title"><h1>원 자 재 재 고 보 고 서</h1><p>작성일: ${now}</p></div>
+    <table class="rpt-info-box">
+      <tr><td class="rpt-label">작성일</td><td>${now}</td><td class="rpt-label">작성부서</td><td>자재관리부</td></tr>
+      <tr><td class="rpt-label">작성자</td><td></td><td class="rpt-label">결재</td><td></td></tr>
+    </table>
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">■ 1. 재고 현황 KPI</div>
+      <div class="rpt-kpi-grid">
+        <div class="rpt-kpi-card"><div class="rk-label">전체 품목</div><div class="rk-val">${items.length}</div><div class="rk-unit">품목</div></div>
+        <div class="rpt-kpi-card"><div class="rk-label">부족 (긴급 발주)</div><div class="rk-val rpt-bad">${lowItems.length}</div><div class="rk-unit">품목</div></div>
+        <div class="rpt-kpi-card"><div class="rk-label">주의</div><div class="rk-val rpt-warn">${warnItems.length}</div><div class="rk-unit">품목</div></div>
+        <div class="rpt-kpi-card"><div class="rk-label">정상</div><div class="rk-val rpt-good">${goodItems.length}</div><div class="rk-unit">품목</div></div>
+      </div>
+    </div>
+    ${lowItems.length?`
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">■ 2. 긴급 발주 필요 품목</div>
+      <table class="rpt-table">
+        <thead><tr><th>자재코드</th><th>카테고리</th><th>자재명</th><th>현재고</th><th>최소재고</th><th>단위</th><th>주거래처</th><th>리드타임</th></tr></thead>
+        <tbody>${lowItems.map(i=>`<tr><td>${i.code}</td><td>${i.cat}</td><td style="text-align:left">${i.name}</td><td class="num rpt-bad">${i.stock.toLocaleString()}</td><td class="num">${i.min.toLocaleString()}</td><td>${i.unit}</td><td>${i.vendor}</td><td>${i.lead}일</td></tr>`).join('')}</tbody>
+      </table>
+    </div>`:''}
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">■ ${lowItems.length?'3':'2'}. 전체 재고 현황</div>
+      <table class="rpt-table">
+        <thead><tr><th>자재코드</th><th>카테고리</th><th>자재명</th><th>현재고</th><th>최소</th><th>최대</th><th>단위</th><th>상태</th><th>소진예상</th></tr></thead>
+        <tbody>${items.map(i=>{const s=calcStatus(i);const ex=calcExhaustDay(i.id);return`<tr><td>${i.code}</td><td>${i.cat}</td><td style="text-align:left">${i.name}</td><td class="num">${i.stock.toLocaleString()}</td><td class="num">${i.min.toLocaleString()}</td><td class="num">${i.max.toLocaleString()}</td><td>${i.unit}</td><td class="${s.key==='low'?'rpt-bad':s.key==='warn'?'rpt-warn':s.key==='good'?'rpt-good':''}">${s.label}</td><td class="${ex.cls==='ex-urgent'?'rpt-bad':ex.cls==='ex-warn'?'rpt-warn':''}">${ex.text}</td></tr>`;}).join('')}</tbody>
+      </table>
+    </div>
+    <table class="rpt-sign">
+      <tr><td class="rpt-label">담당</td><td class="sign-box"></td><td class="rpt-label">팀장</td><td class="sign-box"></td><td class="rpt-label">부장</td><td class="sign-box"></td><td class="rpt-label">임원</td><td class="sign-box"></td></tr>
+    </table>
+    <div class="rpt-footer">본 보고서는 PCB Manufacturing 자재관리 시스템에서 자동 생성되었습니다.</div>
+  `;
+  document.getElementById('rptOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeReport() {
+  document.getElementById('rptOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape' && document.getElementById('rptOverlay').classList.contains('show')) closeReport();
+});
+
+init();
+</script>
+</body>
+</html>

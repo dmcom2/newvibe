@@ -1,0 +1,173 @@
+/* 생산 실적 관리 시스템 스타일시트 */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--border:#d1d9e0;--border2:#c4cdd6;
+  --text:#1a202c;--sub:#4a5568;--mute:#a0aec0;
+  --blue:#2563eb;--green:#059669;--amber:#d97706;--red:#dc2626;--purple:#7c3aed;
+  --rad:10px;--shadow:0 1px 3px rgba(0,0,0,.1),0 2px 8px rgba(0,0,0,.06);
+}
+body{font-family:'맑은 고딕','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── 헤더 ── */
+.header{background:linear-gradient(135deg,#1e3a5f,#2563eb 60%,#1d4ed8);color:#fff;padding:0 28px;height:58px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 10px rgba(0,0,0,.2);}
+.header h1{font-size:1rem;font-weight:700;flex:1;}
+.header h1 small{font-weight:400;opacity:.7;font-size:.8rem;margin-left:8px;}
+.btn{padding:7px 16px;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
+.btn-white{background:#fff;color:var(--blue);}
+.btn-white:hover{background:#f0f4ff;}
+.btn-ghost{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);}
+.btn-ghost:hover{background:rgba(255,255,255,.25);}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border2);}
+.btn-red{background:var(--red);color:#fff;}
+
+/* ── 미션 3: 불량률 경보 배너 ── */
+.alert-banner{background:linear-gradient(90deg,#dc2626,#b91c1c);color:#fff;padding:10px 28px;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:10px;animation:blink-bg 2s infinite;}
+@keyframes blink-bg{0%,100%{opacity:1;}50%{opacity:.85;}}
+
+/* ── 날짜 네비 ── */
+.date-nav{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:12px;}
+.date-nav > button{padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-family:inherit;font-size:.85rem;transition:background .15s;}
+.date-nav > button:hover{background:var(--bg);}
+.current-date{font-size:.95rem;font-weight:700;min-width:110px;text-align:center;}
+.date-nav input[type=date]{padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:.85rem;outline:none;background:var(--bg);}
+.date-nav input[type=date]:focus{border-color:var(--blue);}
+.view-btns{display:flex;gap:4px;margin-left:auto;}
+.vb{padding:5px 14px;border-radius:7px;border:1px solid var(--border);background:var(--surface);font-size:.8rem;cursor:pointer;font-family:inherit;color:var(--sub);transition:all .15s;}
+.vb.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+/* ── 레이아웃 ── */
+.layout{padding:18px 28px;display:flex;flex-direction:column;gap:14px;}
+
+/* ── KPI 카드 ── */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
+.kpi.k1::after{background:var(--blue);}
+.kpi.k2::after{background:var(--green);}
+.kpi.k3::after{background:var(--red);}
+.kpi.k4::after{background:var(--amber);}
+.kpi.k5::after{background:var(--purple);}
+.kpi-l{font-size:.72rem;color:var(--mute);margin-bottom:4px;}
+.kpi-v{font-size:1.5rem;font-weight:900;}
+.kpi.k1 .kpi-v{color:var(--blue);}
+.kpi.k2 .kpi-v{color:var(--green);}
+.kpi.k3 .kpi-v{color:var(--red);}
+.kpi.k4 .kpi-v{color:var(--amber);}
+.kpi.k5 .kpi-v{color:var(--purple);}
+.kpi-sub{font-size:.72rem;color:var(--mute);margin-top:3px;}
+
+/* ── 미션 2: 라인별 실적 카드 ── */
+.line-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
+.lc{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:13px 15px;box-shadow:var(--shadow);border-top-width:3px;}
+.lc-name{font-size:.82rem;font-weight:800;margin-bottom:8px;}
+.lc-main{font-size:1.3rem;font-weight:900;margin-bottom:4px;}
+.lc-unit{font-size:.7rem;color:var(--mute);margin-bottom:8px;}
+.lc-pills{display:flex;gap:5px;flex-wrap:wrap;}
+.lc-pill{padding:2px 8px;border-radius:5px;font-size:.68rem;font-weight:700;}
+.lc-pill.good{background:#dcfce7;color:#15803d;}
+.lc-pill.warn{background:#fef3c7;color:#b45309;}
+.lc-pill.bad{background:#fee2e2;color:#b91c1c;}
+
+/* ── 차트 패널 ── */
+.mid-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:16px 18px;box-shadow:var(--shadow);}
+.panel-title{font-size:.88rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+.panel canvas{max-height:220px;}
+
+/* ── 이력 테이블 ── */
+.data-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.data-table th{background:var(--bg);padding:9px 10px;text-align:left;font-weight:700;color:var(--sub);border-bottom:2px solid var(--border);white-space:nowrap;}
+.data-table td{padding:9px 10px;border-bottom:1px solid var(--border);}
+.data-table tr:hover td{background:#f8fafc;}
+.data-table tr.row-alert td{background:#fff5f5;}
+.data-table tr.row-alert:hover td{background:#fee2e2;}
+.line-badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:.72rem;font-weight:700;color:#fff;}
+.status-chip{padding:2px 8px;border-radius:5px;font-size:.72rem;font-weight:700;}
+.chip-good{background:#dcfce7;color:#15803d;}
+.chip-warn{background:#fef3c7;color:#b45309;}
+.chip-bad{background:#fee2e2;color:#b91c1c;}
+.edit-btn{padding:3px 8px;border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:.75rem;background:var(--bg);font-family:inherit;transition:background .15s;}
+.edit-btn:hover{background:#dbeafe;border-color:var(--blue);color:var(--blue);}
+
+/* ── 미션 1: 실시간 양품률 계산 영역 ── */
+.realtime-calc{display:flex;gap:20px;align-items:center;padding:10px 14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;margin:6px 0 10px;font-size:.83rem;min-height:36px;}
+.realtime-calc:empty{display:none;}
+
+/* ── 모달 ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--surface);border-radius:14px;padding:24px;width:460px;box-shadow:0 20px 50px rgba(0,0,0,.2);}
+.modal h2{font-size:.95rem;font-weight:800;margin-bottom:16px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.form-group label{display:block;font-size:.75rem;font-weight:700;color:var(--sub);margin-bottom:3px;}
+.form-group input,.form-group select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:.85rem;outline:none;background:var(--bg);color:var(--text);}
+.form-group input:focus,.form-group select:focus{border-color:var(--blue);background:#fff;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+
+/* ── 토스트 ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:#1e293b;color:#f1f5f9;padding:10px 22px;border-radius:30px;font-size:.85rem;opacity:0;transition:all .3s;pointer-events:none;z-index:500;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── 보고서 출력 버튼 ── */
+.btn-report{background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.4);}
+.btn-report:hover{background:rgba(255,255,255,.32);}
+
+/* ── 보고서 오버레이 ── */
+.rpt-overlay{display:none;position:fixed;inset:0;z-index:200;background:#6b7280;overflow-y:auto;}
+.rpt-overlay.show{display:block;}
+.rpt-toolbar{position:sticky;top:0;z-index:10;background:#374151;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+
+/* ── 보고서 페이지 ── */
+.rpt-page{width:210mm;min-height:297mm;margin:20px auto;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.25);padding:18mm 16mm 18mm 20mm;font-family:'맑은 고딕','Malgun Gothic','Segoe UI',sans-serif;font-size:9pt;color:#111;line-height:1.5;}
+
+/* 보고서 상단 */
+.rpt-company{text-align:right;font-size:8pt;color:#555;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:14px;}
+.rpt-company strong{font-size:10pt;color:#111;}
+.rpt-doc-title{text-align:center;margin-bottom:16px;}
+.rpt-doc-title h1{font-size:16pt;font-weight:900;letter-spacing:2px;color:#111;margin-bottom:4px;}
+.rpt-doc-title p{font-size:9pt;color:#555;}
+
+/* 문서 정보 박스 */
+.rpt-info-box{border:1px solid #bbb;border-collapse:collapse;width:100%;margin-bottom:16px;}
+.rpt-info-box td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;}
+.rpt-info-box .rpt-label{background:#f5f5f5;font-weight:700;width:80px;color:#333;}
+
+/* 섹션 제목 */
+.rpt-sec{margin-bottom:14px;}
+.rpt-sec-title{font-size:10pt;font-weight:900;background:#1e3a5f;color:#fff;padding:5px 10px;margin-bottom:8px;letter-spacing:.5px;}
+
+/* 일반 보고서 테이블 */
+.rpt-table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:4px;}
+.rpt-table th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:center;font-weight:700;border:1px solid #bbb;}
+.rpt-table td{padding:5px 8px;border:1px solid #ddd;text-align:center;vertical-align:middle;}
+.rpt-table tr:nth-child(even) td{background:#f8f9fa;}
+.rpt-table .rpt-total td{background:#e8edf5;font-weight:800;border-top:2px solid #1e3a5f;}
+.rpt-table .num{text-align:right;}
+.rpt-table .rpt-good{color:#059669;font-weight:700;}
+.rpt-table .rpt-bad{color:#dc2626;font-weight:700;}
+.rpt-table .rpt-warn{color:#d97706;font-weight:700;}
+
+/* KPI 요약 행 */
+.rpt-kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;}
+.rpt-kpi-card{border:1px solid #bbb;border-top:3px solid #1e3a5f;padding:8px;text-align:center;border-radius:2px;}
+.rpt-kpi-card .rk-label{font-size:7.5pt;color:#555;margin-bottom:4px;}
+.rpt-kpi-card .rk-val{font-size:13pt;font-weight:900;color:#1e3a5f;line-height:1;}
+.rpt-kpi-card .rk-unit{font-size:7pt;color:#888;margin-top:2px;}
+
+/* 서명란 */
+.rpt-sign{width:100%;border-collapse:collapse;margin-top:16px;}
+.rpt-sign td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;text-align:center;}
+.rpt-sign .rpt-label{background:#f5f5f5;font-weight:700;width:70px;}
+.rpt-sign .sign-box{height:48px;vertical-align:bottom;padding-bottom:4px;}
+
+/* 하단 주석 */
+.rpt-footer{margin-top:18px;border-top:1px solid #ccc;padding-top:6px;font-size:7.5pt;color:#888;text-align:center;}
+
+/* ── 인쇄 시 ── */
+@media print{
+  .no-print,.header,.date-nav,.layout,.rpt-toolbar{display:none!important;}
+  .rpt-overlay{display:block!important;position:static;background:none;overflow:visible;}
+  .rpt-page{width:100%;margin:0;box-shadow:none;padding:10mm 12mm;}
+  body{background:#fff;}
+}

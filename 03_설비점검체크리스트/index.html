@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!-- 설비 점검 체크리스트 시스템 메인 HTML -->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>설비 점검 체크리스트 | PCB 제조</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+  <h1>🔧 설비 점검 체크리스트 <small>PCB Manufacturing</small></h1>
+  <button class="btn btn-report" onclick="openReport()">🖨 보고서 출력</button>
+  <button class="btn btn-ghost" onclick="exportReport()">📥 결과 저장</button>
+  <button class="btn btn-white" onclick="window.print()">🖨 인쇄</button>
+</div>
+
+<div class="layout">
+  <!-- 좌측: 설비 목록 -->
+  <div class="sidebar">
+    <div class="sb-header">
+      <div class="sb-title">설비 목록</div>
+      <div class="sb-date">
+        <input type="date" id="dateInput" onchange="renderEqList();renderSummaryBanner();renderMain()">
+      </div>
+      <!-- 미션 1: 전체 점검 현황 요약 배너 -->
+      <div id="summaryBanner"></div>
+      <div style="font-size:.75rem;color:var(--mute);margin-top:6px;">설비를 선택하여 점검을 진행하세요.</div>
+    </div>
+    <div class="eq-list" id="eqList"></div>
+  </div>
+
+  <!-- 우측: 점검 내용 -->
+  <div class="main" id="mainArea">
+    <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--mute);">
+      ← 설비를 선택하세요
+    </div>
+  </div>
+</div>
+
+<!-- 보고서 출력 오버레이 -->
+<div class="rpt-overlay" id="rptOverlay">
+  <div class="rpt-toolbar no-print">
+    <span style="font-size:.85rem;font-weight:700;color:#fff">설비 점검 보고서 미리보기</span>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-white" onclick="window.print()">🖨 인쇄 / PDF 저장</button>
+      <button class="btn btn-ghost" onclick="closeReport()">✕ 닫기</button>
+    </div>
+  </div>
+  <div class="rpt-page" id="rptPage"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>

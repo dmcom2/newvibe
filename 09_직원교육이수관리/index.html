@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>직원 교육이수 관리 | PCB 제조</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+  <h1>🎓 직원 교육이수 관리 <span style="font-size:.8rem;opacity:.7;font-weight:400;"> — PCB Manufacturing</span></h1>
+  <button class="btn btn-ghost" onclick="exportCSV()">📥 저장</button>
+  <button class="btn btn-white" onclick="openModal('emp')">+ 직원 등록</button>
+</div>
+
+<!-- 미션1: 법정교육 만료/임박 경보 배너 -->
+<div class="edu-alert-banner" id="eduAlertBanner" style="display:none;"></div>
+
+<div class="filter-bar">
+  <input type="text" id="searchQ" placeholder="이름·부서 검색..." style="width:180px" oninput="render()">
+  <select id="deptFilter" onchange="render()">
+    <option value="">전체 부서</option>
+  </select>
+  <div class="tab-row" style="margin-left:auto;background:transparent;border:none">
+    <button class="tab-btn active" id="t-matrix" onclick="switchTab('matrix')">📋 이수 현황</button>
+    <button class="tab-btn" id="t-courses" onclick="switchTab('courses')">📚 교육 목록</button>
+    <button class="tab-btn" id="t-stat" onclick="switchTab('stat')">📊 통계</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="kpi-row" id="kpiRow"></div>
+  <div id="matrixView"></div>
+  <div id="coursesView" style="display:none"></div>
+  <div id="statView" style="display:none"></div>
+</div>
+
+<!-- 이수 등록 모달 -->
+<div class="modal-overlay" id="completionModal">
+  <div class="modal" style="width:400px">
+    <h2>교육 이수 등록</h2>
+    <div id="completionInfo" style="background:var(--bg);border-radius:7px;padding:10px;margin-bottom:12px;font-size:.8rem;color:var(--sub)"></div>
+    <div class="form-group"><label>이수일</label><input type="date" id="cm-date"></div>
+    <div class="form-group"><label>교육 기관/방법</label><input id="cm-org" placeholder="사내/외부기관명"></div>
+    <div class="form-group"><label>비고</label><input id="cm-note" placeholder="특이사항"></div>
+    <div class="modal-footer">
+      <button class="btn btn-red" id="cmDelBtn" style="display:none" onclick="deleteCompletion()">이수 취소</button>
+      <button class="btn btn-outline" onclick="closeCmModal()">닫기</button>
+      <button class="btn btn-green" onclick="saveCompletion()">이수 등록</button>
+    </div>
+  </div>
+</div>
+
+<!-- 직원 모달 -->
+<div class="modal-overlay" id="empModal">
+  <div class="modal" style="width:400px">
+    <h2 id="empModalTitle">직원 등록</h2>
+    <div class="form-row">
+      <div class="form-group"><label>성명</label><input id="e-name" placeholder="홍길동"></div>
+      <div class="form-group"><label>사번</label><input id="e-empno" placeholder="EMP001"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>부서</label>
+        <select id="e-dept"><option>생산부</option><option>품질부</option><option>설비부</option><option>구매부</option><option>영업부</option><option>관리부</option></select>
+      </div>
+      <div class="form-group"><label>직급</label>
+        <select id="e-rank"><option>사원</option><option>대리</option><option>과장</option><option>차장</option><option>부장</option><option>임원</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>입사일</label><input type="date" id="e-joinDate"></div>
+    <div class="modal-footer">
+      <button class="btn btn-red" id="empDelBtn" style="display:none" onclick="deleteEmp()">삭제</button>
+      <button class="btn btn-outline" onclick="closeEmpModal()">취소</button>
+      <button class="btn btn-blue" onclick="saveEmp()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>

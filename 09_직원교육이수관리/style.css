@@ -1,0 +1,101 @@
+﻿*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--border:#d1d9e0;
+  --text:#1a202c;--sub:#4a5568;--mute:#a0aec0;
+  --blue:#2563eb;--green:#059669;--amber:#d97706;--red:#dc2626;--cyan:#0891b2;
+  --rad:10px;--shadow:0 1px 3px rgba(0,0,0,.1),0 2px 8px rgba(0,0,0,.06);
+}
+body{font-family:'맑은 고딕','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.header{background:linear-gradient(135deg,#083344,#0891b2);color:#fff;padding:0 28px;height:58px;display:flex;align-items:center;gap:12px;}
+.header h1{font-size:1rem;font-weight:700;flex:1;}
+.btn{padding:7px 16px;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-white{background:#fff;color:var(--cyan);}
+.btn-ghost{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border);}
+.btn-red{background:var(--red);color:#fff;}
+.btn-green{background:var(--green);color:#fff;}
+
+.filter-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.filter-bar input,.filter-bar select{padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:.82rem;font-family:inherit;outline:none;}
+.tab-row{display:flex;gap:0;background:var(--surface);border-bottom:2px solid var(--border);}
+.tab-btn{padding:10px 22px;font-size:.85rem;font-weight:700;border:none;background:transparent;cursor:pointer;color:var(--mute);font-family:inherit;border-bottom:3px solid transparent;margin-bottom:-2px;}
+.tab-btn.active{color:var(--cyan);border-bottom-color:var(--cyan);}
+.layout{padding:18px 28px;}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;}
+.kpi{background:var(--surface);border-radius:var(--rad);padding:14px 16px;box-shadow:var(--shadow);border-top:3px solid transparent;}
+.kpi-l{font-size:.72rem;color:var(--mute);margin-bottom:4px;}
+.kpi-v{font-size:1.4rem;font-weight:900;}
+.kpi-sub{font-size:.72rem;color:var(--mute);margin-top:3px;}
+
+/* 직원 교육 현황 테이블 */
+.edu-wrap{background:var(--surface);border-radius:var(--rad);box-shadow:var(--shadow);overflow:auto;}
+.edu-table{min-width:900px;width:100%;border-collapse:collapse;font-size:.8rem;}
+.edu-table th{background:var(--bg);padding:10px 8px;text-align:center;border-bottom:2px solid var(--border);border-right:1px solid var(--border);font-size:.72rem;font-weight:700;color:var(--sub);white-space:nowrap;}
+.edu-table td{padding:9px 8px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);text-align:center;white-space:nowrap;}
+.edu-table th:first-child,.edu-table td:first-child{text-align:left;padding-left:12px;position:sticky;left:0;background:var(--surface);}
+.edu-table tr:hover td{background:#f8fafc;}
+.cell-ok{color:var(--green);font-weight:700;cursor:pointer;}
+.cell-due{color:var(--amber);font-weight:700;cursor:pointer;}
+.cell-overdue{color:var(--red);font-weight:700;cursor:pointer;}
+.cell-none{color:var(--mute);cursor:pointer;}
+
+/* 교육 목록 탭 */
+.course-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+.course-card{background:var(--surface);border-radius:var(--rad);padding:16px;box-shadow:var(--shadow);border-left:4px solid transparent;}
+.cc-title{font-size:.9rem;font-weight:800;margin-bottom:4px;}
+.cc-type{font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:10px;display:inline-block;margin-bottom:6px;}
+.cc-desc{font-size:.75rem;color:var(--sub);line-height:1.5;margin-bottom:8px;}
+.cc-meta{display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:.72rem;}
+.cc-meta-l{color:var(--mute);}
+
+/* 통계 */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.panel{background:var(--surface);border-radius:var(--rad);padding:16px;box-shadow:var(--shadow);}
+.panel-title{font-size:.85rem;font-weight:700;margin-bottom:12px;}
+.dept-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.dept-label{width:80px;font-size:.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dept-track{flex:1;height:10px;background:#e2e8f0;border-radius:5px;overflow:hidden;}
+.dept-fill{height:100%;border-radius:5px;}
+.dept-pct{width:36px;text-align:right;font-size:.75rem;font-weight:700;}
+
+/* 모달 */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--surface);border-radius:14px;padding:24px;width:480px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.2);}
+.modal h2{font-size:.95rem;font-weight:800;margin-bottom:14px;}
+.form-group{margin-bottom:10px;}
+.form-group label{display:block;font-size:.75rem;font-weight:700;color:var(--sub);margin-bottom:3px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:.85rem;outline:none;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+
+/* 버튼 hover */
+.btn:hover{filter:brightness(.92);}
+.header{box-shadow:0 2px 8px rgba(0,0,0,.15);}
+
+/* 미션1: 법정교육 만료/임박 경보 배너 */
+@keyframes blink-edu{0%,100%{opacity:1}50%{opacity:.88}}
+.edu-alert-banner{padding:9px 28px;background:linear-gradient(90deg,#fee2e2,#fef2f2);border-bottom:2px solid #fca5a5;color:#7f1d1d;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:10px;animation:blink-edu 2s infinite;}
+.edu-alert-banner span{background:#dc2626;color:#fff;padding:2px 8px;border-radius:10px;font-size:.72rem;}
+
+/* 미션2: 과정별 이수율 바 차트 */
+.course-bar-wrap{padding:0 2px;}
+.course-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.course-bar-label{width:150px;font-size:.76rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.course-bar-track{flex:1;height:10px;background:#e2e8f0;border-radius:5px;overflow:hidden;}
+.course-bar-fill{height:100%;border-radius:5px;transition:width .4s;}
+.course-bar-pct{width:36px;text-align:right;font-size:.74rem;font-weight:700;}
+
+/* 미션3: 직원별 이수 등급 뱃지 */
+.grade-a{background:#dcfce7;color:#059669;padding:2px 6px;border-radius:8px;font-size:.68rem;font-weight:700;}
+.grade-b{background:#fef9c3;color:#d97706;padding:2px 6px;border-radius:8px;font-size:.68rem;font-weight:700;}
+.grade-c{background:#fee2e2;color:#dc2626;padding:2px 6px;border-radius:8px;font-size:.68rem;font-weight:700;}
+
+/* 토스트 */
+.toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:10px 18px;border-radius:9px;font-size:.82rem;font-weight:600;z-index:999;opacity:0;pointer-events:none;transition:opacity .3s;}
+.toast.show{opacity:1;}
+
+@media print{.edu-alert-banner,.toast{display:none;}}

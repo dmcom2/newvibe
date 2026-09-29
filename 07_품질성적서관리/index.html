@@ -1,0 +1,108 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>품질 성적서 관리 | PCB 제조</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+  <h1>📄 품질 성적서 관리 <span style="font-size:.8rem;opacity:.7;font-weight:400;"> — PCB Manufacturing</span></h1>
+  <button class="btn btn-report no-print" onclick="openReport()">🖨 보고서 출력</button>
+  <button class="btn btn-ghost no-print" onclick="exportCSV()">📥 저장</button>
+  <button class="btn btn-white no-print" onclick="openModal()">+ 성적서 작성</button>
+</div>
+
+<!-- 미션 3: 불합격 경보 배너 -->
+<div class="fail-banner" id="failBanner" style="display:none;"></div>
+
+<div class="filter-bar no-print">
+  <input type="text" id="searchQ" placeholder="성적서번호·제품명·고객사 검색..." style="width:220px" oninput="renderList()">
+  <select id="passFilter" onchange="renderList()">
+    <option value="">전체</option><option value="합격">합격</option><option value="불합격">불합격</option>
+  </select>
+  <input type="month" id="monthFilter" onchange="renderList()">
+</div>
+
+<div class="layout">
+  <div class="card-list" id="certList">
+    <div class="list-header"><span>성적서 목록</span><span id="listCount" style="font-size:.75rem;color:var(--mute)"></span></div>
+    <div id="listItems"></div>
+  </div>
+  <div class="cert-panel" id="certPanel">
+    <div class="panel-header">
+      <span class="panel-title">성적서 상세</span>
+      <div style="display:flex;gap:6px" class="no-print">
+        <button class="btn btn-outline" id="editBtn" style="display:none" onclick="openModal(currentId)">수정</button>
+        <button class="btn btn-green" onclick="window.print()">🖨 인쇄</button>
+      </div>
+    </div>
+    <div class="cert-doc" id="certDoc">
+      <div style="text-align:center;padding:40px;color:var(--mute);font-size:.9rem">
+        좌측 목록에서 성적서를 선택하세요
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 모달 -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">성적서 작성</h2>
+    <div class="form-row">
+      <div class="form-group"><label>성적서 번호</label><input id="c-no" readonly placeholder="자동 생성"></div>
+      <div class="form-group"><label>검사일</label><input type="date" id="c-date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>고객사</label><input id="c-customer" placeholder="(주)삼성전자"></div>
+      <div class="form-group"><label>수주번호</label><input id="c-poNo" placeholder="PO-2026-001"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>제품명/모델</label><input id="c-product" placeholder="PCB-A2401"></div>
+      <div class="form-group"><label>층수</label><select id="c-layer"><option>단면</option><option>양면</option><option>4층</option><option>6층</option><option>8층</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>검사 수량 (매)</label><input type="number" id="c-qty" placeholder="100"></div>
+      <div class="form-group"><label>샘플 수 (매)</label><input type="number" id="c-sample" placeholder="5"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>검사자</label><input id="c-inspector" placeholder="이품질"></div>
+      <div class="form-group"><label>승인자</label><input id="c-approver" placeholder="박팀장"></div>
+    </div>
+
+    <div style="font-size:.8rem;font-weight:800;color:var(--sub);margin:12px 0 6px;padding-bottom:4px;border-bottom:2px solid var(--teal)">외관 검사</div>
+    <table class="inspect-input-table"><thead><tr><th>항목</th><th>기준</th><th>측정값</th><th>판정</th></tr></thead><tbody id="visual-rows"></tbody></table>
+
+    <div style="font-size:.8rem;font-weight:800;color:var(--sub);margin:12px 0 6px;padding-bottom:4px;border-bottom:2px solid var(--teal)">치수 검사</div>
+    <table class="inspect-input-table"><thead><tr><th>항목</th><th>기준(mm)</th><th>측정값(mm)</th><th>판정</th></tr></thead><tbody id="dim-rows"></tbody></table>
+
+    <div style="font-size:.8rem;font-weight:800;color:var(--sub);margin:12px 0 6px;padding-bottom:4px;border-bottom:2px solid var(--teal)">전기 특성</div>
+    <table class="inspect-input-table"><thead><tr><th>항목</th><th>기준</th><th>측정값</th><th>판정</th></tr></thead><tbody id="elec-rows"></tbody></table>
+
+    <div class="form-group" style="margin-top:10px"><label>특이사항</label><textarea id="c-note" placeholder="검사 관련 특이사항..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-red" id="delBtn2" style="display:none" onclick="deleteItem()">삭제</button>
+      <button class="btn btn-outline" onclick="closeModal()">취소</button>
+      <button class="btn btn-blue" onclick="saveCert()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 미션 1: KPI 행 -->
+<div class="kpi-row" id="kpiRow" style="padding:14px 28px 0;"></div>
+<div class="rpt-overlay" id="rptOverlay">
+  <div class="rpt-toolbar">
+    <span style="color:#fff;font-weight:700;font-size:.95rem">📄 품질 성적서 현황 보고서</span>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-white" onclick="window.print()">🖨 인쇄/PDF</button>
+      <button class="btn btn-ghost" onclick="closeReport()">✕ 닫기</button>
+    </div>
+  </div>
+  <div class="rpt-page" id="rptPage"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>

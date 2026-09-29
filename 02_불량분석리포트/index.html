@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!-- 불량 분석 리포트 시스템 메인 HTML -->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>불량 분석 리포트 | PCB 제조</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+  <h1>🔍 불량 분석 리포트 <small>PCB Manufacturing QA</small></h1>
+  <button class="btn btn-report" onclick="openReport()">🖨 보고서 출력</button>
+  <button class="btn btn-ghost" onclick="exportCSV()">📥 CSV 저장</button>
+  <button class="btn btn-white" onclick="window.print()">🖨 인쇄</button>
+  <button class="btn btn-white" onclick="openModal()">+ 불량 등록</button>
+</div>
+
+<!-- 미션 3: 파레토 집중 경보 배너 -->
+<div class="pareto-alert" id="paretoAlert" style="display:none;"></div>
+
+<div class="filter-bar">
+  <label>기간.</label>
+  <input type="date" id="f-from"> ~ <input type="date" id="f-to">
+  <select id="f-line" onchange="renderAll()">
+    <option value="">전체 라인</option>
+    <option>1호기</option><option>2호기</option><option>3호기</option><option>4호기</option><option>5호기</option>
+  </select>
+  <select id="f-type" onchange="renderAll()">
+    <option value="">전체 불량유형</option>
+    <option>단락(Short)</option><option>개방(Open)</option><option>기공(Void)</option>
+    <option>이물(Foreign Material)</option><option>치수불량</option><option>박리(Peeling)</option>
+    <option>도금불량</option><option>변색</option><option>기타</option>
+  </select>
+  <button class="btn btn-red" onclick="renderAll()">조회</button>
+</div>
+
+<div class="layout">
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="chart-grid">
+    <div class="panel">
+      <div class="panel-title">📊 불량 유형 파레토 차트 (건수 + 누적률)</div>
+      <canvas id="paretoChart"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-title">🏭 라인별 불량 발생 현황</div>
+      <canvas id="lineChart"></canvas>
+    </div>
+  </div>
+
+  <!-- 미션 1: 날짜 × 라인 히트맵 -->
+  <div class="panel">
+    <div class="panel-title">🗓 불량 발생 히트맵 — 날짜 × 라인</div>
+    <div id="heatmapWrap" style="overflow-x:auto;"></div>
+  </div>
+
+  <div class="chart-grid2">
+    <div class="panel">
+      <div class="panel-title">📋 불량 유형별 파레토 분석</div>
+      <table class="pareto-table" id="paretoTable"></table>
+    </div>
+    <div class="panel">
+      <div class="panel-title">📈 일별 불량 발생 추이</div>
+      <canvas id="trendChart"></canvas>
+    </div>
+  </div>
+
+  <!-- 미션 2: 심각도별 라인 비교 차트 -->
+  <div class="panel">
+    <div class="panel-title">⚠️ 라인별 심각도 분포</div>
+    <canvas id="severityChart"></canvas>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>📝 불량 발생 목록</span>
+      <input type="text" id="searchInput" placeholder="제품·불량유형·원인·담당자 검색..."
+        style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:.8rem;outline:none;width:260px;background:var(--bg);"
+        oninput="renderDefectList()">
+    </div>
+    <table class="defect-table" id="defectTable"></table>
+  </div>
+</div>
+
+<!-- 불량 등록/수정 모달 -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">불량 발생 등록</h2>
+    <div class="form-row">
+      <div class="form-group"><label>발생 날짜</label><input type="date" id="d-date"></div>
+      <div class="form-group"><label>라인</label>
+        <select id="d-line"><option>1호기</option><option>2호기</option><option>3호기</option><option>4호기</option><option>5호기</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>제품명</label><input id="d-product" placeholder="PCB-A2401"></div>
+      <div class="form-group"><label>불량 유형</label>
+        <select id="d-type">
+          <option>단락(Short)</option><option>개방(Open)</option><option>기공(Void)</option>
+          <option>이물(Foreign Material)</option><option>치수불량</option><option>박리(Peeling)</option>
+          <option>도금불량</option><option>변색</option><option>기타</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>불량 수량 (매)</label><input type="number" id="d-qty" placeholder="5"></div>
+      <div class="form-group"><label>심각도</label>
+        <select id="d-severity">
+          <option value="critical">심각(Critical)</option>
+          <option value="major">주의(Major)</option>
+          <option value="minor" selected>경미(Minor)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>발견 공정</label>
+        <select id="d-process">
+          <option>재단</option><option>천공(드릴링)</option><option>에칭</option><option>도금</option>
+          <option>표면처리</option><option>외관검사</option><option>전기검사</option><option>출하검사</option>
+        </select>
+      </div>
+      <div class="form-group"><label>담당자</label><input id="d-worker" placeholder="홍길동"></div>
+    </div>
+    <div class="form-group"><label>발생 원인</label><textarea id="d-cause" placeholder="원인 분석 내용을 입력하세요..."></textarea></div>
+    <div class="form-group"><label>조치 내용</label><textarea id="d-action" placeholder="취해진 조치 및 재발방지 대책..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-red" id="delBtn" style="display:none" onclick="deleteDefect()">삭제</button>
+      <button class="btn btn-outline" onclick="closeModal()">취소</button>
+      <button class="btn btn-blue" onclick="saveDefect()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 보고서 출력 오버레이 -->
+<div class="rpt-overlay" id="rptOverlay">
+  <div class="rpt-toolbar no-print">
+    <span style="font-size:.85rem;font-weight:700;color:#fff">불량 분석 보고서 미리보기</span>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-white" onclick="window.print()">🖨 인쇄 / PDF 저장</button>
+      <button class="btn btn-ghost" onclick="closeReport()">✕ 닫기</button>
+    </div>
+  </div>
+  <div class="rpt-page" id="rptPage"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>

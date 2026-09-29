@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>월간 생산 보고서 | PCB 제조</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header no-print">
+  <h1>📊 월간 생산 보고서 <span style="font-size:.8rem;opacity:.7;font-weight:400;"> — PCB Manufacturing</span></h1>
+  <button class="btn btn-ghost" onclick="window.print()">🖨 인쇄/PDF</button>
+  <button class="btn btn-white" onclick="exportCSV()">📥 CSV 저장</button>
+</div>
+
+<!-- 미션1: 양품률 미달 경보 배너 -->
+<div class="yield-alert-banner" id="yieldAlertBanner" style="display:none;"></div>
+
+<div class="top-bar no-print">
+  <span style="font-size:.82rem;font-weight:700;color:var(--sub)">보고서 기간:</span>
+  <select id="yearSel" onchange="render()"></select>
+  <select id="monthSel" onchange="render()">
+    <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option><option value="4">4월</option>
+    <option value="5">5월</option><option value="6">6월</option><option value="7">7월</option><option value="8">8월</option>
+    <option value="9">9월</option><option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+  </select>
+  <button class="btn btn-blue" style="margin-left:auto" onclick="render()">보고서 갱신</button>
+</div>
+
+<div class="screen-layout" id="reportBody"></div>
+
+<div class="toast" id="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>

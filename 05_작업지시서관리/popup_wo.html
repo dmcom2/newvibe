@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<!-- 작업지시서 관리 팝업 (CSS/JS 인라인 통합) -->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>작업지시서 관리 | PCB 제조</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--border:#d1d9e0;--border2:#c4cdd6;
+  --text:#1a202c;--sub:#4a5568;--mute:#a0aec0;
+  --blue:#2563eb;--green:#059669;--amber:#d97706;--red:#dc2626;--sky:#0ea5e9;
+  --rad:10px;--shadow:0 1px 3px rgba(0,0,0,.1),0 2px 8px rgba(0,0,0,.06);
+}
+body{font-family:'맑은 고딕','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.header{background:linear-gradient(135deg,#0c4a6e,#0ea5e9 60%,#0284c7);color:#fff;padding:0 28px;height:58px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,.2);}
+.header h1{font-size:1rem;font-weight:700;flex:1;}.header h1 small{font-weight:400;opacity:.7;font-size:.8rem;margin-left:8px;}
+.btn{padding:7px 16px;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
+.btn-white{background:#fff;color:var(--sky);}.btn-white:hover{background:#f0f9ff;}
+.btn-ghost{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);}.btn-ghost:hover{background:rgba(255,255,255,.25);}
+.btn-blue{background:var(--blue);color:#fff;}.btn-blue:hover{background:#1d4ed8;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border2);}.btn-outline:hover{background:var(--bg);}
+.btn-red{background:var(--red);color:#fff;}.btn-red:hover{background:#b91c1c;}
+.due-alert{background:linear-gradient(90deg,#7c2d12,#ea580c);color:#fff;padding:10px 28px;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap;animation:blink-due 2s infinite;}
+@keyframes blink-due{0%,100%{opacity:1;}50%{opacity:.88;}}
+.filter-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.filter-bar input,.filter-bar select{padding:6px 10px;border:1px solid var(--border2);border-radius:7px;font-size:.82rem;font-family:inherit;outline:none;background:var(--bg);transition:border-color .15s;}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--sky);}
+.status-filter-btns{display:flex;gap:4px;}
+.sf-btn{padding:5px 14px;border-radius:20px;font-size:.78rem;font-weight:700;border:1px solid var(--border);cursor:pointer;background:transparent;color:var(--sub);font-family:inherit;transition:all .15s;}
+.sf-btn.active{color:#fff;border-color:transparent;}
+.layout{padding:18px 28px;display:flex;flex-direction:column;gap:14px;}
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+.kpi{background:var(--surface);border-radius:var(--rad);padding:14px 16px;box-shadow:var(--shadow);border:1px solid var(--border);}
+.kpi-l{font-size:.72rem;color:var(--mute);margin-bottom:4px;}.kpi-v{font-size:1.4rem;font-weight:900;}.kpi-sub{font-size:.72rem;color:var(--mute);margin-top:3px;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:16px 20px;box-shadow:var(--shadow);}
+.panel-title{font-size:.88rem;font-weight:700;margin-bottom:12px;}
+.line-load-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+.ll-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
+.ll-name{font-size:.82rem;font-weight:800;margin-bottom:6px;}
+.ll-stats{display:flex;gap:12px;font-size:.75rem;margin-bottom:6px;}.ll-stat-v{font-weight:800;}
+.ll-track{height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;}.ll-fill{height:100%;border-radius:4px;transition:width .4s;}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;}
+.wo-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:16px;box-shadow:var(--shadow);border-left:4px solid transparent;cursor:pointer;transition:all .15s;}
+.wo-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);transform:translateY(-1px);}
+.wo-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.wo-no{font-size:.75rem;font-family:monospace;color:var(--mute);}.wo-product{font-size:.92rem;font-weight:800;margin-top:2px;}.wo-customer{font-size:.78rem;color:var(--sub);}
+.status-badge{padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:700;white-space:nowrap;}
+.wo-info{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0;font-size:.78rem;}
+.wi-label{color:var(--mute);}.wi-value{font-weight:700;}
+.wo-progress{margin-top:8px;}.wo-prog-row{display:flex;align-items:center;gap:8px;font-size:.75rem;margin-bottom:4px;}
+.wo-prog-bar{flex:1;height:7px;background:#e2e8f0;border-radius:4px;overflow:hidden;}.wo-prog-fill{height:100%;border-radius:4px;transition:width .4s;}
+.wo-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px;}.wo-tag{padding:2px 7px;border-radius:5px;font-size:.68rem;background:var(--bg);color:var(--sub);}
+.due-warn{color:var(--red)!important;font-weight:700;}
+.proc-timeline{display:flex;gap:0;margin-top:8px;overflow-x:auto;}
+.proc-step{display:flex;flex-direction:column;align-items:center;flex:1;min-width:52px;}
+.proc-dot{width:10px;height:10px;border-radius:50%;border:2px solid #cbd5e1;background:#fff;margin-bottom:3px;transition:all .2s;flex-shrink:0;}
+.proc-dot.done{background:var(--sky);border-color:var(--sky);}
+.proc-dot.current{background:var(--amber);border-color:var(--amber);box-shadow:0 0 0 3px rgba(217,119,6,.2);}
+.proc-label{font-size:.58rem;color:var(--mute);text-align:center;line-height:1.3;white-space:nowrap;}
+.proc-label.done{color:var(--sky);}.proc-label.current{color:var(--amber);font-weight:700;}
+.proc-line{flex:1;height:2px;background:#e2e8f0;margin-top:4px;}.proc-line.done{background:var(--sky);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--surface);border-radius:14px;padding:24px;width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.2);}
+.modal h2{font-size:.95rem;font-weight:800;margin-bottom:16px;}
+.form-group{margin-bottom:10px;}.form-group label{display:block;font-size:.75rem;font-weight:700;color:var(--sub);margin-bottom:3px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:7px;font-family:inherit;font-size:.85rem;outline:none;background:var(--bg);color:var(--text);}
+.form-group input:focus,.form-group select:focus{border-color:var(--sky);}
+.form-group textarea{height:70px;resize:none;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+.progress-steps{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.step-btn{padding:4px 12px;border-radius:6px;font-size:.75rem;font-weight:700;border:1px solid var(--border);cursor:pointer;background:transparent;font-family:inherit;color:var(--sub);transition:all .15s;}
+.step-btn.active{color:#fff;border-color:transparent;background:var(--sky);}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:#1e293b;color:#f1f5f9;padding:10px 22px;border-radius:30px;font-size:.85rem;opacity:0;transition:all .3s;pointer-events:none;z-index:500;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.btn-report{background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.4);}.btn-report:hover{background:rgba(255,255,255,.32);}
+.rpt-overlay{display:none;position:fixed;inset:0;z-index:200;background:#6b7280;overflow-y:auto;}.rpt-overlay.show{display:block;}
+.rpt-toolbar{position:sticky;top:0;z-index:10;background:#374151;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+.rpt-page{width:210mm;min-height:297mm;margin:20px auto;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.25);padding:18mm 16mm 18mm 20mm;font-family:'맑은 고딕','Malgun Gothic','Segoe UI',sans-serif;font-size:9pt;color:#111;line-height:1.5;}
+.rpt-company{text-align:right;font-size:8pt;color:#555;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:14px;}.rpt-company strong{font-size:10pt;color:#111;}
+.rpt-doc-title{text-align:center;margin-bottom:16px;}.rpt-doc-title h1{font-size:16pt;font-weight:900;letter-spacing:2px;color:#111;margin-bottom:4px;}.rpt-doc-title p{font-size:9pt;color:#555;}
+.rpt-info-box{border:1px solid #bbb;border-collapse:collapse;width:100%;margin-bottom:16px;}.rpt-info-box td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;}.rpt-info-box .rpt-label{background:#f5f5f5;font-weight:700;width:80px;color:#333;}
+.rpt-sec{margin-bottom:14px;}.rpt-sec-title{font-size:10pt;font-weight:900;background:#1e3a5f;color:#fff;padding:5px 10px;margin-bottom:8px;letter-spacing:.5px;}
+.rpt-table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:4px;}.rpt-table th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:center;font-weight:700;border:1px solid #bbb;}.rpt-table td{padding:5px 8px;border:1px solid #ddd;text-align:center;vertical-align:middle;}.rpt-table tr:nth-child(even) td{background:#f8f9fa;}.rpt-table .rpt-total td{background:#e8edf5;font-weight:800;border-top:2px solid #1e3a5f;}.rpt-table .num{text-align:right;}.rpt-table .rpt-good{color:#059669;font-weight:700;}.rpt-table .rpt-bad{color:#dc2626;font-weight:700;}.rpt-table .rpt-warn{color:#d97706;font-weight:700;}
+.rpt-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}.rpt-kpi-card{border:1px solid #bbb;border-top:3px solid #1e3a5f;padding:8px;text-align:center;border-radius:2px;}.rpt-kpi-card .rk-label{font-size:7.5pt;color:#555;margin-bottom:4px;}.rpt-kpi-card .rk-val{font-size:13pt;font-weight:900;color:#1e3a5f;line-height:1;}.rpt-kpi-card .rk-unit{font-size:7pt;color:#888;margin-top:2px;}
+.rpt-sign{width:100%;border-collapse:collapse;margin-top:16px;}.rpt-sign td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;text-align:center;}.rpt-sign .rpt-label{background:#f5f5f5;font-weight:700;width:70px;}.rpt-sign .sign-box{height:48px;vertical-align:bottom;padding-bottom:4px;}
+.rpt-footer{margin-top:18px;border-top:1px solid #ccc;padding-top:6px;font-size:7.5pt;color:#888;text-align:center;}
+@media print{.header,.filter-bar,.layout,.rpt-toolbar{display:none!important;}.rpt-overlay{display:block!important;position:static;background:none;overflow:visible;}.rpt-page{width:100%;margin:0;box-shadow:none;padding:10mm 12mm;}body{background:#fff;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 작업지시서 관리 <small>PCB Manufacturing</small></h1>
+  <button class="btn btn-report" onclick="openReport()">🖨 보고서 출력</button>
+  <button class="btn btn-ghost" onclick="exportCSV()">📥 저장</button>
+  <button class="btn btn-white" onclick="openModal()">+ 작업지시서 발행</button>
+</div>
+
+<div class="due-alert" id="dueAlert" style="display:none;"></div>
+
+<div class="filter-bar">
+  <input type="text" id="searchInput" placeholder="지시번호·제품명·고객사 검색..." style="width:220px" oninput="renderCards()">
+  <div class="status-filter-btns" id="statusFilters">
+    <button class="sf-btn active" data-status="" style="background:var(--sub);color:#fff" onclick="doFilterStatus('',this)">전체</button>
+    <button class="sf-btn" onclick="doFilterStatus('waiting',this)">대기</button>
+    <button class="sf-btn" onclick="doFilterStatus('progress',this)">진행중</button>
+    <button class="sf-btn" onclick="doFilterStatus('inspect',this)">검사중</button>
+    <button class="sf-btn" onclick="doFilterStatus('done',this)">완료</button>
+    <button class="sf-btn" onclick="doFilterStatus('hold',this)">보류</button>
+  </div>
+  <select id="lineFilter" onchange="renderCards()" style="margin-left:auto">
+    <option value="">전체 라인</option>
+    <option>1호기</option><option>2호기</option><option>3호기</option><option>4호기</option>
+  </select>
+</div>
+
+<div class="layout">
+  <div class="kpi-row" id="kpiRow"></div>
+  <div class="panel" id="lineLoadPanel">
+    <div class="panel-title">🏭 라인별 작업 부하 현황</div>
+    <div id="lineLoadWrap"></div>
+  </div>
+  <div class="card-grid" id="woCards"></div>
+</div>
+
+<!-- 작업지시서 모달 -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">작업지시서 발행</h2>
+    <div class="form-row">
+      <div class="form-group"><label>지시 번호</label><input id="w-no" readonly placeholder="자동 생성"></div>
+      <div class="form-group"><label>발행일</label><input type="date" id="w-issueDate"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>고객사</label><input id="w-customer" placeholder="(주)삼성전자"></div>
+      <div class="form-group"><label>수주번호</label><input id="w-orderNo" placeholder="PO-2026-001"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>제품명/모델</label><input id="w-product" placeholder="PCB-A2401"></div>
+      <div class="form-group"><label>층수</label>
+        <select id="w-layer"><option>단면</option><option>양면</option><option>4층</option><option>6층</option><option>8층</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>지시 수량 (매)</label><input type="number" id="w-qty" placeholder="1000"></div>
+      <div class="form-group"><label>할당 라인</label>
+        <select id="w-line"><option>1호기</option><option>2호기</option><option>3호기</option><option>4호기</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>착수 예정일</label><input type="date" id="w-startDate"></div>
+      <div class="form-group"><label>완료 예정일 (납기)</label><input type="date" id="w-dueDate"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>담당자</label><input id="w-worker" placeholder="홍길동"></div>
+      <div class="form-group"><label>진행 상태</label>
+        <select id="w-status">
+          <option value="waiting">대기</option><option value="progress">진행중</option>
+          <option value="inspect">검사중</option><option value="done">완료</option><option value="hold">보류</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>현재 공정 단계</label><div class="progress-steps" id="stepBtns"></div></div>
+    <div class="form-group"><label>생산 완료 수량 (매)</label><input type="number" id="w-produced" placeholder="0"></div>
+    <div class="form-group"><label>특이사항/메모</label><textarea id="w-note" placeholder="작업 관련 특이사항..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn" style="background:#fff;color:var(--sub);border:1px solid var(--border)" onclick="printWO()">🖨 출력</button>
+      <button class="btn btn-red" id="delBtn" style="display:none" onclick="deleteWO()">삭제</button>
+      <button class="btn btn-outline" onclick="closeModal()">취소</button>
+      <button class="btn btn-blue" onclick="saveWO()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="rpt-overlay" id="rptOverlay">
+  <div class="rpt-toolbar">
+    <span style="color:#fff;font-weight:700;font-size:.95rem">📋 작업지시서 현황 보고서</span>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-white" onclick="window.print()">🖨 인쇄/PDF</button>
+      <button class="btn btn-ghost" onclick="closeReport()">✕ 닫기</button>
+    </div>
+  </div>
+  <div class="rpt-page" id="rptPage"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const STATUS_META={
+  waiting:{label:'대기',color:'#6b7280',bg:'#f3f4f6'},
+  progress:{label:'진행중',color:'#2563eb',bg:'#eff6ff'},
+  inspect:{label:'검사중',color:'#d97706',bg:'#fffbeb'},
+  done:{label:'완료',color:'#059669',bg:'#f0fdf4'},
+  hold:{label:'보류',color:'#dc2626',bg:'#fef2f2'},
+};
+const PROCESS_STEPS=['원자재 준비','드릴링','도금','에칭','솔더마스크','AOI 검사','외형 가공','포장/출하'];
+const SAMPLE_WOS=[
+  {id:'WO001',no:'WO-2026-001',customer:'(주)삼성전자',orderNo:'PO-2026-071',product:'PCB-A2401',layer:'4층',qty:2000,line:'1호기',issueDate:'2026-07-25',startDate:'2026-07-28',dueDate:'2026-08-07',worker:'김생산',status:'progress',step:4,produced:1200,note:''},
+  {id:'WO002',no:'WO-2026-002',customer:'LG이노텍',orderNo:'PO-2026-072',product:'PCB-B3301',layer:'양면',qty:5000,line:'2호기',issueDate:'2026-07-26',startDate:'2026-07-29',dueDate:'2026-08-08',worker:'이공정',status:'inspect',step:6,produced:5000,note:'AOI 진행 중'},
+  {id:'WO003',no:'WO-2026-003',customer:'현대모비스',orderNo:'PO-2026-073',product:'PCB-C1201',layer:'6층',qty:800,line:'3호기',issueDate:'2026-07-27',startDate:'2026-07-30',dueDate:'2026-08-09',worker:'박제조',status:'progress',step:3,produced:350,note:''},
+  {id:'WO004',no:'WO-2026-004',customer:'(주)현대전자',orderNo:'PO-2026-074',product:'PCB-D5501',layer:'단면',qty:10000,line:'1호기',issueDate:'2026-07-28',startDate:'2026-08-01',dueDate:'2026-08-05',worker:'최라인',status:'done',step:8,produced:10000,note:'완료'},
+  {id:'WO005',no:'WO-2026-005',customer:'SK하이닉스',orderNo:'PO-2026-075',product:'PCB-E8801',layer:'8층',qty:300,line:'4호기',issueDate:'2026-07-30',startDate:'2026-08-04',dueDate:'2026-08-06',worker:'한담당',status:'progress',step:2,produced:80,note:'고난도 기판'},
+  {id:'WO006',no:'WO-2026-006',customer:'보쉬코리아',orderNo:'PO-2026-076',product:'PCB-F2201',layer:'양면',qty:3000,line:'2호기',issueDate:'2026-08-01',startDate:'2026-08-05',dueDate:'2026-08-15',worker:'이공정',status:'waiting',step:0,produced:0,note:''},
+  {id:'WO007',no:'WO-2026-007',customer:'덴소코리아',orderNo:'PO-2026-077',product:'PCB-G4401',layer:'4층',qty:1500,line:'3호기',issueDate:'2026-08-02',startDate:'2026-08-06',dueDate:'2026-08-20',worker:'박제조',status:'waiting',step:0,produced:0,note:''},
+  {id:'WO008',no:'WO-2026-008',customer:'LS전선',orderNo:'PO-2026-078',product:'PCB-H1101',layer:'단면',qty:8000,line:'4호기',issueDate:'2026-08-03',startDate:'2026-08-04',dueDate:'2026-08-06',worker:'최라인',status:'hold',step:1,produced:200,note:'원자재 공급 지연'},
+];
+let wos=[],activeFilter='',editId=null;
+function getWos(){try{return JSON.parse(localStorage.getItem('wo_list'))||SAMPLE_WOS;}catch{return SAMPLE_WOS;}}
+function saveWos(){localStorage.setItem('wo_list',JSON.stringify(wos));}
+let toastTimer;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2800);}
+function daysUntil(dateStr){const now=new Date();now.setHours(0,0,0,0);return Math.ceil((new Date(dateStr)-now)/86400000);}
+function renderDueAlert(){
+  const urgentWos=wos.filter(w=>w.status!=='done'&&w.status!=='hold'&&daysUntil(w.dueDate)<=3);
+  const el=document.getElementById('dueAlert');
+  if(!urgentWos.length){el.style.display='none';return;}
+  el.style.display='flex';
+  el.innerHTML=`🚨 <strong>납기 임박 ${urgentWos.length}건</strong> &nbsp;|&nbsp;
+    ${urgentWos.slice(0,3).map(w=>{const d=daysUntil(w.dueDate);return`<span style="background:rgba(255,255,255,.2);border-radius:4px;padding:2px 8px">${w.product} — D-${Math.abs(d)}(${w.dueDate})</span>`;}).join(' ')}
+    ${urgentWos.length>3?`<span>외 ${urgentWos.length-3}건</span>`:''}`;
+}
+function renderLineLoad(){
+  const lines=['1호기','2호기','3호기','4호기'];
+  const wrap=document.getElementById('lineLoadWrap');
+  wrap.className='line-load-grid';
+  wrap.innerHTML=lines.map(line=>{
+    const lineWos=wos.filter(w=>w.line===line&&(w.status==='progress'||w.status==='inspect'||w.status==='waiting'));
+    const active=wos.filter(w=>w.line===line&&(w.status==='progress'||w.status==='inspect')).length;
+    const total=lineWos.length;
+    const load=Math.min(total/3,1);
+    const fillColor=load>0.8?'var(--red)':load>0.5?'var(--amber)':'var(--green)';
+    return`<div class="ll-card">
+      <div class="ll-name">🏭 ${line}</div>
+      <div class="ll-stats"><span>진행중 <span class="ll-stat-v" style="color:var(--blue)">${active}</span>건</span><span>대기 <span class="ll-stat-v" style="color:var(--mute)">${total-active}</span>건</span></div>
+      <div class="ll-track"><div class="ll-fill" style="width:${load*100}%;background:${fillColor}"></div></div>
+    </div>`;
+  }).join('');
+}
+function renderKPI(){
+  const total=wos.length,active=wos.filter(w=>w.status==='progress').length,done=wos.filter(w=>w.status==='done').length,hold=wos.filter(w=>w.status==='hold').length,overdue=wos.filter(w=>w.status!=='done'&&daysUntil(w.dueDate)<0).length;
+  document.getElementById('kpiRow').innerHTML=`
+    <div class="kpi" style="border-top:3px solid var(--sub)"><div class="kpi-l">전체</div><div class="kpi-v">${total}</div><div class="kpi-sub">작업지시서</div></div>
+    <div class="kpi" style="border-top:3px solid var(--blue)"><div class="kpi-l">진행중</div><div class="kpi-v">${active}</div><div class="kpi-sub">건</div></div>
+    <div class="kpi" style="border-top:3px solid var(--green)"><div class="kpi-l">완료</div><div class="kpi-v">${done}</div><div class="kpi-sub">건</div></div>
+    <div class="kpi" style="border-top:3px solid var(--red)"><div class="kpi-l">보류</div><div class="kpi-v">${hold}</div><div class="kpi-sub">건</div></div>
+    <div class="kpi" style="border-top:3px solid var(--red)"><div class="kpi-l">납기 초과</div><div class="kpi-v" style="color:var(--red)">${overdue}</div><div class="kpi-sub">건</div></div>`;
+}
+function buildTimeline(wo){
+  const steps=PROCESS_STEPS;const curStep=wo.step||0;const pairs=[];
+  steps.forEach((s,i)=>{
+    if(i>0)pairs.push({type:'line',done:i<=curStep});
+    pairs.push({type:'step',label:s,done:i<curStep,current:i===curStep});
+  });
+  return`<div class="proc-timeline">${pairs.map(p=>{
+    if(p.type==='line')return`<div class="proc-line${p.done?' done':''}"></div>`;
+    const cls=p.done?'done':p.current?'current':'';
+    return`<div class="proc-step"><div class="proc-dot ${cls}"></div><div class="proc-label ${cls}">${p.label}</div></div>`;
+  }).join('')}</div>`;
+}
+function renderCards(){
+  const search=document.getElementById('searchInput').value.toLowerCase();
+  const line=document.getElementById('lineFilter').value;
+  let filtered=wos.filter(w=>{
+    const matchText=!search||w.no.toLowerCase().includes(search)||w.product.toLowerCase().includes(search)||w.customer.toLowerCase().includes(search);
+    const matchStatus=!activeFilter||w.status===activeFilter;
+    const matchLine=!line||w.line===line;
+    return matchText&&matchStatus&&matchLine;
+  });
+  filtered.sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+  const container=document.getElementById('woCards');
+  container.innerHTML=filtered.map(wo=>{
+    const m=STATUS_META[wo.status]||STATUS_META.waiting;
+    const prog=wo.qty>0?Math.round(wo.produced/wo.qty*100):0;
+    const du=daysUntil(wo.dueDate);
+    const dueClass=du<=3?'due-warn':'';
+    const dueLabel=du<0?`납기 ${Math.abs(du)}일 초과`:du===0?'오늘 납기':`D-${du}`;
+    return`<div class="wo-card" style="border-left-color:${m.color}" onclick="openModal('${wo.id}')">
+      <div class="wo-header">
+        <div><div class="wo-no">${wo.no}</div><div class="wo-product">${wo.product}</div><div class="wo-customer">${wo.customer}</div></div>
+        <span class="status-badge" style="background:${m.bg};color:${m.color}">${m.label}</span>
+      </div>
+      <div class="wo-info">
+        <span class="wi-label">라인</span><span class="wi-value">${wo.line}</span>
+        <span class="wi-label">지시수량</span><span class="wi-value">${wo.qty.toLocaleString()} 매</span>
+        <span class="wi-label">층수</span><span class="wi-value">${wo.layer}</span>
+        <span class="wi-label">납기일</span><span class="wi-value ${dueClass}">${wo.dueDate} (${dueLabel})</span>
+      </div>
+      <div class="wo-progress">
+        <div class="wo-prog-row">
+          <span style="color:var(--mute)">생산진도</span>
+          <div class="wo-prog-bar"><div class="wo-prog-fill" style="width:${prog}%;background:${m.color}"></div></div>
+          <span style="font-weight:700;color:${m.color}">${prog}%</span>
+        </div>
+      </div>
+      ${buildTimeline(wo)}
+      <div class="wo-tags">
+        <span class="wo-tag">👷 ${wo.worker}</span>
+        <span class="wo-tag">🏭 ${wo.line}</span>
+        ${wo.note?`<span class="wo-tag">💬 ${wo.note.slice(0,12)}${wo.note.length>12?'...':''}</span>`:''}
+      </div>
+    </div>`;
+  }).join('')||'<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--mute)">조회된 작업지시서가 없습니다.</div>';
+}
+function doFilterStatus(status,btn){
+  activeFilter=status;
+  document.querySelectorAll('.sf-btn').forEach(b=>{b.classList.remove('active');b.style.background='transparent';b.style.color='var(--sub)';});
+  btn.classList.add('active');
+  const m=STATUS_META[status];
+  btn.style.background=m?m.color:'var(--sub)';btn.style.color='#fff';
+  renderCards();
+}
+function openModal(woId){
+  editId=woId||null;
+  const modal=document.getElementById('modal'),delBtn=document.getElementById('delBtn');
+  const today=new Date().toISOString().split('T')[0];
+  if(woId){
+    const wo=wos.find(w=>w.id===woId);
+    document.getElementById('modalTitle').textContent='작업지시서 상세/수정';
+    document.getElementById('w-no').value=wo.no;document.getElementById('w-issueDate').value=wo.issueDate;
+    document.getElementById('w-customer').value=wo.customer;document.getElementById('w-orderNo').value=wo.orderNo;
+    document.getElementById('w-product').value=wo.product;document.getElementById('w-layer').value=wo.layer;
+    document.getElementById('w-qty').value=wo.qty;document.getElementById('w-line').value=wo.line;
+    document.getElementById('w-startDate').value=wo.startDate;document.getElementById('w-dueDate').value=wo.dueDate;
+    document.getElementById('w-worker').value=wo.worker;document.getElementById('w-status').value=wo.status;
+    document.getElementById('w-produced').value=wo.produced;document.getElementById('w-note').value=wo.note;
+    delBtn.style.display='';renderStepBtns(wo.step||0);
+  }else{
+    document.getElementById('modalTitle').textContent='작업지시서 발행';
+    const newNo='WO-2026-'+String(wos.length+1).padStart(3,'0');
+    document.getElementById('w-no').value=newNo;document.getElementById('w-issueDate').value=today;
+    document.getElementById('w-startDate').value=today;document.getElementById('w-dueDate').value='';
+    ['w-customer','w-orderNo','w-product','w-produced','w-note','w-worker'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('w-qty').value='';document.getElementById('w-status').value='waiting';
+    delBtn.style.display='none';renderStepBtns(0);
+  }
+  modal.classList.add('show');
+}
+function renderStepBtns(currentStep){
+  const container=document.getElementById('stepBtns');
+  container.innerHTML=PROCESS_STEPS.map((s,i)=>`<button class="step-btn${i===currentStep?' active':''}" onclick="selectStep(${i},this)">${i+1}.${s}</button>`).join('');
+}
+function selectStep(idx,btn){document.querySelectorAll('.step-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+function getSelectedStep(){const active=document.querySelector('.step-btn.active');if(!active)return 0;return Array.from(document.querySelectorAll('.step-btn')).indexOf(active);}
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+function saveWO(){
+  const product=document.getElementById('w-product').value.trim(),customer=document.getElementById('w-customer').value.trim(),dueDate=document.getElementById('w-dueDate').value;
+  if(!product||!customer||!dueDate){showToast('제품명, 고객사, 납기일은 필수입니다.');return;}
+  const data={no:document.getElementById('w-no').value,issueDate:document.getElementById('w-issueDate').value,customer,orderNo:document.getElementById('w-orderNo').value,product,layer:document.getElementById('w-layer').value,qty:parseInt(document.getElementById('w-qty').value)||0,line:document.getElementById('w-line').value,startDate:document.getElementById('w-startDate').value,dueDate,worker:document.getElementById('w-worker').value,status:document.getElementById('w-status').value,step:getSelectedStep(),produced:parseInt(document.getElementById('w-produced').value)||0,note:document.getElementById('w-note').value};
+  if(editId){const idx=wos.findIndex(w=>w.id===editId);wos[idx]={...wos[idx],...data};showToast('작업지시서가 수정되었습니다.');}
+  else{data.id='WO'+Date.now();wos.push(data);showToast('작업지시서가 발행되었습니다.');}
+  saveWos();closeModal();renderAll();
+}
+function deleteWO(){if(!confirm('작업지시서를 삭제하시겠습니까?'))return;wos=wos.filter(w=>w.id!==editId);saveWos();closeModal();renderAll();showToast('삭제되었습니다.');}
+function printWO(){window.print();}
+function exportCSV(){
+  let csv='지시번호,고객사,제품명,층수,지시수량,라인,착수일,납기일,담당자,상태,생산완료,진행률\n';
+  wos.forEach(w=>{const prog=w.qty>0?Math.round(w.produced/w.qty*100):0;csv+=`"${w.no}","${w.customer}","${w.product}","${w.layer}",${w.qty},"${w.line}","${w.startDate}","${w.dueDate}","${w.worker}","${STATUS_META[w.status]?.label||w.status}",${w.produced},${prog}%\n`;});
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`작업지시서_${new Date().toISOString().split('T')[0]}.csv`;a.click();
+  showToast('저장되었습니다.');
+}
+function renderAll(){renderDueAlert();renderKPI();renderLineLoad();renderCards();}
+function openReport(){
+  const total=wos.length,inProg=wos.filter(w=>w.status==='progress'||w.status==='inspect').length;
+  const done=wos.filter(w=>w.status==='done').length,hold=wos.filter(w=>w.status==='hold').length;
+  const todayStr=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric'});
+  const lineMap={};
+  wos.forEach(w=>{if(!lineMap[w.line])lineMap[w.line]={total:0,done:0,progress:0};lineMap[w.line].total++;if(w.status==='done')lineMap[w.line].done++;if(w.status==='progress'||w.status==='inspect')lineMap[w.line].progress++;});
+  const lineRows=Object.entries(lineMap).sort((a,b)=>a[0].localeCompare(b[0])).map(([line,v])=>{const rate=v.total>0?Math.round(v.done/v.total*100):0;return`<tr><td>${line}</td><td class="num">${v.total}</td><td class="num rpt-good">${v.done}</td><td class="num" style="color:#2563eb">${v.progress}</td><td class="num">${rate}%</td></tr>`;}).join('');
+  const rows=wos.map(w=>{const sm=STATUS_META[w.status]||{label:w.status,color:'#888'};const due=daysUntil(w.dueDate);const dueClass=due<0?'rpt-bad':due<=3?'rpt-warn':'';return`<tr><td style="text-align:left;font-family:monospace;font-size:8pt">${w.no}</td><td style="text-align:left">${w.customer}</td><td style="text-align:left">${w.product}</td><td>${w.layer}</td><td class="num">${w.qty.toLocaleString()}</td><td class="num">${w.produced.toLocaleString()}</td><td>${w.line}</td><td class="${dueClass}">${w.dueDate}</td><td><span style="color:${sm.color};font-weight:700">${sm.label}</span></td></tr>`;}).join('');
+  document.getElementById('rptPage').innerHTML=`
+    <div class="rpt-company"><strong>(주)PCB 제조</strong> | 생산관리<br>출력일: ${todayStr}</div>
+    <div class="rpt-doc-title"><h1>작업지시서 현황 보고서</h1><p>작업지시서 전체 현황 및 라인별 분석</p></div>
+    <div class="rpt-kpi-grid">
+      <div class="rpt-kpi-card"><div class="rk-label">전체 지시</div><div class="rk-val">${total}</div><div class="rk-unit">건</div></div>
+      <div class="rpt-kpi-card"><div class="rk-label">진행중/검사</div><div class="rk-val" style="color:#2563eb">${inProg}</div><div class="rk-unit">건</div></div>
+      <div class="rpt-kpi-card"><div class="rk-label">완료</div><div class="rk-val" style="color:#059669">${done}</div><div class="rk-unit">건</div></div>
+      <div class="rpt-kpi-card"><div class="rk-label">보류</div><div class="rk-val" style="color:#d97706">${hold}</div><div class="rk-unit">건</div></div>
+    </div>
+    <div class="rpt-sec"><div class="rpt-sec-title">■ 라인별 현황</div>
+      <table class="rpt-table"><thead><tr><th>라인</th><th>전체</th><th>완료</th><th>진행중/검사</th><th>완료율</th></tr></thead><tbody>${lineRows}</tbody></table>
+    </div>
+    <div class="rpt-sec"><div class="rpt-sec-title">■ 작업지시서 목록</div>
+      <table class="rpt-table"><thead><tr><th>지시번호</th><th>고객사</th><th>제품명</th><th>층수</th><th>지시수량</th><th>생산수량</th><th>라인</th><th>납기일</th><th>상태</th></tr></thead><tbody>${rows}</tbody></table>
+    </div>
+    <table class="rpt-sign"><tr><td class="rpt-label">작성</td><td class="sign-box"></td><td class="rpt-label">검토</td><td class="sign-box"></td><td class="rpt-label">승인</td><td class="sign-box"></td></tr></table>
+    <div class="rpt-footer">본 보고서는 시스템에서 자동 생성되었습니다. | 출력: ${todayStr}</div>`;
+  document.getElementById('rptOverlay').classList.add('show');
+}
+function closeReport(){document.getElementById('rptOverlay').classList.remove('show');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const ov=document.getElementById('rptOverlay');if(ov.classList.contains('show')){closeReport();return;}closeModal();}});
+function init(){wos=getWos();renderAll();}
+init();
+</script>
+</body>
+</html>

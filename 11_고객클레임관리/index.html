@@ -1,0 +1,95 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>고객 클레임 관리 | PCB 제조</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+  <h1>⚠ 고객 클레임 관리 (8D) <span style="font-size:.8rem;opacity:.7;font-weight:400;"> — PCB Manufacturing</span></h1>
+  <button class="btn btn-ghost" onclick="exportCSV()">📥 저장</button>
+  <button class="btn btn-white" onclick="openModal()">+ 클레임 등록</button>
+</div>
+
+<!-- 미션1: 긴급 클레임 경보 배너 -->
+<div class="claim-alert-banner" id="claimAlertBanner" style="display:none;"></div>
+
+<div class="filter-bar">
+  <input type="text" id="searchQ" placeholder="번호·고객·제품·내용 검색..." style="width:220px" oninput="render()">
+  <select id="statusF" onchange="render()">
+    <option value="">전체 상태</option>
+    <option value="open">접수</option><option value="analysis">원인분석</option>
+    <option value="action">대책수립</option><option value="verify">효과검증</option><option value="closed">완료</option>
+  </select>
+  <select id="sevF" onchange="render()">
+    <option value="">전체 심각도</option>
+    <option value="critical">긴급(Critical)</option><option value="major">중요(Major)</option><option value="minor">경미(Minor)</option>
+  </select>
+</div>
+
+<!-- 미션2: 상태별/심각도별 현황 바 차트 -->
+<div id="statusChart" style="padding:14px 28px 0"></div>
+
+<div class="layout" style="display:block;padding:18px 28px">
+  <div class="kpi-row" id="kpiRow"></div>
+  <div style="display:grid;grid-template-columns:360px 1fr;gap:14px">
+    <div>
+      <div class="claim-list" id="claimList"></div>
+    </div>
+    <div class="report-panel" id="reportPanel">
+      <div class="report-header"><span style="font-size:.9rem;font-weight:700">8D 리포트</span></div>
+      <div style="text-align:center;padding:40px;color:var(--mute)">좌측 목록에서 클레임을 선택하세요</div>
+    </div>
+  </div>
+</div>
+
+<!-- 클레임 입력 모달 -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">클레임 등록</h2>
+    <div class="form-row">
+      <div class="form-group"><label>클레임 번호</label><input id="c-no" readonly></div>
+      <div class="form-group"><label>접수일</label><input type="date" id="c-date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>고객사</label><input id="c-customer" placeholder="(주)삼성전자"></div>
+      <div class="form-group"><label>제품명</label><input id="c-product" placeholder="PCB-A2401"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>심각도</label>
+        <select id="c-sev"><option value="critical">긴급(Critical)</option><option value="major">중요(Major)</option><option value="minor">경미(Minor)</option></select>
+      </div>
+      <div class="form-group"><label>상태</label>
+        <select id="c-status"><option value="open">접수</option><option value="analysis">원인분석</option><option value="action">대책수립</option><option value="verify">효과검증</option><option value="closed">완료</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>클레임 수량</label><input type="number" id="c-qty" placeholder="50매"></div>
+      <div class="form-group"><label>담당자</label><input id="c-manager" placeholder="박품질"></div>
+    </div>
+
+    <div class="section-label">8D 보고서 내용</div>
+    <div class="form-group"><label>D1. 팀 구성</label><input id="d1" placeholder="품질팀장, 생산팀장, 공정엔지니어 등"></div>
+    <div class="form-group"><label>D2. 문제 정의 (고객 클레임 내용)</label><textarea id="d2" placeholder="고객 접수 불만 내용을 구체적으로 기술..."></textarea></div>
+    <div class="form-group"><label>D3. 긴급 봉쇄 조치 (임시 조치)</label><textarea id="d3" placeholder="즉각적인 임시 조치 사항..."></textarea></div>
+    <div class="form-group"><label>D4. 근본 원인 분석 (5-Why, 특성요인도)</label><textarea id="d4" placeholder="Why1: ... → Why2: ... → Why3: ..."></textarea></div>
+    <div class="form-group"><label>D5. 영구 시정 조치 계획</label><textarea id="d5" placeholder="근본 원인 해결을 위한 항구적 대책..."></textarea></div>
+    <div class="form-group"><label>D6. 시정 조치 실시 및 검증</label><textarea id="d6" placeholder="조치 내용 및 효과 확인 결과..."></textarea></div>
+    <div class="form-group"><label>D7. 재발 방지 대책 (수평전개)</label><textarea id="d7" placeholder="표준화, 유사 공정 적용, 교육 계획..."></textarea></div>
+    <div class="form-group"><label>D8. 팀 공인 및 종결</label><input id="d8" placeholder="완료일, 검토자, 종결 승인"></div>
+
+    <div class="modal-footer">
+      <button class="btn btn-red" id="delBtn" style="display:none" onclick="deleteItem()">삭제</button>
+      <button class="btn btn-outline" onclick="closeModal()">취소</button>
+      <button class="btn btn-blue" onclick="saveItem()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>

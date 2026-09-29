@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제품 원가 계산기 | PCB 제조</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+  <h1>💰 제품 원가 계산기 <span style="font-size:.8rem;opacity:.7;font-weight:400;"> — PCB Manufacturing</span></h1>
+  <button class="btn btn-ghost" onclick="exportCSV()">📥 저장</button>
+  <button class="btn btn-white" onclick="saveCalc()">💾 비교 저장</button>
+</div>
+
+<!-- 미션1: 재료비 과다 경보 배너 -->
+<div class="cost-alert-banner" id="costAlertBanner" style="display:none;"></div>
+
+<div class="layout">
+  <!-- 좌측: 입력 -->
+  <div>
+    <!-- 기본 정보 -->
+    <div class="panel" style="margin-bottom:14px">
+      <div class="panel-header">
+        <span class="panel-title">🔖 기본 정보</span>
+      </div>
+      <div class="panel-body">
+        <div class="field-row">
+          <div class="field"><label>제품명/모델</label><input id="productName" value="PCB-A2401 (4층, 양면)" oninput="calc()"></div>
+          <div class="field"><label>생산 배치 수량 (매)</label><div class="field-unit"><input type="number" id="batchQty" value="1000" oninput="calc()"><span>매</span></div></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>층수</label><select id="layerCnt" onchange="calc()"><option value="1">단면(1층)</option><option value="2">양면(2층)</option><option value="4" selected>4층</option><option value="6">6층</option><option value="8">8층</option></select></div>
+          <div class="field"><label>기판 크기 (mm)</label>
+            <div style="display:flex;gap:4px;align-items:center">
+              <input type="number" id="bW" value="200" oninput="calc()" style="flex:1"><span style="font-size:.75rem;color:var(--mute)">×</span>
+              <input type="number" id="bH" value="150" oninput="calc()" style="flex:1"><span style="font-size:.75rem;color:var(--mute)">mm</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 재료비 -->
+    <div class="panel" style="margin-bottom:14px">
+      <div class="panel-header">
+        <span class="panel-title" style="color:#2563eb">📦 재료비 (원/매)</span>
+        <button class="btn btn-outline" style="font-size:.75rem;padding:4px 10px" onclick="addMaterial()">+ 항목 추가</button>
+      </div>
+      <div class="panel-body">
+        <div style="display:grid;grid-template-columns:1fr 80px 80px 70px 24px;gap:4px;margin-bottom:6px;font-size:.7rem;font-weight:700;color:var(--mute)">
+          <span>재료명</span><span>소모량</span><span>단가(원)</span><span>금액</span><span></span>
+        </div>
+        <div id="materialRows"></div>
+        <div style="text-align:right;margin-top:6px;font-size:.82rem;font-weight:700">
+          재료비 합계: <span id="matTotal" style="color:var(--blue)">₩0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 공정비 -->
+    <div class="panel" style="margin-bottom:14px">
+      <div class="panel-header">
+        <span class="panel-title" style="color:var(--green)">⚙ 공정비 (원/매)</span>
+      </div>
+      <div class="panel-body">
+        <div id="processRows"></div>
+        <div style="text-align:right;margin-top:6px;font-size:.82rem;font-weight:700">
+          공정비 합계: <span id="procTotal" style="color:var(--green)">₩0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 간접비 -->
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title" style="color:var(--amber)">🏭 간접비 설정</span></div>
+      <div class="panel-body">
+        <div class="field-row">
+          <div class="field"><label>제조간접비율 (%)</label><div class="field-unit"><input type="number" id="ohRate" value="25" oninput="calc()"><span>%</span></div></div>
+          <div class="field"><label>판관비율 (%)</label><div class="field-unit"><input type="number" id="sgaRate" value="10" oninput="calc()"><span>%</span></div></div>
+        </div>
+        <div style="font-size:.75rem;color:var(--mute)">제조간접비 = (재료비+공정비) × 제조간접비율 / 100</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 우측: 결과 -->
+  <div>
+    <div class="panel" style="margin-bottom:14px">
+      <div class="panel-header"><span class="panel-title">📊 원가 분석 결과</span></div>
+      <div class="panel-body">
+        <div class="total-box">
+          <div class="total-label">제품 단가 (매당)</div>
+          <div class="total-unit" id="unitCost">₩0</div>
+          <div class="total-batch" id="batchCost">배치 합계: ₩0</div>
+          <!-- 미션3: 원가 등급 뱃지 -->
+          <div id="costGrade" style="text-align:center;margin-top:8px;"></div>
+        </div>
+
+        <!-- 도넛 차트 -->
+        <div class="donut-wrap" id="donutWrap"></div>
+        <div id="costLegend"></div>
+
+        <div class="breakdown" style="margin-top:14px">
+          <div class="breakdown-row header"><span>항목</span><span style="text-align:right">단가</span><span style="text-align:right">비율</span></div>
+          <div id="breakdownRows"></div>
+        </div>
+
+        <!-- 마진 계산 -->
+        <div style="background:var(--bg);border-radius:8px;padding:12px;margin-top:12px">
+          <div style="font-size:.78rem;font-weight:700;margin-bottom:8px">목표 마진 계산</div>
+          <div class="field-row">
+            <div class="field"><label>목표 마진율 (%)</label><div class="field-unit"><input type="number" id="marginRate" value="20" oninput="calcMargin()"><span>%</span></div></div>
+            <div class="field"><label>제안 판매 단가</label><input id="sellPrice" readonly style="background:#f9fafb;font-weight:700;color:var(--rose)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 비교 저장 목록 -->
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">🗃 비교 저장 목록</span><button class="btn btn-outline" style="font-size:.72rem;padding:3px 8px" onclick="clearSaved()">전체삭제</button></div>
+      <div class="saved-list" id="savedList">
+        <div style="text-align:center;padding:20px;color:var(--mute);font-size:.8rem">저장된 항목이 없습니다</div>
+      </div>
+      <!-- 미션2: 단가 비교 바 차트 -->
+      <div id="compareChart"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>

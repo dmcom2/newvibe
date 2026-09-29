@@ -1,0 +1,598 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>월간 생산 보고서 — 교육 자료</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'맑은 고딕','Segoe UI',sans-serif;}
+.deck{position:relative;width:100vw;height:100vh;overflow:hidden;}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .4s,transform .4s;transform:translateX(60px);}
+.slide.active{opacity:1;pointer-events:all;transform:translateX(0);}
+.slide.exit{opacity:0;transform:translateX(-60px);}
+.progress-bar{position:fixed;top:0;left:0;height:4px;background:linear-gradient(90deg,#2563eb,#0891b2);transition:width .35s;z-index:999;}
+.nav{position:fixed;bottom:28px;right:32px;display:flex;align-items:center;gap:10px;z-index:999;}
+.nav button{border:none;border-radius:50%;width:40px;height:40px;font-size:23px;cursor:pointer;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);color:#fff;transition:.2s;}
+.nav button:hover{background:rgba(255,255,255,.32);}
+.nav button:disabled{opacity:.3;cursor:default;}
+.slide-label{font-size:16px;color:rgba(255,255,255,.4);min-width:44px;text-align:center;}
+
+/* 타이틀 슬라이드 */
+.s-title{background:linear-gradient(135deg,#0a0f1e 0%,#0c1a3a 50%,#0f172a 100%);justify-content:center;align-items:center;text-align:center;}
+.s-title .badge{background:rgba(37,99,235,.25);color:#93c5fd;border:1px solid rgba(37,99,235,.4);border-radius:20px;padding:6px 18px;font-size:17px;margin-bottom:24px;display:inline-block;}
+.s-title h1{font-size:57px;font-weight:800;color:#fff;line-height:1.15;margin-bottom:16px;}
+.s-title h1 span{background:linear-gradient(90deg,#2563eb,#0891b2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.s-title p{font-size:23px;color:rgba(255,255,255,.55);margin-bottom:40px;}
+.s-title .meta{display:flex;gap:32px;justify-content:center;}
+.s-title .meta div{text-align:center;}
+.s-title .meta .val{font-size:31px;font-weight:700;color:#60a5fa;}
+.s-title .meta .lbl{font-size:16px;color:rgba(255,255,255,.4);margin-top:4px;}
+
+/* 콘텐츠 슬라이드 */
+.s-content{background:#f8fafc;padding:56px 72px 140px;}
+.s-content h2{font-size:37px;font-weight:700;color:#0c1a3a;margin-bottom:8px;}
+.s-content .sub{font-size:21px;color:#64748b;margin-bottom:36px;padding-bottom:20px;border-bottom:2px solid #e2e8f0;}
+.card-row{display:flex;gap:20px;margin-bottom:24px;}
+.card{flex:1;background:#fff;border-radius:14px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.06);border-left:4px solid #2563eb;}
+.card.cyan{border-left-color:#0891b2;}
+.card.violet{border-left-color:#7c3aed;}
+.card.emerald{border-left-color:#059669;}
+.card h3{font-size:20px;font-weight:600;color:#475569;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;}
+.card p{font-size:18px;color:#334155;line-height:1.7;}
+
+/* 코드 슬라이드 */
+.s-dark{background:#0c1220;padding:56px 72px 140px;}
+.s-dark h2{font-size:35px;font-weight:700;color:#dbeafe;margin-bottom:8px;}
+.s-dark .sub{font-size:20px;color:#64748b;margin-bottom:32px;padding-bottom:16px;border-bottom:1px solid #1e293b;}
+.code-block{background:#080c16;border-radius:12px;padding:24px 28px;font-family:'Consolas','D2Coding',monospace;font-size:18px;line-height:1.8;color:#dbeafe;border:1px solid #1e293b;margin-bottom:20px;overflow:auto;max-height:48vh;}
+.kw{color:#c4b5fd;} .fn{color:#7dd3fc;} .str{color:#86efac;} .cm{color:#64748b;font-style:italic;} .num{color:#fdba74;}
+.tip-box{background:rgba(37,99,235,.14);border:1px solid rgba(37,99,235,.32);border-radius:10px;padding:16px 20px;color:#93c5fd;font-size:18px;line-height:1.6;}
+
+/* 그라데이션 슬라이드 */
+.s-grad{background:linear-gradient(135deg,#eff6ff 0%,#e0f2fe 100%);padding:56px 72px 140px;}
+.s-grad h2{font-size:37px;font-weight:700;color:#0c1a3a;margin-bottom:8px;}
+.s-grad .sub{font-size:21px;color:#64748b;margin-bottom:36px;padding-bottom:20px;border-bottom:2px solid #bae6fd;}
+.step-list{display:flex;flex-direction:column;gap:16px;}
+.step{display:flex;align-items:flex-start;gap:18px;background:#fff;border-radius:12px;padding:20px 24px;box-shadow:0 2px 8px rgba(37,99,235,.08);}
+.step-num{min-width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#0891b2);color:#fff;font-weight:700;font-size:20px;display:flex;align-items:center;justify-content:center;}
+.step-body h4{font-size:21px;font-weight:600;color:#0c1a3a;margin-bottom:4px;}
+.step-body p{font-size:18px;color:#64748b;line-height:1.6;}
+
+/* 마무리 슬라이드 */
+.s-end{background:linear-gradient(135deg,#0a0f1e,#0c1a3a);justify-content:center;align-items:center;text-align:center;}
+.s-end h2{font-size:48px;font-weight:800;color:#fff;margin-bottom:16px;}
+.s-end h2 span{background:linear-gradient(90deg,#2563eb,#0891b2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.s-end p{font-size:22px;color:rgba(255,255,255,.55);margin-bottom:40px;}
+.mission-grid{display:flex;gap:20px;justify-content:center;}
+.mission-card{background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);border-radius:14px;padding:24px 28px;width:200px;text-align:left;}
+.mission-card .m-num{font-size:14px;color:#93c5fd;margin-bottom:8px;}
+.mission-card .m-title{font-size:18px;font-weight:600;color:#fff;}
+
+/* 공통 태그/배지 */
+.tag{display:inline-block;background:rgba(37,99,235,.12);color:#2563eb;border-radius:6px;padding:3px 10px;font-size:16px;margin:3px 2px;}
+.tag.cyan{background:rgba(8,145,178,.12);color:#0891b2;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.icon-row{display:flex;gap:16px;margin-bottom:24px;}
+.icon-box{flex:1;background:#fff;border-radius:12px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.icon-box .ico{font-size:35px;margin-bottom:8px;}
+.icon-box .label{font-size:16px;color:#64748b;font-weight:600;}
+.highlight{color:#2563eb;font-weight:700;}
+
+/* 프롬프트 슬라이드 */
+.s-prompt{background:#eff6ff;padding:clamp(20px,3vh,56px) 72px 140px;overflow-y:auto;}
+.s-prompt h2{font-size:33px;font-weight:700;color:#0c1a3a;margin-bottom:8px;}
+.s-prompt .sub{font-size:18px;color:#64748b;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #bae6fd;}
+.prompt-copy-label{font-size:14px;font-weight:700;color:#2563eb;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;}
+.prompt-box{background:#0c1220;border-radius:12px;padding:22px 26px;font-family:'Consolas','D2Coding',monospace;font-size:16px;line-height:1.8;color:#86efac;white-space:pre-line;min-height:180px;max-height:clamp(180px,45vh,480px);overflow:auto;border:1px solid #1e293b;}
+.extend-tips{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;}
+.extend-tip{flex:1;min-width:180px;background:#fff;border-radius:10px;padding:14px 16px;border-left:3px solid #2563eb;font-size:16px;color:#475569;line-height:1.55;}
+.extend-tip b{color:#0c1a3a;display:block;margin-bottom:4px;}
+.nav-dots{position:fixed;bottom:86px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;z-index:999;background:rgba(255,255,255,.9);padding:9px 16px;border-radius:20px;box-shadow:0 2px 12px rgba(0,0,0,.15);max-width:min(78vw,640px);overflow-x:auto;}
+.nav-dot{width:8px;height:8px;border-radius:50%;background:#cbd5e1;border:none;cursor:pointer;flex-shrink:0;padding:0;transition:all .25s ease;}
+.nav-dot:hover{background:#94a3b8;}
+.nav-dot.active{width:22px;border-radius:5px;background:#2563eb;}
+.result-link{position:absolute;top:30px;right:36px;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:1.49rem;color:#fff;text-decoration:none;cursor:pointer;transition:all .2s;}
+.result-link:hover{background:rgba(255,255,255,.25);transform:scale(1.08);}
+.result-link-tip{position:absolute;top:86px;right:36px;font-size:0.86rem;color:rgba(255,255,255,.55);letter-spacing:.03em;}
+/* ── 시나리오 슬라이드 ── */
+.s-story{background:linear-gradient(150deg,#0f172a 0%,#0c2540 55%,#0c3361 100%);color:#f1f5f9;display:flex;flex-direction:column;justify-content:center;padding:0 80px 100px;}
+.story-eyebrow{font-size:0.82rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#38bdf8;margin-bottom:28px;}
+.story-title{font-size:clamp(1.6rem,3.8vw,2.6rem);font-weight:900;line-height:1.25;margin-bottom:36px;}
+.story-title em{color:#7dd3fc;font-style:normal;}
+.story-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;}
+.story-card{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:22px 24px;}
+.story-card-label{font-size:0.76rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#38bdf8;margin-bottom:10px;}
+.story-card-body{font-size:1.05rem;line-height:1.7;color:#cbd5e1;}
+.story-card-body strong{color:#f1f5f9;font-weight:700;}
+.story-quote{margin-top:28px;max-width:740px;background:rgba(56,189,248,.1);border-left:3px solid #38bdf8;border-radius:0 10px 10px 0;padding:16px 22px;font-size:1.09rem;line-height:1.7;color:#bae6fd;font-style:italic;}
+.story-quote cite{display:block;margin-top:8px;font-size:0.82rem;font-style:normal;color:#64748b;}
+.story-resolve{margin-top:20px;display:flex;align-items:center;gap:12px;font-size:1.05rem;color:#f1f5f9;}
+.story-resolve-dot{width:10px;height:10px;border-radius:50%;background:#38bdf8;box-shadow:0 0 8px #38bdf8;flex-shrink:0;}
+</style>
+</head>
+<body>
+<div class="progress-bar" id="progressBar"></div>
+<div class="deck">
+
+<!-- 슬라이드 1: 타이틀 -->
+<div class="slide s-title active">
+  <div class="badge">회사활용예제 12 · 최고급 🏆⭐⭐⭐⭐⭐</div>
+  <h1>월간 생산<br><span>보고서</span></h1>
+  <p>Chart.js 4종 복합 차트 · 파레토 분석 · 게이지 플러그인 · 인쇄 최적화</p>
+  <div class="meta">
+    <div><div class="val">3시간</div><div class="lbl">예상 실습 시간</div></div>
+    <div><div class="val">6</div><div class="lbl">핵심 기술</div></div>
+    <div><div class="val">3파일</div><div class="lbl">html · css · js</div></div>
+  </div>
+</div>
+
+<!-- 슬라이드 2: 무엇을 만드나 -->
+<div class="slide s-content">
+  <h2>무엇을 만드나요?</h2>
+  <div class="sub">생산·품질·납기를 종합한 월간 보고서를 자동으로 생성하고 PDF로 출력하는 최종 종합 앱</div>
+  <div class="icon-row">
+    <div class="icon-box"><div class="ico">📋</div><div class="label">커버 배너</div></div>
+    <div class="icon-box"><div class="ico">📊</div><div class="label">KPI 카드 6개</div></div>
+    <div class="icon-box"><div class="ico">📈</div><div class="label">혼합 차트</div></div>
+    <div class="icon-box"><div class="ico">🎯</div><div class="label">파레토 차트</div></div>
+    <div class="icon-box"><div class="ico">🍩</div><div class="label">달성률 게이지</div></div>
+    <div class="icon-box"><div class="ico">🖨</div><div class="label">인쇄/PDF 출력</div></div>
+  </div>
+  <div class="card-row">
+    <div class="card">
+      <h3>다중 Chart.js 관리</h3>
+      <p><code>charts</code> 객체로 4개 차트(일별·파레토·라인별·게이지)를 일괄 관리. 월 변경 시 <code>destroy()</code> 후 재생성으로 메모리 누수 방지.</p>
+    </div>
+    <div class="card cyan">
+      <h3>게이지 도넛 커스텀 플러그인</h3>
+      <p>Chart.js <code>beforeDraw</code> 플러그인으로 도넛 중앙에 달성률 % 텍스트를 직접 렌더링.</p>
+    </div>
+    <div class="card violet">
+      <h3>파레토 & 인쇄 최적화</h3>
+      <p>불량 유형 누적 비율 자동 계산 + <code>@media print</code>로 헤더 없이 보고서만 깔끔하게 PDF 출력.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 슬라이드 3: 오늘 수업 진행 순서 -->
+<div class="slide s-content">
+  <h2>오늘 수업 진행 순서</h2>
+  <div class="sub">개념은 가볍게, 손은 바쁘게 — 5단계 약 3시간</div>
+  <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:11px 18px;"><div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.17rem;flex-shrink:0;">1</div><div style="flex:1;font-size:1.14rem;color:#1e293b;"><strong>핵심 기술 이해</strong> <span style="color:#64748b;font-size:1.04rem;">— 오늘의 재료: 다중 Chart.js 관리 · 게이지 플러그인 · 파레토 계산 · 인쇄 최적화 CSS 등</span></div><div style="font-size:0.94rem;font-weight:700;color:#2563eb;background:#eff6ff;padding:4px 10px;border-radius:12px;flex-shrink:0;">45분</div></div>
+      <div style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:11px 18px;"><div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.17rem;flex-shrink:0;">2</div><div style="flex:1;font-size:1.14rem;color:#1e293b;"><strong>AI로 만들기</strong> <span style="color:#64748b;font-size:1.04rem;">— 프롬프트를 복사해 VS Code의 zoo code에게 요청 (index.html·style.css·script.js 3개 파일 생성)</span></div><div style="font-size:0.94rem;font-weight:700;color:#2563eb;background:#eff6ff;padding:4px 10px;border-radius:12px;flex-shrink:0;">30분</div></div>
+      <div style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:11px 18px;"><div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.17rem;flex-shrink:0;">3</div><div style="flex:1;font-size:1.14rem;color:#1e293b;"><strong>실행하기</strong> <span style="color:#64748b;font-size:1.04rem;">— 완성 파일을 확인하고 Go Live로 실행, 월/연도 변경해보기</span></div><div style="font-size:0.94rem;font-weight:700;color:#2563eb;background:#eff6ff;padding:4px 10px;border-radius:12px;flex-shrink:0;">15분</div></div>
+      <div style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:11px 18px;"><div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.17rem;flex-shrink:0;">4</div><div style="flex:1;font-size:1.14rem;color:#1e293b;"><strong>코드 읽어보기</strong> <span style="color:#64748b;font-size:1.04rem;">— AI가 만든 코드의 핵심 패턴 이해 (외울 필요 없어요!)</span></div><div style="font-size:0.94rem;font-weight:700;color:#2563eb;background:#eff6ff;padding:4px 10px;border-radius:12px;flex-shrink:0;">30분</div></div>
+      <div style="display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:11px 18px;"><div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.17rem;flex-shrink:0;">5</div><div style="flex:1;font-size:1.14rem;color:#1e293b;"><strong>실습 미션</strong> <span style="color:#64748b;font-size:1.04rem;">— 회사명 변경, 실데이터 연동, 전월 비교 섹션 추가로 업그레이드</span></div><div style="font-size:0.94rem;font-weight:700;color:#2563eb;background:#eff6ff;padding:4px 10px;border-radius:12px;flex-shrink:0;">60분</div></div>
+  </div>
+  <div style="margin-top:16px;background:#fffbeb;border-left:4px solid #f59e0b;border-radius:0 10px 10px 0;padding:12px 18px;font-size:1.07rem;color:#92400e;line-height:1.6;">💡 <strong>막혀도 괜찮습니다!</strong> 실행이 안 될 때 보는 <strong>"자주 막히는 문제"</strong> 슬라이드가 준비되어 있고, 오류는 AI에게 물어보면 대부분 해결됩니다.</div>
+</div>
+
+<!-- 슬라이드 4: 시작 전 준비물 체크 -->
+<div class="slide s-content">
+  <h2>시작 전 준비물 체크</h2>
+  <div class="sub">최고급 과정 — 여러 차트와 표를 동시에 다루므로 준비물을 꼼꼼히 확인하세요</div>
+  <div class="card-row">
+    <div class="card"><h3>💻 VS Code + Live Server</h3><p>중급 과정에서 설치한 그대로 사용합니다. Chart.js CDN이 정상 로드되려면 Live Server가 켜져 있어야 합니다.</p></div>
+    <div class="card cyan"><h3>🤖 zoo code 확장</h3><p>오늘도 파일이 3개(index.html·style.css·script.js)로 나뉘어 생성됩니다. 각 파일의 승인(Approve)을 빠짐없이 눌러주세요.</p></div>
+    <div class="card violet"><h3>🌐 인터넷 연결</h3><p>Chart.js 4.4.0을 CDN(외부 서버)에서 불러오므로 인터넷이 필요합니다. 사내망이 CDN을 막는 경우 강사에게 문의하세요.</p></div>
+    <div class="card emerald"><h3>📂 샘플데이터_월간실적.csv</h3><p>같은 폴더의 CSV를 엑셀로 열어 우리 회사 데이터로 바꿔두면 실습 미션에서 바로 활용할 수 있습니다.</p></div>
+  </div>
+  <div style="margin-top:16px;background:#fffbeb;border-left:4px solid #f59e0b;border-radius:0 10px 10px 0;padding:12px 18px;font-size:1.07rem;color:#92400e;line-height:1.6;">💡 12개 중 난이도가 가장 높은 종합 앱입니다 — 완벽히 이해하지 못해도 괜찮습니다. 코드는 AI가 쓰고, 우리는 패턴을 읽고 요청하는 법을 배웁니다.</div>
+</div>
+
+<!-- 슬라이드 5: 오늘 나오는 용어 미리보기 -->
+<div class="slide s-content">
+  <h2>오늘 나오는 용어 미리보기</h2>
+  <div class="sub">외우지 마세요 — 눈에만 익혀두면 수업이 술술 풀립니다</div>
+  <div class="card-row">
+    <div class="card"><h3>📌 Mixed Chart</h3><p>한 canvas에 막대(생산량)와 선(양품률/누적%)을 <strong>동시에</strong> 그리는 Chart.js 기능</p></div>
+    <div class="card cyan"><h3>📌 파레토 분석</h3><p>불량 유형을 건수 내림차순 정렬 후 <strong>누적 비율(cumPct)</strong>을 계산해 상위 80% 원인을 찾는 기법</p></div>
+    <div class="card violet"><h3>📌 beforeDraw 플러그인</h3><p>Chart.js가 차트를 그리기 <strong>직전</strong>에 실행되는 훅. 도넛 중앙에 달성률 % 텍스트를 직접 그릴 때 사용</p></div>
+  </div>
+  <div class="card-row" style="margin-top:20px;">
+    <div class="card emerald"><h3>📌 chart.destroy()</h3><p>차트를 다시 그리기 전 <strong>기존 인스턴스를 정리</strong>하는 메서드. 4개 차트 모두에 필수, 메모리 누수 방지</p></div>
+    <div class="card"><h3>📌 @media print</h3><p>인쇄/PDF 출력 시에만 적용되는 CSS 블록. 헤더 숨기고 <code>page-break-inside:avoid</code>로 차트 잘림 방지</p></div>
+    <div class="card cyan"><h3>📌 BOM</h3><p>CSV 파일 맨 앞에 붙이는 3바이트 표시(<code>﻿</code>). 엑셀이 한글을 깨지지 않게 읽도록 도와줌</p></div>
+  </div>
+  <div style="margin-top:16px;background:#f0fdf4;border-left:4px solid #22c55e;border-radius:0 10px 10px 0;padding:11px 16px;font-size:1.04rem;color:#166534;line-height:1.6;">🌱 낯선 용어가 나와도 괜찮습니다. 코드는 <strong>AI가 쓰고</strong>, 우리는 <strong>읽고 요청</strong>만 하면 돼요!</div>
+</div>
+
+<!-- 슬라이드 6: 핵심 기술 1 — 다중 Chart.js 차트 동시 관리 -->
+<div class="slide s-dark">
+  <h2>핵심 기술 ① — 다중 Chart.js 차트 동시 관리</h2>
+  <div class="sub">charts 객체 하나로 4개 차트를 일괄 관리 — 재생성 전 반드시 destroy</div>
+  <div class="code-block">
+<span class="cm">// 여러 차트를 객체로 관리하여 메모리 누수 방지</span>
+<span class="kw">let</span> charts = {};
+
+<span class="kw">function</span> <span class="fn">destroyCharts</span>() {
+  Object.<span class="fn">values</span>(charts).<span class="fn">forEach</span>(c => { <span class="kw">if</span> (c) c.<span class="fn">destroy</span>(); });
+  charts = {};  <span class="cm">// 객체 초기화</span>
+}
+
+<span class="kw">function</span> <span class="fn">render</span>() {
+  <span class="fn">destroyCharts</span>();  <span class="cm">// 반드시 기존 차트 파괴 후 재생성!</span>
+
+  <span class="cm">// 각 차트를 charts 객체에 저장</span>
+  charts.daily  = <span class="kw">new</span> <span class="fn">Chart</span>(document.<span class="fn">getElementById</span>(<span class="str">'dailyChart'</span>), { ... });
+  charts.pareto = <span class="kw">new</span> <span class="fn">Chart</span>(document.<span class="fn">getElementById</span>(<span class="str">'paretoChart'</span>), { ... });
+  charts.line   = <span class="kw">new</span> <span class="fn">Chart</span>(document.<span class="fn">getElementById</span>(<span class="str">'lineChart'</span>), { ... });
+  charts.gauge  = <span class="kw">new</span> <span class="fn">Chart</span>(document.<span class="fn">getElementById</span>(<span class="str">'gaugeChart'</span>), { ... });
+}
+  </div>
+  <div class="tip-box">💡 월/연도를 바꿀 때마다 <code>render()</code>가 호출되는데, <code>destroy()</code> 없이 새 Chart를 만들면 이전 캔버스가 겹쳐 그려지며 성능이 계속 나빠집니다. 4개 차트를 <strong>하나의 객체</strong>로 묶어두면 일괄 파괴가 한 줄로 끝납니다.</div>
+</div>
+
+<!-- 슬라이드 7: 핵심 기술 2 — 일별 데이터 생성 (실데이터 연동 포인트) -->
+<div class="slide s-dark">
+  <h2>핵심 기술 ② — 일별 데이터 생성 (실데이터 연동 포인트)</h2>
+  <div class="sub">지금은 샘플 자동 생성 — 실 운영 시 이 함수만 실제 데이터로 교체하면 됩니다</div>
+  <div class="code-block">
+<span class="cm">// 현재는 샘플 데이터 자동 생성</span>
+<span class="cm">// 실제 운영 시 01_생산실적관리 앱의 localStorage 데이터 읽어오기</span>
+
+<span class="kw">function</span> <span class="fn">genMonthData</span>(year, month) {
+  <span class="kw">const</span> days = <span class="kw">new</span> <span class="fn">Date</span>(year, month, <span class="num">0</span>).<span class="fn">getDate</span>();
+
+  <span class="kw">const</span> dailyData = Array.<span class="fn">from</span>({length: days}, (_, i) => {
+    <span class="kw">const</span> day = i + <span class="num">1</span>;
+    <span class="kw">const</span> dow = <span class="kw">new</span> <span class="fn">Date</span>(year, month - <span class="num">1</span>, day).<span class="fn">getDay</span>();
+
+    <span class="cm">// 주말 제외 (실제 가동일만)</span>
+    <span class="kw">if</span> (dow === <span class="num">0</span> || dow === <span class="num">6</span>) <span class="kw">return</span> <span class="kw">null</span>;
+
+    <span class="kw">return</span> { day, produced: <span class="cm">/* 수식으로 계산 */</span>, yieldRate: <span class="cm">/* ... */</span> };
+  }).<span class="fn">filter</span>(Boolean);  <span class="cm">// null 제거</span>
+
+  <span class="kw">return</span> { lineData, defectTypes, dailyData, total };
+}
+  </div>
+  <div class="tip-box">💡 지금은 <code>Math.random()</code>으로 매번 다른 샘플값을 만들지만, 구조는 실무와 동일합니다. <strong>미션 2</strong>에서 <code>localStorage.getItem('pcbRecords')</code>로 01_생산실적관리 데이터를 읽어오도록 이 함수만 교체합니다.</div>
+</div>
+
+<!-- 슬라이드 8: 핵심 기술 3 — 달성률 게이지 차트 -->
+<div class="slide s-dark">
+  <h2>핵심 기술 ③ — 달성률 게이지 차트 (도넛 커스텀 플러그인)</h2>
+  <div class="sub">Chart.js 4.x에서 도넛 중앙에 텍스트를 표시하는 표준 패턴</div>
+  <div class="code-block">
+<span class="kw">const</span> gaugeChart = <span class="kw">new</span> <span class="fn">Chart</span>(ctx, {
+  type: <span class="str">'doughnut'</span>,
+  data: { datasets: [{
+    data: [achieveRate, Math.<span class="fn">max</span>(<span class="num">0</span>, <span class="num">100</span> - achieveRate)],
+    backgroundColor: [achieveRate >= <span class="num">100</span> ? <span class="str">'#059669'</span> : <span class="str">'#2563eb'</span>, <span class="str">'#e2e8f0'</span>],
+    borderWidth: <span class="num">0</span>, cutout: <span class="str">'78%'</span>,
+  }] },
+  <span class="cm">// 커스텀 플러그인으로 중앙 텍스트 렌더링</span>
+  plugins: [{
+    id: <span class="str">'centerText'</span>,
+    <span class="fn">beforeDraw</span>(chart) {
+      <span class="kw">const</span> { width, height, ctx } = chart;
+      ctx.<span class="fn">save</span>();
+      ctx.textAlign = <span class="str">'center'</span>;
+      ctx.font = <span class="str">'bold 1.3rem sans-serif'</span>;
+      ctx.fillStyle = <span class="str">'#2563eb'</span>;
+      ctx.<span class="fn">fillText</span>(<span class="str">`${achieveRate}%`</span>, width/<span class="num">2</span>, height/<span class="num">2</span>-<span class="num">8</span>);
+      ctx.<span class="fn">restore</span>();
+    }
+  }],
+});
+  </div>
+  <div class="tip-box">💡 Chart.js는 도넛 중앙에 텍스트를 넣는 옵션을 기본 제공하지 않습니다. <code>beforeDraw</code> 훅에서 canvas 2D API로 직접 <code>fillText</code>하는 것이 표준 우회 방법입니다.</div>
+</div>
+
+<!-- 슬라이드 9: 핵심 기술 4 — 파레토 분석 자동 계산 -->
+<div class="slide s-dark">
+  <h2>핵심 기술 ④ — 파레토 분석 자동 계산</h2>
+  <div class="sub">불량 유형을 내림차순 정렬하고 누적 비율을 계산해 상위 80% 원인을 자동 추출</div>
+  <div class="code-block">
+<span class="kw">function</span> <span class="fn">calcPareto</span>(defectCounts) {
+  <span class="cm">// 내림차순 정렬</span>
+  <span class="kw">const</span> sorted = [...defectCounts].<span class="fn">sort</span>((a, b) => b.cnt - a.cnt);
+
+  <span class="kw">const</span> total = sorted.<span class="fn">reduce</span>((s, d) => s + d.cnt, <span class="num">0</span>);
+  <span class="kw">let</span> cumSum = <span class="num">0</span>;
+
+  <span class="kw">return</span> sorted.<span class="fn">map</span>(d => {
+    cumSum += d.cnt;
+    <span class="kw">return</span> {
+      ...d,
+      pct: Math.<span class="fn">round</span>(d.cnt / total * <span class="num">100</span>),       <span class="cm">// 개별 비율</span>
+      cumPct: Math.<span class="fn">round</span>(cumSum / total * <span class="num">100</span>),  <span class="cm">// 누적 비율</span>
+    };
+  });
+}
+
+<span class="cm">// 상위 80% 불량 유형 추출 → 표에서 빨간색으로 강조</span>
+<span class="kw">const</span> criticalDefects = defects.<span class="fn">filter</span>(d => d.cumPct <= <span class="num">80</span>);
+  </div>
+  <div class="tip-box">💡 실제 코드에서는 불량 유형별 현황 표의 <code>cumPct</code> 값이 80 이하일 때만 빨간색 굵은 글씨로 표시해 "먼저 손봐야 할 불량"을 한눈에 보여줍니다.</div>
+</div>
+
+<!-- 슬라이드 10: 핵심 기술 5 — 전월 대비 비교 -->
+<div class="slide s-dark">
+  <h2>핵심 기술 ⑤ — 전월 대비 비교 (트렌드 표시)</h2>
+  <div class="sub">전월 데이터와 비교해 ▲▼ 화살표와 색상으로 증감을 즉시 보여줍니다</div>
+  <div class="code-block">
+<span class="cm">// 전월 데이터와 비교하여 ▲▼ 표시</span>
+<span class="kw">const</span> prodVs = ((thisMonth.produced - lastMonth.produced)
+                / lastMonth.produced * <span class="num">100</span>).<span class="fn">toFixed</span>(<span class="num">1</span>);
+
+<span class="kw">const</span> trendHTML = <span class="str">`
+  &lt;span style="color:${prodVs >= 0 ? 'var(--green)' : 'var(--red)'}"&gt;
+    ${prodVs >= 0 ? '▲' : '▼'}${Math.abs(prodVs)}% 전월比
+  &lt;/span&gt;`</span>;
+  </div>
+  <div class="tip-box">💡 실제 코드에는 <code>prevProduced</code>·<code>prevYield</code>를 함께 생성해 KPI 카드 아래 <code>kpi-vs up/down</code> 클래스로 초록/빨강 화살표를 자동 표시합니다.</div>
+</div>
+
+<!-- 슬라이드 11: 핵심 기술 6 — 인쇄 최적화 CSS -->
+<div class="slide s-dark">
+  <h2>핵심 기술 ⑥ — 인쇄 최적화 CSS</h2>
+  <div class="sub">@media print으로 헤더를 숨기고 차트가 페이지 중간에 잘리지 않도록 처리</div>
+  <div class="code-block">
+<span class="kw">@media</span> print {
+  <span class="cm">/* 화면 전용 요소 숨기기 */</span>
+  .header, .top-bar, .no-print {
+    display: none !important;
+  }
+
+  <span class="cm">/* 전체 너비 사용 */</span>
+  body { background: <span class="num">#fff</span>; }
+
+  <span class="cm">/* 차트 페이지 잘림 방지 */</span>
+  .chart-area, .panel {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  <span class="cm">/* 색상 강제 출력 (배경색 포함) */</span>
+  .cover {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+  </div>
+  <div class="tip-box">💡 <code>page-break-inside:avoid</code>가 없으면 표나 차트가 페이지 경계에서 반으로 잘려 출력됩니다. <code>print-color-adjust:exact</code>는 커버 배너의 진한 배경색이 인쇄에서도 그대로 나오게 합니다.</div>
+</div>
+
+<!-- 슬라이드 12: 실제 사용한 AI 생성 프롬프트 -->
+
+<!-- ★ 시나리오 슬라이드 -->
+<div class="slide s-story">
+  <div class="story-eyebrow">📌 SITUATION &amp; ROLE</div>
+  <div class="story-title">당신은 생산관리팀 <em>과장</em>입니다.<br>매월 말 생산 보고서 작성에 하루가 꼬박 걸립니다.</div>
+  <div class="story-quote">
+    매월 말이면 생산실적·불량률·설비가동률·납기달성률 다 모아서<br>보고서 만드는 데 하루 종일이야.<br>데이터 입력하면 차트랑 보고서가 자동 생성되는 시스템 만들어줄 수 있어?
+    <cite>— 생산본부장, 월간 보고 준비 회의</cite>
+  </div>
+  <div class="story-grid" style="margin-top:28px;">
+    <div class="story-card">
+      <div class="story-card-label">🚫 현실적 제약</div>
+      <div class="story-card-body">ERP 리포팅 모듈은 <strong>양식 변경 시 IT 요청 필요</strong>.<br>Excel 수작업은 매월 동일 작업 반복.<br>경영진 보고 마감은 매월 1일 오전.</div>
+    </div>
+    <div class="story-card">
+      <div class="story-card-label">💡 내가 가진 것</div>
+      <div class="story-card-body">보고서 항목·KPI 기준 완벽 파악.<br>각 데이터 소스 위치 알고 있음.<br><strong>AI로 자동 월간 보고서 생성 시스템 구현.</strong></div>
+    </div>
+  </div>
+  <div class="story-resolve">
+    <span class="story-resolve-dot"></span>
+    <span>그래서 결심했습니다 — <strong>AI한테 직접 만들어달라고 해보자.</strong> 아래 프롬프트가 그 결과입니다.</span>
+  </div>
+</div>
+<div class="slide s-prompt">
+  <div class="slide-header" style="font-size:12px;font-weight:700;letter-spacing:.1em;color:#2563eb;text-transform:uppercase;margin-bottom:12px;">ACTUAL AI GENERATION PROMPT</div>
+  <h2>실제 사용한 AI 생성 프롬프트</h2>
+  <div class="sub">아래 프롬프트를 VS Code의 zoo code에 그대로 붙여넣으면 월간 생산 보고서가 완성됩니다</div>
+  <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:10px 16px;">
+    <span style="font-size:13px;font-weight:700;color:#4f46e5;">📂 샘플 데이터 — 먼저 다운로드 후 작업 폴더에 저장하세요</span>
+    <a href="https://dmcom2.github.io/vibe-coding/data/샘플데이터_월간실적.csv" download style="display:inline-flex;align-items:center;gap:5px;background:#6366f1;color:#fff;border-radius:8px;padding:5px 14px;font-size:13px;font-weight:600;text-decoration:none;">📥 샘플데이터_월간실적.csv</a>
+  </div>
+  <div class="prompt-copy-label">▼ COPY &amp; PASTE THIS PROMPT</div>
+  <div class="prompt-box">PCB 제조업체 월간 생산 보고서 웹앱을 HTML/CSS/JS 3개 파일로 만들어줘.
+샘플 데이터: fetch()로 아래 CSV를 로드해줘 (localStorage가 비었을 때 초기 데이터로 사용).
+ - 월간실적: https://dmcom2.github.io/vibe-coding/data/샘플데이터_월간실적.csv (컬럼: 연도, 월, 라인, 목표수량, 생산수량, 양품수량, 클레임건수)
+
+보고서 구성:
+1. 커버: 보고서 제목, 기간, 핵심 지표 요약
+2. KPI 카드 6개: 총생산량, 양품수, 불량수, 양품률, 달성률, 클레임
+3. 차트 4개 (Chart.js 4.4.0 CDN):
+   - 일별 생산량 + 양품률 혼합차트 (막대+꺾은선)
+   - 불량 파레토 차트
+   - 라인별 생산량 비교 막대차트
+   - 달성률 게이지 도넛차트 (중앙 % 텍스트)
+4. 라인별 성과 테이블 (라인·목표·생산·양품·양품률·달성률·클레임)
+5. 불량 유형 테이블
+6. 종합 의견 텍스트 입력란
+
+연도/월 선택 드롭다운 → 데이터 재계산.
+인쇄/PDF 버튼 (헤더 숨기고 보고서만 출력, @media print).
+CSV 저장 (BOM 포함).
+다크 계열 헤더.
+localStorage 저장.
+추가 기능:
+- 양품률 경고 배너: 양품률이 기준치(예: 95%) 미만인 라인을 상단 경고 배너로 표시
+코드에 한국어 주석 달아줘</div>
+  <div style="display:flex;align-items:center;gap:8px;margin-top:12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:9px 14px;font-size:0.95rem;font-weight:600;color:#065f46;flex-wrap:wrap;">👣 <b>따라하기</b><span>① 위 프롬프트 전체 복사</span><span style="color:#34d399;">▶</span><span>② VS Code의 zoo code 채팅창에 붙여넣고 전송</span><span style="color:#34d399;">▶</span><span>③ zoo code이 만든 3개 파일 승인(Approve)</span><span style="color:#34d399;">▶</span><span>④ 다음 슬라이드에서 실행</span></div>
+  <div class="extend-tips">
+    <div class="extend-tip"><b>🔗 실제 데이터 연동</b>"01_생산실적관리 앱의 localStorage 데이터를 읽어와서 보고서를 실제 데이터로 생성해줘"</div>
+    <div class="extend-tip"><b>📊 전월 비교 섹션 추가</b>"이번달 vs 지난달 주요 지표 비교 테이블에 ▲▼ 화살표와 색상으로 개선/악화 표시해줘"</div>
+    <div class="extend-tip"><b>✏ 종합 의견 자동 생성</b>"KPI 데이터를 분석해서 이번달 보고서 종합 의견을 AI가 자동으로 작성해줘"</div>
+  </div>
+</div>
+
+<!-- 슬라이드 13: 프롬프트 해설 -->
+<div class="slide s-content">
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+    <div style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">🔍</div>
+    <div>
+      <h2>프롬프트 해설 — 왜 잘 작동했을까?</h2>
+      <p style="font-size:18px;color:#64748b;margin-top:4px;">앞 슬라이드 프롬프트를 분석해 "AI에게 잘 말하는 법"을 배웁니다</p>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+    <div style="background:#f5f3ff;border-left:4px solid #6366f1;padding:14px;border-radius:8px;">
+      <strong style="color:#6366f1;">POINT 1 — 보고서 섹션 순서를 번호로 지정</strong>
+      <p style="margin:6px 0 0;font-size:0.9em;">"1.커버 2.KPI카드 3.차트4개 4.라인별 표 5.불량 표 6.종합의견" — 번호를 붙여 순서대로 나열하면 AI가 섹션을 빠뜨리지 않고 한 번에 생성합니다.</p>
+    </div>
+    <div style="background:#ecfdf5;border-left:4px solid #059669;padding:14px;border-radius:8px;">
+      <strong style="color:#059669;">POINT 2 — 차트 라이브러리·종류·버전 명시</strong>
+      <p style="margin:6px 0 0;font-size:0.9em;">"Chart.js 4.4.0 CDN, 일별 혼합차트(막대+꺾은선), 파레토, 게이지 도넛" — 라이브러리와 차트 종류를 구체화해야 원하는 시각화가 정확하게 나옵니다.</p>
+    </div>
+    <div style="background:#fffbeb;border-left:4px solid #d97706;padding:14px;border-radius:8px;">
+      <strong style="color:#d97706;">POINT 3 — CSV 컬럼명을 그대로 제공</strong>
+      <p style="margin:6px 0 0;font-size:0.9em;">"(컬럼: 연도, 월, 라인, 목표수량, 생산수량, 양품수량, 클레임건수)" — 실제 컬럼명을 알려줘야 파싱 오류와 변수명 불일치가 없습니다.</p>
+    </div>
+    <div style="background:#fef2f2;border-left:4px solid #dc2626;padding:14px;border-radius:8px;">
+      <strong style="color:#dc2626;">POINT 4 — 출력·저장 방식을 키워드로 지정</strong>
+      <p style="margin:6px 0 0;font-size:0.9em;">"인쇄/PDF 버튼(헤더 숨기고 보고서만 출력, @media print), CSV 저장(BOM 포함)" — 출력 방식까지 명시해야 실무에서 바로 쓸 수 있는 코드가 생성됩니다.</p>
+    </div>
+  </div>
+  <div style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);padding:16px;border-radius:10px;">
+    <strong>✏️ 비교해 보기</strong>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
+      <div style="background:rgba(255,255,255,0.7);padding:10px;border-radius:6px;">
+        <strong>❌ 막연한 요청</strong>
+        <p style="font-size:0.85em;margin:4px 0 0;">"월간 보고서 만들어줘" → 어떤 섹션인지, 어떤 차트인지, 어떻게 출력하는지 AI가 임의로 결정합니다.</p>
+      </div>
+      <div style="background:rgba(255,255,255,0.9);padding:10px;border-radius:6px;">
+        <strong>✅ 구체적인 요청</strong>
+        <p style="font-size:0.85em;margin:4px 0 0;">"월간 생산 보고서, 커버·KPI 6개·Chart.js 4.4.0 차트 4개·라인별 표 순서, @media print 헤더 숨김 출력, CSV BOM 포함 내보내기"</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 슬라이드 14: 파일 실행 방법 -->
+<div class="slide s-grad">
+  <h2>파일 실행 방법</h2>
+  <div class="sub">AI가 만든 코드를 VS Code에서 실행하는 4단계</div>
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:flex-start;gap:18px;background:#fff;border-radius:12px;padding:18px 24px;box-shadow:0 2px 8px rgba(37,99,235,.08);"><div style="min-width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#0891b2);color:#fff;font-weight:700;font-size:20px;display:flex;align-items:center;justify-content:center;">1</div><div><h4 style="font-size:21px;font-weight:600;color:#0c1a3a;margin-bottom:4px;">폴더 열기</h4><p style="font-size:18px;color:#64748b;line-height:1.6;">VS Code에서 12_월간생산보고서 폴더를 엽니다 (메뉴 → 파일 → 폴더 열기)</p></div></div><div style="display:flex;align-items:flex-start;gap:18px;background:#fff;border-radius:12px;padding:18px 24px;box-shadow:0 2px 8px rgba(37,99,235,.08);"><div style="min-width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#0891b2);color:#fff;font-weight:700;font-size:20px;display:flex;align-items:center;justify-content:center;">2</div><div><h4 style="font-size:21px;font-weight:600;color:#0c1a3a;margin-bottom:4px;">파일 3개 확인</h4><p style="font-size:18px;color:#64748b;line-height:1.6;">zoo code이 만든 <strong>index.html · style.css · script.js</strong> 3개 파일이 폴더에 있는지 확인 (없으면 zoo code의 승인 대기 확인)</p></div></div><div style="display:flex;align-items:flex-start;gap:18px;background:#fff;border-radius:12px;padding:18px 24px;box-shadow:0 2px 8px rgba(37,99,235,.08);"><div style="min-width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#0891b2);color:#fff;font-weight:700;font-size:20px;display:flex;align-items:center;justify-content:center;">3</div><div><h4 style="font-size:21px;font-weight:600;color:#0c1a3a;margin-bottom:4px;">Go Live 클릭</h4><p style="font-size:18px;color:#64748b;line-height:1.6;">VS Code 우측 하단 <strong>Go Live</strong> 버튼 클릭 (Live Server 확장 필요)</p></div></div><div style="display:flex;align-items:flex-start;gap:18px;background:#fff;border-radius:12px;padding:18px 24px;box-shadow:0 2px 8px rgba(37,99,235,.08);"><div style="min-width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#0891b2);color:#fff;font-weight:700;font-size:20px;display:flex;align-items:center;justify-content:center;">4</div><div><h4 style="font-size:21px;font-weight:600;color:#0c1a3a;margin-bottom:4px;">연도/월 변경 & 인쇄 확인</h4><p style="font-size:18px;color:#64748b;line-height:1.6;">드롭다운에서 월을 바꿔 차트가 즉시 갱신되는지, 인쇄 버튼으로 보고서가 깔끔히 출력되는지 확인</p></div></div>
+  </div>
+</div>
+
+<!-- 슬라이드 14: 자주 막히는 문제 & 해결법 -->
+<div class="slide s-content">
+  <h2>자주 막히는 문제 &amp; 해결법</h2>
+  <div class="sub">여기서 멈추는 게 정상입니다 — 옆 사람도 같은 곳에서 막혀 있어요</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;"><div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:15px 18px;"><p style="font-weight:800;color:#dc2626;font-size:1.11rem;margin-bottom:7px;">🗂️ "화면이 하얗거나 스타일이 안 먹어요"</p><p style="font-size:1.03rem;color:#475569;line-height:1.7;"><strong>index.html · style.css · script.js</strong> 3개 파일이 <strong>같은 폴더</strong>에 있는지, 파일명이 정확한지 확인하세요.</p></div><div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:15px 18px;"><p style="font-weight:800;color:#dc2626;font-size:1.11rem;margin-bottom:7px;">💾 "고쳤는데 화면이 그대로예요"</p><p style="font-size:1.03rem;color:#475569;line-height:1.7;">수정한 <strong>모든 파일을 저장(Ctrl+S)</strong>하세요. 탭 이름 옆 ● 표시는 저장 안 됨 표시! 저장 후 브라우저 <strong>새로고침(F5)</strong>.</p></div><div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:15px 18px;"><p style="font-weight:800;color:#dc2626;font-size:1.11rem;margin-bottom:7px;">📡 "차트가 하나도 안 나와요"</p><p style="font-size:1.03rem;color:#475569;line-height:1.7;">Chart.js는 <strong>CDN(인터넷)</strong>에서 불러옵니다. <strong>F12 → Console</strong>의 빨간 오류를 복사해 AI에게 붙여넣으세요.</p></div><div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:15px 18px;"><p style="font-weight:800;color:#dc2626;font-size:1.11rem;margin-bottom:7px;">🖨 "인쇄하면 헤더까지 같이 나와요"</p><p style="font-size:1.03rem;color:#475569;line-height:1.7;"><code>@media print</code> 블록의 <code>.no-print</code> 클래스가 헤더에 붙어 있는지, CSS가 저장됐는지 확인하세요.</p></div></div>
+  <div style="margin-top:16px;background:#eef2ff;border-left:4px solid #2563eb;border-radius:0 10px 10px 0;padding:12px 18px;font-size:1.07rem;color:#3730a3;line-height:1.6;">🤖 <strong>만능 해결법:</strong> 오류 메시지나 이상한 화면을 그대로 복사(캡처)해서 AI에게 <strong>"이거 왜 안 돼? 고쳐줘"</strong>라고 붙여넣으세요. 대부분 해결됩니다.</div>
+</div>
+
+<!-- 슬라이드 15: AI 프롬프트 작성 요령 -->
+<div class="slide s-grad">
+  <h2>AI 프롬프트 작성 요령</h2>
+  <div class="sub">종합 보고서를 한 번에 완성하는 핵심 지시 구조</div>
+  <div class="step-list">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>라이브러리 명시</h4>
+        <p>"Chart.js 4.4.0 CDN" — 버전을 명시하면 구버전 API를 사용하는 실수를 방지합니다.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>보고서 구성을 번호로 나열</h4>
+        <p>"1.커버 2.KPI 6개 3.차트 4개 4.라인별 표 5.불량 표 6.종합의견" — 순서대로 나열하면 빠진 섹션 없이 한 번에 생성됩니다.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>KPI·차트 필드명 명시</h4>
+        <p>"총생산량, 양품수, 불량수, 양품률, 달성률, 클레임" — 구체적인 지표명을 주면 실제 업무에 바로 쓸 수 있는 구조가 생성됩니다.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>출력/저장 기능 키워드</h4>
+        <p>"인쇄/PDF 버튼 (헤더 숨기고 보고서만 출력)", "CSV 저장" — 키워드가 명확하면 AI가 정확한 구현을 생성합니다.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 슬라이드 16: 실습 미션 -->
+<div class="slide s-content">
+  <h2>실습 미션</h2>
+  <div class="sub">배운 내용을 직접 수정하며 완성도를 높여보세요</div>
+  <div class="card-row">
+    <div class="card">
+      <h3>미션 1 ⭐</h3>
+      <p><strong>회사명 변경</strong><br><br>보고서 커버의 회사명(PCB Manufacturing Co., Ltd.)을 실제 우리 회사명과 부서명으로 바꿔보세요.</p>
+      <div style="margin-top:12px;"><span class="tag">cover-sub</span><span class="tag">buildReportHTML</span></div>
+    </div>
+    <div class="card cyan">
+      <h3>미션 2 ⭐⭐</h3>
+      <p><strong>목표 양품률 기준선 추가</strong><br><br>일별 혼합 차트(dailyChart)에 목표 양품률(예: 98%) 수평 점선을 추가하고, 목표를 미달한 날짜의 막대 색상을 주황색으로 강조해 문제 날짜를 한눈에 식별해보세요.</p>
+      <div style="margin-top:12px;"><span class="tag">annotations</span><span class="tag">backgroundColor 조건부</span></div>
+    </div>
+    <div class="card violet">
+      <h3>미션 3 ⭐⭐⭐</h3>
+      <p><strong>라인별 주차 달성률 히트맵</strong><br><br>라인(L1~L4) × 1~4주차 달성률을 색상으로 표현하는 히트맵 테이블을 보고서 하단에 추가해보세요. 90% 이상 초록, 80~90% 노랑, 80% 미만 빨강으로 구분하세요.</p>
+      <div style="margin-top:12px;"><span class="tag">heatmap</span><span class="tag">weeklyAchRate</span></div>
+    </div>
+  </div>
+  <div style="margin-top:16px;padding:16px 20px;background:#eff6ff;border-radius:12px;border-left:4px solid #2563eb;">
+    <p style="font-size:17px;color:#475569;"><strong>체크리스트:</strong> 연도/월 선택 정상 작동 ✓ · KPI 카드 6개 정확한 수치 ✓ · 혼합/파레토/게이지 차트 렌더링 ✓ · 인쇄 시 헤더 없이 보고서만 출력 ✓ · CSV 내보내기 ✓</p>
+  </div>
+</div>
+
+<!-- 슬라이드 17: 마무리 -->
+<div class="slide s-end">
+  <a class="result-link" href="#" onclick="openResultPopup();return false;" title="완성 예제 새 창으로 보기">🔗</a>
+  <div class="result-link-tip">완성 예제 보기</div>
+  <h2>회사활용예제 12 <span>완료</span></h2>
+  <p>다중 Chart.js 관리 · 게이지 플러그인 · 파레토 계산 · 인쇄 최적화 CSS</p>
+  <div class="mission-grid">
+    <div class="mission-card">
+      <div class="m-num">핵심 패턴 1</div>
+      <div class="m-title">charts 객체 + destroyCharts() → 4개 차트 일괄 관리
+</div>
+    </div>
+    <div class="mission-card">
+      <div class="m-num">핵심 패턴 2</div>
+      <div class="m-title">beforeDraw 플러그인 → 도넛 중앙 텍스트</div>
+    </div>
+    <div class="mission-card">
+      <div class="m-num">핵심 패턴 3</div>
+      <div class="m-title">정렬 + 누적합 → 파레토 상위 80% 추출</div>
+    </div>
+  </div>
+
+  <p style="margin-top:22px;text-align:center;font-size:0.95rem;font-weight:700;letter-spacing:.05em;color:rgba(255,255,255,.9);white-space:nowrap;">본 교육자료는 사전 승인 없이 외부에 유출하거나 공유할 수 없습니다. — AI정보기획팀</p>
+</div>
+
+</div>
+
+<!-- 슬라이드 점 네비게이션 -->
+<div class="nav-dots" id="navDots"></div>
+
+<!-- 내비게이션 -->
+<div class="nav">
+  <button id="prevBtn" onclick="changeSlide(-1)" disabled>‹</button>
+  <span class="slide-label" id="slideLabel">1 / 17</span>
+  <button id="nextBtn" onclick="changeSlide(1)">›</button>
+</div>
+
+<script>
+const RESULT_HTML_B64="PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImtvIj4KPGhlYWQ+CjxtZXRhIGNoYXJzZXQ9IlVURi04Ij4KPG1ldGEgbmFtZT0idmlld3BvcnQiIGNvbnRlbnQ9IndpZHRoPWRldmljZS13aWR0aCwgaW5pdGlhbC1zY2FsZT0xLjAiPgo8dGl0bGU+7JuU6rCEIOyDneyCsCDrs7Tqs6DshJwgfCBQQ0Ig7KCc7KGwPC90aXRsZT4KPHNjcmlwdCBzcmM9Imh0dHBzOi8vY2RuLmpzZGVsaXZyLm5ldC9ucG0vY2hhcnQuanNANC40LjAvZGlzdC9jaGFydC51bWQubWluLmpzIj48L3NjcmlwdD4KPHN0eWxlPgoqe21hcmdpbjowO3BhZGRpbmc6MDtib3gtc2l6aW5nOmJvcmRlci1ib3g7fQo6cm9vdHsKICAtLWJnOiNmMGY0Zjg7LS1zdXJmYWNlOiNmZmY7LS1ib3JkZXI6I2QxZDllMDsKICAtLXRleHQ6IzFhMjAyYzstLXN1YjojNGE1NTY4Oy0tbXV0ZTojYTBhZWMwOwogIC0tYmx1ZTojMjU2M2ViOy0tZ3JlZW46IzA1OTY2OTstLWFtYmVyOiNkOTc3MDY7LS1yZWQ6I2RjMjYyNjstLWRhcms6IzExMTgyNzsKICAtLXJhZDoxMHB4Oy0tc2hhZG93OjAgMXB4IDNweCByZ2JhKDAsMCwwLC4xKSwwIDJweCA4cHggcmdiYSgwLDAsMCwuMDYpOwp9CmJvZHl7Zm9udC1mYW1pbHk6J+unkeydgCDqs6DrlJUnLCdTZWdvZSBVSScsc2Fucy1zZXJpZjtiYWNrZ3JvdW5kOnZhcigtLWJnKTtjb2xvcjp2YXIoLS10ZXh0KTttaW4taGVpZ2h0OjEwMHZoO30KLmhlYWRlcntiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzExMTgyNywjMzc0MTUxKTtjb2xvcjojZmZmO3BhZGRpbmc6MCAyOHB4O2hlaWdodDo1OHB4O2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjEycHg7Ym94LXNoYWRvdzowIDJweCA4cHggcmdiYSgwLDAsMCwuMTUpO30KLmhlYWRlciBoMXtmb250LXNpemU6MXJlbTtmb250LXdlaWdodDo3MDA7ZmxleDoxO30KLmJ0bntwYWRkaW5nOjdweCAxNnB4O2JvcmRlcjpub25lO2JvcmRlci1yYWRpdXM6N3B4O2ZvbnQtc2l6ZTouODJyZW07Zm9udC13ZWlnaHQ6NzAwO2N1cnNvcjpwb2ludGVyO2ZvbnQtZmFtaWx5OmluaGVyaXQ7fQouYnRuOmhvdmVye2ZpbHRlcjpicmlnaHRuZXNzKC45Mik7fQouYnRuLXdoaXRle2JhY2tncm91bmQ6I2ZmZjtjb2xvcjp2YXIoLS1kYXJrKTt9Ci5idG4tZ2hvc3R7YmFja2dyb3VuZDpyZ2JhKDI1NSwyNTUsMjU1LC4xNSk7Y29sb3I6I2ZmZjtib3JkZXI6MXB4IHNvbGlkIHJnYmEoMjU1LDI1NSwyNTUsLjMpO30KLmJ0bi1ibHVle2JhY2tncm91bmQ6dmFyKC0tYmx1ZSk7Y29sb3I6I2ZmZjt9Ci5idG4tb3V0bGluZXtiYWNrZ3JvdW5kOnRyYW5zcGFyZW50O2NvbG9yOnZhcigtLXN1Yik7Ym9yZGVyOjFweCBzb2xpZCB2YXIoLS1ib3JkZXIpO30KCi50b3AtYmFye2JhY2tncm91bmQ6dmFyKC0tc3VyZmFjZSk7Ym9yZGVyLWJvdHRvbToxcHggc29saWQgdmFyKC0tYm9yZGVyKTtwYWRkaW5nOjEwcHggMjhweDtkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDoxNHB4O30KLnRvcC1iYXIgc2VsZWN0e3BhZGRpbmc6N3B4IDEycHg7Ym9yZGVyOjFweCBzb2xpZCB2YXIoLS1ib3JkZXIpO2JvcmRlci1yYWRpdXM6N3B4O2ZvbnQtc2l6ZTouODVyZW07Zm9udC1mYW1pbHk6aW5oZXJpdDtvdXRsaW5lOm5vbmU7Zm9udC13ZWlnaHQ6NzAwO30KCi5zY3JlZW4tbGF5b3V0e3BhZGRpbmc6MjBweCAyOHB4O30KCi5jb3ZlcntiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzExMTgyNywjMWUzYTVmKTtjb2xvcjojZmZmO2JvcmRlci1yYWRpdXM6MTRweDtwYWRkaW5nOjMwcHg7bWFyZ2luLWJvdHRvbToyMHB4O3Bvc2l0aW9uOnJlbGF0aXZlO292ZXJmbG93OmhpZGRlbjt9Ci5jb3Zlcjo6YmVmb3Jle2NvbnRlbnQ6Jyc7cG9zaXRpb246YWJzb2x1dGU7cmlnaHQ6LTQwcHg7dG9wOi00MHB4O3dpZHRoOjIwMHB4O2hlaWdodDoyMDBweDtib3JkZXItcmFkaXVzOjUwJTtiYWNrZ3JvdW5kOnJnYmEoMjU1LDI1NSwyNTUsLjA0KTt9Ci5jb3Zlci10aXRsZXtmb250LXNpemU6MS42cmVtO2ZvbnQtd2VpZ2h0OjkwMDtsZXR0ZXItc3BhY2luZzoxcHg7bWFyZ2luLWJvdHRvbTo2cHg7fQouY292ZXItc3Vie2ZvbnQtc2l6ZTouOXJlbTtvcGFjaXR5Oi43O21hcmdpbi1ib3R0b206MjBweDt9Ci5jb3Zlci1tZXRhe2Rpc3BsYXk6ZmxleDtnYXA6MjhweDt9Ci5jb3Zlci1tZXRhLWl0ZW17Zm9udC1zaXplOi44MnJlbTtvcGFjaXR5Oi44O30KLmNvdmVyLW1ldGEtaXRlbSBie2Rpc3BsYXk6YmxvY2s7Zm9udC1zaXplOjFyZW07b3BhY2l0eToxO30KCi5rcGktZ3JpZHtkaXNwbGF5OmdyaWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOnJlcGVhdCg2LDFmcik7Z2FwOjEycHg7bWFyZ2luLWJvdHRvbToyMHB4O30KLmtwaS1jYXJke2JhY2tncm91bmQ6dmFyKC0tc3VyZmFjZSk7Ym9yZGVyLXJhZGl1czoxMHB4O3BhZGRpbmc6MTRweCAxMnB4O2JveC1zaGFkb3c6dmFyKC0tc2hhZG93KTt0ZXh0LWFsaWduOmNlbnRlcjtib3JkZXItdG9wOjNweCBzb2xpZCB0cmFuc3BhcmVudDt9Ci5rcGktbGFiZWx7Zm9udC1zaXplOi42OHJlbTtjb2xvcjp2YXIoLS1tdXRlKTttYXJnaW4tYm90dG9tOjRweDt9Ci5rcGktdmFse2ZvbnQtc2l6ZToxLjNyZW07Zm9udC13ZWlnaHQ6OTAwO2xpbmUtaGVpZ2h0OjE7fQoua3BpLXVuaXR7Zm9udC1zaXplOi42OHJlbTtjb2xvcjp2YXIoLS1tdXRlKTttYXJnaW4tdG9wOjNweDt9Ci5rcGktdnN7Zm9udC1zaXplOi43cmVtO21hcmdpbi10b3A6M3B4O30KLnVwe2NvbG9yOnZhcigtLWdyZWVuKTt9LmRvd257Y29sb3I6dmFyKC0tcmVkKTt9Cgouc2VjLXRpdGxle2ZvbnQtc2l6ZTouOXJlbTtmb250LXdlaWdodDo4MDA7bWFyZ2luLWJvdHRvbToxMnB4O2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjhweDt9Ci5zZWMtdGl0bGU6OmFmdGVye2NvbnRlbnQ6Jyc7ZmxleDoxO2hlaWdodDoxcHg7YmFja2dyb3VuZDp2YXIoLS1ib3JkZXIpO30KCi5jaGFydC1ncmlke2Rpc3BsYXk6Z3JpZDtncmlkLXRlbXBsYXRlLWNvbHVtbnM6MmZyIDFmcjtnYXA6MTRweDttYXJnaW4tYm90dG9tOjIwcHg7fQouY2hhcnQtZ3JpZDJ7ZGlzcGxheTpncmlkO2dyaWQtdGVtcGxhdGUtY29sdW1uczoxZnIgMWZyIDFmcjtnYXA6MTRweDttYXJnaW4tYm90dG9tOjIwcHg7fQoucGFuZWx7YmFja2dyb3VuZDp2YXIoLS1zdXJmYWNlKTtib3JkZXItcmFkaXVzOnZhcigtLXJhZCk7cGFkZGluZzoxNnB4O2JveC1zaGFkb3c6dmFyKC0tc2hhZG93KTt9Ci5wYW5lbC10aXRsZXtmb250LXNpemU6LjgycmVtO2ZvbnQtd2VpZ2h0OjcwMDttYXJnaW4tYm90dG9tOjEycHg7Y29sb3I6dmFyKC0tc3ViKTt9Ci5jaGFydC1oMjAwe2hlaWdodDoyMDBweDtwb3NpdGlvbjpyZWxhdGl2ZTt9Ci5jaGFydC1oMTYwe2hlaWdodDoxNjBweDtwb3NpdGlvbjpyZWxhdGl2ZTt9CgoucGVyZi10YWJsZXt3aWR0aDoxMDAlO2JvcmRlci1jb2xsYXBzZTpjb2xsYXBzZTtmb250LXNpemU6Ljc4cmVtO30KLnBlcmYtdGFibGUgdGh7YmFja2dyb3VuZDp2YXIoLS1iZyk7cGFkZGluZzo5cHggMTBweDt0ZXh0LWFsaWduOmNlbnRlcjtib3JkZXItYm90dG9tOjJweCBzb2xpZCB2YXIoLS1ib3JkZXIpO2ZvbnQtc2l6ZTouNzJyZW07Zm9udC13ZWlnaHQ6NzAwO2NvbG9yOnZhcigtLXN1Yik7fQoucGVyZi10YWJsZSB0ZHtwYWRkaW5nOjlweCAxMHB4O2JvcmRlci1ib3R0b206MXB4IHNvbGlkIHZhcigtLWJvcmRlcik7dGV4dC1hbGlnbjpjZW50ZXI7fQoucGVyZi10YWJsZSB0cjpsYXN0LWNoaWxkIHRke2ZvbnQtd2VpZ2h0OjgwMDtiYWNrZ3JvdW5kOnZhcigtLWJnKTt9CgouZGVmLXRhYmxle3dpZHRoOjEwMCU7Ym9yZGVyLWNvbGxhcHNlOmNvbGxhcHNlO2ZvbnQtc2l6ZTouNzhyZW07fQouZGVmLXRhYmxlIHRoe2JhY2tncm91bmQ6dmFyKC0tYmcpO3BhZGRpbmc6OHB4IDEwcHg7dGV4dC1hbGlnbjpsZWZ0O2JvcmRlci1ib3R0b206MnB4IHNvbGlkIHZhcigtLWJvcmRlcik7Zm9udC13ZWlnaHQ6NzAwO2NvbG9yOnZhcigtLXN1Yik7Zm9udC1zaXplOi43MnJlbTt9Ci5kZWYtdGFibGUgdGR7cGFkZGluZzo4cHggMTBweDtib3JkZXItYm90dG9tOjFweCBzb2xpZCB2YXIoLS1ib3JkZXIpO30KCi5oaWdobGlnaHQtYm94e2JhY2tncm91bmQ6dmFyKC0tYmcpO2JvcmRlci1sZWZ0OjRweCBzb2xpZCB2YXIoLS1ibHVlKTtib3JkZXItcmFkaXVzOjAgOHB4IDhweCAwO3BhZGRpbmc6MTBweCAxNHB4O21hcmdpbi1ib3R0b206OHB4O2ZvbnQtc2l6ZTouOHJlbTtsaW5lLWhlaWdodDoxLjY7fQoKQGtleWZyYW1lcyBibGluay15aWVsZHswJSwxMDAle29wYWNpdHk6MX01MCV7b3BhY2l0eTouODh9fQoueWllbGQtYWxlcnQtYmFubmVye3BhZGRpbmc6OXB4IDI4cHg7YmFja2dyb3VuZDpsaW5lYXItZ3JhZGllbnQoOTBkZWcsI2ZmZjdlZCwjZmZmYmViKTtib3JkZXItYm90dG9tOjJweCBzb2xpZCAjZmNkMzRkO2NvbG9yOiM3ODM1MGY7Zm9udC1zaXplOi44cmVtO2ZvbnQtd2VpZ2h0OjcwMDtkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDoxMHB4O2FuaW1hdGlvbjpibGluay15aWVsZCAycyBpbmZpbml0ZTt9Ci55aWVsZC1hbGVydC1iYW5uZXIgc3BhbntiYWNrZ3JvdW5kOiNkOTc3MDY7Y29sb3I6I2ZmZjtwYWRkaW5nOjJweCA4cHg7Ym9yZGVyLXJhZGl1czoxMHB4O2ZvbnQtc2l6ZTouNzJyZW07fQoKLmNvbXBhcmUtdGFibGV7d2lkdGg6MTAwJTtib3JkZXItY29sbGFwc2U6Y29sbGFwc2U7Zm9udC1zaXplOi43OHJlbTt9Ci5jb21wYXJlLXRhYmxlIHRoe2JhY2tncm91bmQ6dmFyKC0tYmcpO3BhZGRpbmc6OHB4IDEwcHg7dGV4dC1hbGlnbjpjZW50ZXI7Ym9yZGVyLWJvdHRvbToycHggc29saWQgdmFyKC0tYm9yZGVyKTtmb250LXNpemU6LjcycmVtO2ZvbnQtd2VpZ2h0OjcwMDtjb2xvcjp2YXIoLS1zdWIpO30KLmNvbXBhcmUtdGFibGUgdGR7cGFkZGluZzo4cHggMTBweDtib3JkZXItYm90dG9tOjFweCBzb2xpZCB2YXIoLS1ib3JkZXIpO3RleHQtYWxpZ246Y2VudGVyO30KCi5saW5lLXdhcm57YmFja2dyb3VuZDojZmVmM2M3O2NvbG9yOiNkOTc3MDY7cGFkZGluZzoxcHggNnB4O2JvcmRlci1yYWRpdXM6NnB4O2ZvbnQtc2l6ZTouNjhyZW07Zm9udC13ZWlnaHQ6NzAwO21hcmdpbi1sZWZ0OjRweDt9Ci5saW5lLWFsYXJte2JhY2tncm91bmQ6I2ZlZTJlMjtjb2xvcjojZGMyNjI2O3BhZGRpbmc6MXB4IDZweDtib3JkZXItcmFkaXVzOjZweDtmb250LXNpemU6LjY4cmVtO2ZvbnQtd2VpZ2h0OjcwMDttYXJnaW4tbGVmdDo0cHg7fQoKLnRvYXN0e3Bvc2l0aW9uOmZpeGVkO2JvdHRvbToyNHB4O3JpZ2h0OjI0cHg7YmFja2dyb3VuZDojMWUyOTNiO2NvbG9yOiNmZmY7cGFkZGluZzoxMHB4IDE4cHg7Ym9yZGVyLXJhZGl1czo5cHg7Zm9udC1zaXplOi44MnJlbTtmb250LXdlaWdodDo2MDA7ei1pbmRleDo5OTk7b3BhY2l0eTowO3BvaW50ZXItZXZlbnRzOm5vbmU7dHJhbnNpdGlvbjpvcGFjaXR5IC4zczt9Ci50b2FzdC5zaG93e29wYWNpdHk6MTt9CgpAbWVkaWEgcHJpbnR7CiAgLmhlYWRlciwudG9wLWJhciwubm8tcHJpbnR7ZGlzcGxheTpub25lIWltcG9ydGFudDt9CiAgLnNjcmVlbi1sYXlvdXR7cGFkZGluZzowO30KICBib2R5e2JhY2tncm91bmQ6I2ZmZjt9CiAgLnBhbmVse2JveC1zaGFkb3c6bm9uZTtib3JkZXI6MXB4IHNvbGlkIHZhcigtLWJvcmRlcik7fQogIC5jb3Zlcnstd2Via2l0LXByaW50LWNvbG9yLWFkanVzdDpleGFjdDtwcmludC1jb2xvci1hZGp1c3Q6ZXhhY3Q7fQogIC5jaGFydC1oMjAwLC5jaGFydC1oMTYwe3BhZ2UtYnJlYWstaW5zaWRlOmF2b2lkO30KICAueWllbGQtYWxlcnQtYmFubmVyLC50b2FzdHtkaXNwbGF5Om5vbmUhaW1wb3J0YW50O30KfQo8L3N0eWxlPgo8L2hlYWQ+Cjxib2R5PgoKPGRpdiBjbGFzcz0iaGVhZGVyIG5vLXByaW50Ij4KICA8aDE+8J+TiiDsm5TqsIQg7IOd7IKwIOuztOqzoOyEnCA8c3BhbiBzdHlsZT0iZm9udC1zaXplOi44cmVtO29wYWNpdHk6Ljc7Zm9udC13ZWlnaHQ6NDAwOyI+IOKAlCBQQ0IgTWFudWZhY3R1cmluZzwvc3Bhbj48L2gxPgogIDxidXR0b24gY2xhc3M9ImJ0biBidG4tZ2hvc3QiIG9uY2xpY2s9IndpbmRvdy5wcmludCgpIj7wn5aoIOyduOyHhC9QREY8L2J1dHRvbj4KICA8YnV0dG9uIGNsYXNzPSJidG4gYnRuLXdoaXRlIiBvbmNsaWNrPSJleHBvcnRDU1YoKSI+8J+TpSBDU1Yg7KCA7J6lPC9idXR0b24+CjwvZGl2PgoKPGRpdiBjbGFzcz0ieWllbGQtYWxlcnQtYmFubmVyIiBpZD0ieWllbGRBbGVydEJhbm5lciIgc3R5bGU9ImRpc3BsYXk6bm9uZTsiPjwvZGl2PgoKPGRpdiBjbGFzcz0idG9wLWJhciBuby1wcmludCI+CiAgPHNwYW4gc3R5bGU9ImZvbnQtc2l6ZTouODJyZW07Zm9udC13ZWlnaHQ6NzAwO2NvbG9yOnZhcigtLXN1YikiPuuztOqzoOyEnCDquLDqsIQuPC9zcGFuPgogIDxzZWxlY3QgaWQ9InllYXJTZWwiIG9uY2hhbmdlPSJyZW5kZXIoKSI+PC9zZWxlY3Q+CiAgPHNlbGVjdCBpZD0ibW9udGhTZWwiIG9uY2hhbmdlPSJyZW5kZXIoKSI+CiAgICA8b3B0aW9uIHZhbHVlPSIxIj4x7JuUPC9vcHRpb24+PG9wdGlvbiB2YWx1ZT0iMiI+MuyblDwvb3B0aW9uPjxvcHRpb24gdmFsdWU9IjMiPjPsm5Q8L29wdGlvbj48b3B0aW9uIHZhbHVlPSI0Ij407JuUPC9vcHRpb24+CiAgICA8b3B0aW9uIHZhbHVlPSI1Ij417JuUPC9vcHRpb24+PG9wdGlvbiB2YWx1ZT0iNiI+NuyblDwvb3B0aW9uPjxvcHRpb24gdmFsdWU9IjciPjfsm5Q8L29wdGlvbj48b3B0aW9uIHZhbHVlPSI4Ij447JuUPC9vcHRpb24+CiAgICA8b3B0aW9uIHZhbHVlPSI5Ij457JuUPC9vcHRpb24+PG9wdGlvbiB2YWx1ZT0iMTAiPjEw7JuUPC9vcHRpb24+PG9wdGlvbiB2YWx1ZT0iMTEiPjEx7JuUPC9vcHRpb24+PG9wdGlvbiB2YWx1ZT0iMTIiPjEy7JuUPC9vcHRpb24+CiAgPC9zZWxlY3Q+CiAgPGJ1dHRvbiBjbGFzcz0iYnRuIGJ0bi1ibHVlIiBzdHlsZT0ibWFyZ2luLWxlZnQ6YXV0byIgb25jbGljaz0icmVuZGVyKCkiPuuztOqzoOyEnCDqsLHsi6A8L2J1dHRvbj4KPC9kaXY+Cgo8ZGl2IGNsYXNzPSJzY3JlZW4tbGF5b3V0IiBpZD0icmVwb3J0Qm9keSI+PC9kaXY+Cgo8ZGl2IGNsYXNzPSJ0b2FzdCIgaWQ9InRvYXN0Ij48L2Rpdj4KCjxzY3JpcHQ+CmNvbnN0IHRvZGF5PW5ldyBEYXRlKCkudG9JU09TdHJpbmcoKS5zbGljZSgwLDEwKTsKY29uc3QgdGhpc1llYXI9cGFyc2VJbnQodG9kYXkuc2xpY2UoMCw0KSk7CmNvbnN0IHRoaXNNb250aD1wYXJzZUludCh0b2RheS5zbGljZSg1LDcpKTsKCmNvbnN0IHlzPWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCd5ZWFyU2VsJyk7CmZvcihsZXQgeT10aGlzWWVhci0yO3k8PXRoaXNZZWFyO3krKykgeXMuaW5uZXJIVE1MKz1gPG9wdGlvbiB2YWx1ZT0iJHt5fSIgJHt5PT09dGhpc1llYXI/J3NlbGVjdGVkJzonJ30+JHt5feuFhDwvb3B0aW9uPmA7CmRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdtb250aFNlbCcpLnZhbHVlPVN0cmluZyh0aGlzTW9udGgpOwoKY29uc3QgTElORVM9Wycx7Zi46riwJywnMu2YuOq4sCcsJzPtmLjquLAnLCc07Zi46riwJ107CmNvbnN0IExJTkVfQ09MT1JTPVsnIzI1NjNlYicsJyMwNTk2NjknLCcjZDk3NzA2JywnIzdjM2FlZCddOwoKZnVuY3Rpb24gZ2VuTW9udGhEYXRhKHllYXIsbW9udGgpewogIGNvbnN0IGRheXM9bmV3IERhdGUoeWVhcixtb250aCwwKS5nZXREYXRlKCk7CiAgY29uc3QgbGluZURhdGE9TElORVMubWFwKChsLGxpKT0+ewogICAgY29uc3QgdGFyZ2V0PU1hdGgucm91bmQoKDgwMCtsaSoxMDArTWF0aC5yYW5kb20oKSoxMDApLzEwKSoxMDsKICAgIGNvbnN0IHByb2R1Y2VkPU1hdGgucm91bmQodGFyZ2V0KigwLjkrTWF0aC5yYW5kb20oKSowLjE1KSk7CiAgICBjb25zdCBnb29kPU1hdGgucm91bmQocHJvZHVjZWQqKDAuOTc1K01hdGgucmFuZG9tKCkqMC4wMikpOwogICAgY29uc3QgY2xhaW1zPU1hdGguZmxvb3IoTWF0aC5yYW5kb20oKSozKTsKICAgIHJldHVybiB7bGluZTpsLHRhcmdldCxwcm9kdWNlZCxnb29kLGRlZmVjdDpwcm9kdWNlZC1nb29kLAogICAgICB5aWVsZFJhdGU6KGdvb2QvcHJvZHVjZWQqMTAwKS50b0ZpeGVkKDEpLAogICAgICBhY2hpZXZlUmF0ZToocHJvZHVjZWQvdGFyZ2V0KjEwMCkudG9GaXhlZCgxKSwKICAgICAgdXB0aW1lOig5MitNYXRoLnJhbmRvbSgpKjcpLnRvRml4ZWQoMSksY2xhaW1zfTsKICB9KTsKICBjb25zdCBkZWZlY3RUeXBlcz1bCiAgICB7bmFtZTon64uo6529KFNob3J0KScsY250Ok1hdGguZmxvb3IoTWF0aC5yYW5kb20oKSozMCkrMTB9LAogICAge25hbWU6J+qwnOuwqShPcGVuKScsY250Ok1hdGguZmxvb3IoTWF0aC5yYW5kb20oKSoyMCkrNX0sCiAgICB7bmFtZTon6riw6rO1KFZvaWQpJyxjbnQ6TWF0aC5mbG9vcihNYXRoLnJhbmRvbSgpKjE1KSszfSwKICAgIHtuYW1lOifrsJXrpqwnLGNudDpNYXRoLmZsb29yKE1hdGgucmFuZG9tKCkqMTIpKzJ9LAogICAge25hbWU6J+y5mOyImOu2iOufiScsY250Ok1hdGguZmxvb3IoTWF0aC5yYW5kb20oKSoxMCkrMX0sCiAgICB7bmFtZTon6riw7YOAJyxjbnQ6TWF0aC5mbG9vcihNYXRoLnJhbmRvbSgpKjgpKzF9LAogIF0uc29ydCgoYSxiKT0+Yi5jbnQtYS5jbnQpOwogIGNvbnN0IHRvdERlZmVjdD1kZWZlY3RUeXBlcy5yZWR1Y2UoKHMsZCk9PnMrZC5jbnQsMCk7CiAgbGV0IGN1bT0wOwogIGRlZmVjdFR5cGVzLmZvckVhY2goZD0+e2N1bSs9ZC5jbnQ7ZC5jdW1QY3Q9TWF0aC5yb3VuZChjdW0vdG90RGVmZWN0KjEwMCk7ZC5wY3Q9TWF0aC5yb3VuZChkLmNudC90b3REZWZlY3QqMTAwKTt9KTsKICBjb25zdCBkYWlseURhdGE9QXJyYXkuZnJvbSh7bGVuZ3RoOmRheXN9LChfLGkpPT57CiAgICBjb25zdCBkYXk9aSsxO2NvbnN0IGRvdz1uZXcgRGF0ZSh5ZWFyLG1vbnRoLTEsZGF5KS5nZXREYXkoKTsKICAgIGlmKGRvdz09PTB8fGRvdz09PTYpIHJldHVybiBudWxsOwogICAgcmV0dXJuIHtkYXkscHJvZHVjZWQ6TElORVMucmVkdWNlKChzLGwsbGkpPT5zK01hdGgucm91bmQoKGxpbmVEYXRhW2xpXS5wcm9kdWNlZC9kYXlzKSooMC44NStNYXRoLnJhbmRvbSgpKi4zKSksMCksZ29vZDowLHlpZWxkUmF0ZTowfTsKICB9KS5maWx0ZXIoQm9vbGVhbik7CiAgZGFpbHlEYXRhLmZvckVhY2goZD0+e2QuZ29vZD1NYXRoLnJvdW5kKGQucHJvZHVjZWQqMC45NzYpO2QueWllbGRSYXRlPShkLmdvb2QvZC5wcm9kdWNlZCoxMDApLnRvRml4ZWQoMSk7fSk7CiAgY29uc3QgdG90YWw9ewogICAgdGFyZ2V0OmxpbmVEYXRhLnJlZHVjZSgocyxsKT0+cytsLnRhcmdldCwwKSwKICAgIHByb2R1Y2VkOmxpbmVEYXRhLnJlZHVjZSgocyxsKT0+cytsLnByb2R1Y2VkLDApLAogICAgZ29vZDpsaW5lRGF0YS5yZWR1Y2UoKHMsbCk9PnMrbC5nb29kLDApLAogICAgZGVmZWN0OmxpbmVEYXRhLnJlZHVjZSgocyxsKT0+cytsLmRlZmVjdCwwKSwKICAgIGNsYWltczpsaW5lRGF0YS5yZWR1Y2UoKHMsbCk9PnMrbC5jbGFpbXMsMCksCiAgfTsKICB0b3RhbC55aWVsZFJhdGU9KHRvdGFsLmdvb2QvdG90YWwucHJvZHVjZWQqMTAwKS50b0ZpeGVkKDEpOwogIHRvdGFsLmFjaGlldmVSYXRlPSh0b3RhbC5wcm9kdWNlZC90b3RhbC50YXJnZXQqMTAwKS50b0ZpeGVkKDEpOwogIGNvbnN0IHByZXZQcm9kdWNlZD10b3RhbC5wcm9kdWNlZCooMC45MitNYXRoLnJhbmRvbSgpKjAuMSk7CiAgY29uc3QgcHJldllpZWxkPXBhcnNlRmxvYXQodG90YWwueWllbGRSYXRlKS0wLjMrTWF0aC5yYW5kb20oKSowLjY7CiAgY29uc3QgcHJldkFjaGlldmU9KHBhcnNlRmxvYXQodG90YWwuYWNoaWV2ZVJhdGUpLTIrTWF0aC5yYW5kb20oKSo0KS50b0ZpeGVkKDEpOwogIGNvbnN0IHByZXZDbGFpbXM9dG90YWwuY2xhaW1zK01hdGguZmxvb3IoTWF0aC5yYW5kb20oKSozKS0xOwogIHJldHVybiB7eWVhcixtb250aCxsaW5lRGF0YSxkZWZlY3RUeXBlcyxkYWlseURhdGEsdG90YWwsCiAgICBwcmV2UHJvZHVjZWQ6TWF0aC5yb3VuZChwcmV2UHJvZHVjZWQpLHByZXZZaWVsZDpwcmV2WWllbGQudG9GaXhlZCgxKSwKICAgIHByZXZBY2hpZXZlLHByZXZDbGFpbXM6TWF0aC5tYXgoMCxwcmV2Q2xhaW1zKX07Cn0KCmxldCBjaGFydHM9e307CmZ1bmN0aW9uIGRlc3Ryb3lDaGFydHMoKXtPYmplY3QudmFsdWVzKGNoYXJ0cykuZm9yRWFjaChjPT57aWYoYyljLmRlc3Ryb3koKTt9KTtjaGFydHM9e307fQoKZnVuY3Rpb24gcmVuZGVyWWllbGRBbGVydEJhbm5lcih0b3RhbCl7CiAgY29uc3QgYmFubmVyPWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCd5aWVsZEFsZXJ0QmFubmVyJyk7CiAgY29uc3QgcGFydHM9W107CiAgaWYocGFyc2VGbG9hdCh0b3RhbC55aWVsZFJhdGUpPDk4KQogICAgcGFydHMucHVzaChgPHNwYW4+7JaR7ZKI66WgIOuvuOuLrDwvc3Bhbj4g7KKF7ZWpIOyWke2SiOuloCAke3RvdGFsLnlpZWxkUmF0ZX0l6rCAIOuqqe2RnCg5OC4wJSnsl5Ag66+464us7ZWp64uI64ukLmApOwogIGlmKHBhcnNlRmxvYXQodG90YWwuYWNoaWV2ZVJhdGUpPDk1KQogICAgcGFydHMucHVzaChgPHNwYW4+64us7ISx66WgIOuvuOuLrDwvc3Bhbj4g6rOE7ZqNIOuLrOyEseuloCAke3RvdGFsLmFjaGlldmVSYXRlfSXqsIAg66qp7ZGcKDk1LjAlKeyXkCDrr7jri6ztlanri4jri6QuYCk7CiAgaWYocGFydHMubGVuZ3RoPT09MCl7YmFubmVyLnN0eWxlLmRpc3BsYXk9J25vbmUnO3JldHVybjt9CiAgYmFubmVyLmlubmVySFRNTD0n4pqgICcrcGFydHMuam9pbignICZuYnNwO3wmbmJzcDsgJyk7CiAgYmFubmVyLnN0eWxlLmRpc3BsYXk9J2ZsZXgnOwp9CgpmdW5jdGlvbiBnZXRMaW5lQmFkZ2UobCl7CiAgY29uc3QgYmFkZ2VzPVtdOwogIGlmKHBhcnNlRmxvYXQobC51cHRpbWUpPDk1KSBiYWRnZXMucHVzaChgPHNwYW4gY2xhc3M9ImxpbmUtYWxhcm0iPuqwgOuPmeKGkyR7bC51cHRpbWV9JTwvc3Bhbj5gKTsKICBpZihwYXJzZUZsb2F0KGwuYWNoaWV2ZVJhdGUpPDk1KSBiYWRnZXMucHVzaChgPHNwYW4gY2xhc3M9ImxpbmUtd2FybiI+64us7ISx4oaTJHtsLmFjaGlldmVSYXRlfSU8L3NwYW4+YCk7CiAgcmV0dXJuIGJhZGdlcy5qb2luKCcnKTsKfQoKZnVuY3Rpb24gcmVuZGVyKCl7CiAgZGVzdHJveUNoYXJ0cygpOwogIGNvbnN0IHllYXI9cGFyc2VJbnQoZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3llYXJTZWwnKS52YWx1ZSk7CiAgY29uc3QgbW9udGg9cGFyc2VJbnQoZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ21vbnRoU2VsJykudmFsdWUpOwogIGNvbnN0IGRhdGE9Z2VuTW9udGhEYXRhKHllYXIsbW9udGgpOwogIGNvbnN0IHt0b3RhbCxsaW5lRGF0YSxkZWZlY3RUeXBlcyxkYWlseURhdGF9PWRhdGE7CiAgY29uc3QgcHJvZFZzPSgodG90YWwucHJvZHVjZWQtZGF0YS5wcmV2UHJvZHVjZWQpL2RhdGEucHJldlByb2R1Y2VkKjEwMCkudG9GaXhlZCgxKTsKICBjb25zdCB5aWVsZFZzPShwYXJzZUZsb2F0KHRvdGFsLnlpZWxkUmF0ZSktcGFyc2VGbG9hdChkYXRhLnByZXZZaWVsZCkpLnRvRml4ZWQoMSk7CgogIHJlbmRlcllpZWxkQWxlcnRCYW5uZXIodG90YWwpOwoKICBjb25zdCBjb21wYXJlVGFibGU9YAogICAgPHRhYmxlIGNsYXNzPSJjb21wYXJlLXRhYmxlIj4KICAgICAgPHRoZWFkPjx0cj48dGg+7KeA7ZGcPC90aD48dGg+64u57JuUPC90aD48dGg+7KCE7JuUPC90aD48dGg+7Kad6rCQPC90aD48L3RyPjwvdGhlYWQ+CiAgICAgIDx0Ym9keT4KICAgICAgICA8dHI+PHRkPuy0nSDsg53sgrDrn4kgKOunpCk8L3RkPjx0ZCBzdHlsZT0iZm9udC13ZWlnaHQ6NzAwO2NvbG9yOnZhcigtLWJsdWUpIj4ke3RvdGFsLnByb2R1Y2VkLnRvTG9jYWxlU3RyaW5nKCl9PC90ZD48dGQ+JHtkYXRhLnByZXZQcm9kdWNlZC50b0xvY2FsZVN0cmluZygpfTwvdGQ+CiAgICAgICAgICA8dGQgc3R5bGU9ImZvbnQtd2VpZ2h0OjcwMDtjb2xvcjoke3Byb2RWcz49MD8ndmFyKC0tZ3JlZW4pJzondmFyKC0tcmVkKSd9Ij4ke3Byb2RWcz49MD8n4payJzon4pa8J30ke01hdGguYWJzKHByb2RWcyl9JTwvdGQ+PC90cj4KICAgICAgICA8dHI+PHRkPuyihe2VqSDslpHtkojrpaAgKCUpPC90ZD48dGQgc3R5bGU9ImZvbnQtd2VpZ2h0OjcwMDtjb2xvcjoke3BhcnNlRmxvYXQodG90YWwueWllbGRSYXRlKT49OTg/J3ZhcigtLWdyZWVuKSc6J3ZhcigtLXJlZCknfSI+JHt0b3RhbC55aWVsZFJhdGV9JTwvdGQ+PHRkPiR7ZGF0YS5wcmV2WWllbGR9JTwvdGQ+CiAgICAgICAgICA8dGQgc3R5bGU9ImZvbnQtd2VpZ2h0OjcwMDtjb2xvcjoke3lpZWxkVnM+PTA/J3ZhcigtLWdyZWVuKSc6J3ZhcigtLXJlZCknfSI+JHt5aWVsZFZzPj0wPyfilrInOifilrwnfSR7TWF0aC5hYnMoeWllbGRWcyl9JXA8L3RkPjwvdHI+CiAgICAgICAgPHRyPjx0ZD7qs4Ttmo0g64us7ISx66WgICglKTwvdGQ+PHRkIHN0eWxlPSJmb250LXdlaWdodDo3MDA7Y29sb3I6JHtwYXJzZUZsb2F0KHRvdGFsLmFjaGlldmVSYXRlKT49MTAwPyd2YXIoLS1ncmVlbiknOid2YXIoLS1hbWJlciknfSI+JHt0b3RhbC5hY2hpZXZlUmF0ZX0lPC90ZD48dGQ+JHtkYXRhLnByZXZBY2hpZXZlfSU8L3RkPgogICAgICAgICAgPHRkIHN0eWxlPSJmb250LXdlaWdodDo3MDA7Y29sb3I6JHtwYXJzZUZsb2F0KHRvdGFsLmFjaGlldmVSYXRlKT49cGFyc2VGbG9hdChkYXRhLnByZXZBY2hpZXZlKT8ndmFyKC0tZ3JlZW4pJzondmFyKC0tcmVkKSd9Ij4ke3BhcnNlRmxvYXQodG90YWwuYWNoaWV2ZVJhdGUpPj1wYXJzZUZsb2F0KGRhdGEucHJldkFjaGlldmUpPyfilrInOifilrwnfSR7TWF0aC5hYnMoKHBhcnNlRmxvYXQodG90YWwuYWNoaWV2ZVJhdGUpLXBhcnNlRmxvYXQoZGF0YS5wcmV2QWNoaWV2ZSkpLnRvRml4ZWQoMSkpfSVwPC90ZD48L3RyPgogICAgICAgIDx0cj48dGQ+6rOg6rCdIO2BtOugiOyehCAo6rG0KTwvdGQ+PHRkIHN0eWxlPSJmb250LXdlaWdodDo3MDA7Y29sb3I6JHt0b3RhbC5jbGFpbXM9PT0wPyd2YXIoLS1ncmVlbiknOnRvdGFsLmNsYWltczw9Mj8ndmFyKC0tYW1iZXIpJzondmFyKC0tcmVkKSd9Ij4ke3RvdGFsLmNsYWltc308L3RkPjx0ZD4ke2RhdGEucHJldkNsYWltc308L3RkPgogICAgICAgICAgPHRkIHN0eWxlPSJmb250LXdlaWdodDo3MDA7Y29sb3I6JHt0b3RhbC5jbGFpbXM8PWRhdGEucHJldkNsYWltcz8ndmFyKC0tZ3JlZW4pJzondmFyKC0tcmVkKSd9Ij4ke3RvdGFsLmNsYWltczw9ZGF0YS5wcmV2Q2xhaW1zPyfilrwnOifilrInfSR7TWF0aC5hYnModG90YWwuY2xhaW1zLWRhdGEucHJldkNsYWltcyl9PC90ZD48L3RyPgogICAgICA8L3Rib2R5PgogICAgPC90YWJsZT5gOwoKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgncmVwb3J0Qm9keScpLmlubmVySFRNTD1gCiAgICA8ZGl2IGNsYXNzPSJjb3ZlciI+CiAgICAgIDxkaXYgY2xhc3M9ImNvdmVyLXRpdGxlIj4ke3llYXJ964WEICR7bW9udGh97JuUIOyblOqwhCDsg53sgrAg67O06rOg7IScPC9kaXY+CiAgICAgIDxkaXYgY2xhc3M9ImNvdmVyLXN1YiI+UENCIE1hbnVmYWN0dXJpbmcgQ28uLCBMdGQuIOKAlCDsg53sgrDqtIDrpqztjIA8L2Rpdj4KICAgICAgPGRpdiBjbGFzcz0iY292ZXItbWV0YSI+CiAgICAgICAgPGRpdiBjbGFzcz0iY292ZXItbWV0YS1pdGVtIj48Yj4ke3RvdGFsLnByb2R1Y2VkLnRvTG9jYWxlU3RyaW5nKCl9PC9iPuy0nSDsg53sgrDrn4ko66ekKTwvZGl2PgogICAgICAgIDxkaXYgY2xhc3M9ImNvdmVyLW1ldGEtaXRlbSI+PGI+JHt0b3RhbC55aWVsZFJhdGV9JTwvYj7sooXtlakg7JaR7ZKI66WgPC9kaXY+CiAgICAgICAgPGRpdiBjbGFzcz0iY292ZXItbWV0YS1pdGVtIj48Yj4ke3RvdGFsLmFjaGlldmVSYXRlfSU8L2I+6rOE7ZqNIOuLrOyEseuloDwvZGl2PgogICAgICAgIDxkaXYgY2xhc3M9ImNvdmVyLW1ldGEtaXRlbSI+PGI+JHt0b3RhbC5jbGFpbXN9PC9iPuqzoOqwnSDtgbTroIjsnoQ8L2Rpdj4KICAgICAgICA8ZGl2IGNsYXNzPSJjb3Zlci1tZXRhLWl0ZW0iPjxiPiR7dG9kYXl9PC9iPuyekeyEseydvDwvZGl2PgogICAgICA8L2Rpdj4KICAgIDwvZGl2PgoKICAgIDxkaXYgY2xhc3M9InNlYy10aXRsZSI+7ZW17IusIOyDneyCsCDsp4DtkZw8L2Rpdj4KICAgIDxkaXYgY2xhc3M9ImtwaS1ncmlkIj4KICAgICAgPGRpdiBjbGFzcz0ia3BpLWNhcmQiIHN0eWxlPSJib3JkZXItdG9wLWNvbG9yOnZhcigtLWJsdWUpIj4KICAgICAgICA8ZGl2IGNsYXNzPSJrcGktbGFiZWwiPuy0nSDsg53sgrDrn4k8L2Rpdj48ZGl2IGNsYXNzPSJrcGktdmFsIiBzdHlsZT0iY29sb3I6dmFyKC0tYmx1ZSkiPiR7dG90YWwucHJvZHVjZWQudG9Mb2NhbGVTdHJpbmcoKX08L2Rpdj4KICAgICAgICA8ZGl2IGNsYXNzPSJrcGktdW5pdCI+66ekPC9kaXY+PGRpdiBjbGFzcz0ia3BpLXZzICR7cHJvZFZzPj0wPyd1cCc6J2Rvd24nfSI+JHtwcm9kVnM+PTA/J+KWsic6J+KWvCd9JHtNYXRoLmFicyhwcm9kVnMpfSUg7KCE7JuU5q+UPC9kaXY+CiAgICAgIDwvZGl2PgogICAgICA8ZGl2IGNsYXNzPSJrcGktY2FyZCIgc3R5bGU9ImJvcmRlci10b3AtY29sb3I6dmFyKC0tZ3JlZW4pIj4KICAgICAgICA8ZGl2IGNsYXNzPSJrcGktbGFiZWwiPuy0nSDslpHtkojsiJg8L2Rpdj48ZGl2IGNsYXNzPSJrcGktdmFsIiBzdHlsZT0iY29sb3I6dmFyKC0tZ3JlZW4pIj4ke3RvdGFsLmdvb2QudG9Mb2NhbGVTdHJpbmcoKX08L2Rpdj48ZGl2IGNsYXNzPSJrcGktdW5pdCI+66ekPC9kaXY+CiAgICAgIDwvZGl2PgogICAgICA8ZGl2IGNsYXNzPSJrcGktY2FyZCIgc3R5bGU9ImJvcmRlci10b3AtY29sb3I6dmFyKC0tcmVkKSI+CiAgICAgICAgPGRpdiBjbGFzcz0ia3BpLWxhYmVsIj7stJ0g67aI65+J7IiYPC9kaXY+PGRpdiBjbGFzcz0ia3BpLXZhbCIgc3R5bGU9ImNvbG9yOnZhcigtLXJlZCkiPiR7dG90YWwuZGVmZWN0LnRvTG9jYWxlU3RyaW5nKCl9PC9kaXY+PGRpdiBjbGFzcz0ia3BpLXVuaXQiPuunpDwvZGl2PgogICAgICA8L2Rpdj4KICAgICAgPGRpdiBjbGFzcz0ia3BpLWNhcmQiIHN0eWxlPSJib3JkZXItdG9wLWNvbG9yOiR7cGFyc2VGbG9hdCh0b3RhbC55aWVsZFJhdGUpPj05OD8ndmFyKC0tZ3JlZW4pJzpwYXJzZUZsb2F0KHRvdGFsLnlpZWxkUmF0ZSk+PTk3Pyd2YXIoLS1hbWJlciknOid2YXIoLS1yZWQpJ30iPgogICAgICAgIDxkaXYgY2xhc3M9ImtwaS1sYWJlbCI+7KKF7ZWpIOyWke2SiOuloDwvZGl2PgogICAgICAgIDxkaXYgY2xhc3M9ImtwaS12YWwiIHN0eWxlPSJjb2xvcjoke3BhcnNlRmxvYXQodG90YWwueWllbGRSYXRlKT49OTg/J3ZhcigtLWdyZWVuKSc6cGFyc2VGbG9hdCh0b3RhbC55aWVsZFJhdGUpPj05Nz8ndmFyKC0tYW1iZXIpJzondmFyKC0tcmVkKSd9Ij4ke3RvdGFsLnlpZWxkUmF0ZX08L2Rpdj4KICAgICAgICA8ZGl2IGNsYXNzPSJrcGktdW5pdCI+JTwvZGl2PjxkaXYgY2xhc3M9ImtwaS12cyAke3lpZWxkVnM+PTA/J3VwJzonZG93bid9Ij4ke3lpZWxkVnM+PTA/J+KWsic6J+KWvCd9JHtNYXRoLmFicyh5aWVsZFZzKX0lcCDsoITsm5Tmr5Q8L2Rpdj4KICAgICAgPC9kaXY+CiAgICAgIDxkaXYgY2xhc3M9ImtwaS1jYXJkIiBzdHlsZT0iYm9yZGVyLXRvcC1jb2xvcjoke3BhcnNlRmxvYXQodG90YWwuYWNoaWV2ZVJhdGUpPj0xMDA/J3ZhcigtLWdyZWVuKSc6cGFyc2VGbG9hdCh0b3RhbC5hY2hpZXZlUmF0ZSk+PTk1Pyd2YXIoLS1hbWJlciknOid2YXIoLS1yZWQpJ30iPgogICAgICAgIDxkaXYgY2xhc3M9ImtwaS1sYWJlbCI+6rOE7ZqNIOuLrOyEseuloDwvZGl2PgogICAgICAgIDxkaXYgY2xhc3M9ImtwaS12YWwiIHN0eWxlPSJjb2xvcjoke3BhcnNlRmxvYXQodG90YWwuYWNoaWV2ZVJhdGUpPj0xMDA/J3ZhcigtLWdyZWVuKSc6cGFyc2VGbG9hdCh0b3RhbC5hY2hpZXZlUmF0ZSk+PTk1Pyd2YXIoLS1hbWJlciknOid2YXIoLS1yZWQpJ30iPiR7dG90YWwuYWNoaWV2ZVJhdGV9PC9kaXY+PGRpdiBjbGFzcz0ia3BpLXVuaXQiPiU8L2Rpdj4KICAgICAgPC9kaXY+CiAgICAgIDxkaXYgY2xhc3M9ImtwaS1jYXJkIiBzdHlsZT0iYm9yZGVyLXRvcC1jb2xvcjoke3RvdGFsLmNsYWltcz09PTA/J3ZhcigtLWdyZWVuKSc6dG90YWwuY2xhaW1zPD0yPyd2YXIoLS1hbWJlciknOid2YXIoLS1yZWQpJ30iPgogICAgICAgIDxkaXYgY2xhc3M9ImtwaS1sYWJlbCI+6rOg6rCdIO2BtOugiOyehDwvZGl2PgogICAgICAgIDxkaXYgY2xhc3M9ImtwaS12YWwiIHN0eWxlPSJjb2xvcjoke3RvdGFsLmNsYWltcz09PTA/J3ZhcigtLWdyZWVuKSc6dG90YWwuY2xhaW1zPD0yPyd2YXIoLS1hbWJlciknOid2YXIoLS1yZWQpJ30iPiR7dG90YWwuY2xhaW1zfTwvZGl2PjxkaXYgY2xhc3M9ImtwaS11bml0Ij7qsbQ8L2Rpdj4KICAgICAgPC9kaXY+CiAgICA8L2Rpdj4KCiAgICA8ZGl2IGNsYXNzPSJzZWMtdGl0bGUiPuyDneyCsCDstpTsnbQg67aE7ISdPC9kaXY+CiAgICA8ZGl2IGNsYXNzPSJjaGFydC1ncmlkIj4KICAgICAgPGRpdiBjbGFzcz0icGFuZWwiPjxkaXYgY2xhc3M9InBhbmVsLXRpdGxlIj7snbzrs4Qg7IOd7IKw65+JICYg7JaR7ZKI66WgIOy2lOydtDwvZGl2PjxkaXYgY2xhc3M9ImNoYXJ0LWgyMDAiPjxjYW52YXMgaWQ9ImRhaWx5Q2hhcnQiPjwvY2FudmFzPjwvZGl2PjwvZGl2PgogICAgICA8ZGl2IGNsYXNzPSJwYW5lbCI+PGRpdiBjbGFzcz0icGFuZWwtdGl0bGUiPuu2iOufiSDsnKDtmJUg7YyM66CI7YagPC9kaXY+PGRpdiBjbGFzcz0iY2hhcnQtaDIwMCI+PGNhbnZhcyBpZD0icGFyZXRvQ2hhcnQiPjwvY2FudmFzPjwvZGl2PjwvZGl2PgogICAgPC9kaXY+CgogICAgPGRpdiBjbGFzcz0ic2VjLXRpdGxlIj7rnbzsnbjrs4Qg7IOd7IKwIOyEseqzvDwvZGl2PgogICAgPGRpdiBjbGFzcz0iY2hhcnQtZ3JpZCI+CiAgICAgIDxkaXYgY2xhc3M9InBhbmVsIj4KICAgICAgICA8ZGl2IGNsYXNzPSJwYW5lbC10aXRsZSI+65287J2467OEIOyEseqzvCDsmpTslb08L2Rpdj4KICAgICAgICA8dGFibGUgY2xhc3M9InBlcmYtdGFibGUiPgogICAgICAgICAgPHRoZWFkPjx0cj48dGg+65287J24PC90aD48dGg+6rOE7ZqNPC90aD48dGg+7IOd7IKwPC90aD48dGg+67aI65+JPC90aD48dGg+7JaR7ZKI66WgPC90aD48dGg+64us7ISx66WgPC90aD48dGg+6rCA64+Z66WgPC90aD48dGg+7YG066CI7J6EPC90aD48L3RyPjwvdGhlYWQ+CiAgICAgICAgICA8dGJvZHk+CiAgICAgICAgICAgICR7bGluZURhdGEubWFwKChsLGkpPT5gCiAgICAgICAgICAgICAgPHRyPgogICAgICAgICAgICAgICAgPHRkIHN0eWxlPSJmb250LXdlaWdodDo3MDA7Y29sb3I6JHtMSU5FX0NPTE9SU1tpXX0iPiR7bC5saW5lfSR7Z2V0TGluZUJhZGdlKGwpfTwvdGQ+CiAgICAgICAgICAgICAgICA8dGQ+JHtsLnRhcmdldC50b0xvY2FsZVN0cmluZygpfTwvdGQ+PHRkPiR7bC5wcm9kdWNlZC50b0xvY2FsZVN0cmluZygpfTwvdGQ+CiAgICAgICAgICAgICAgICA8dGQgc3R5bGU9ImNvbG9yOnZhcigtLXJlZCkiPiR7bC5kZWZlY3QudG9Mb2NhbGVTdHJpbmcoKX08L3RkPgogICAgICAgICAgICAgICAgPHRkIHN0eWxlPSJmb250LXdlaWdodDo3MDA7Y29sb3I6JHtwYXJzZUZsb2F0KGwueWllbGRSYXRlKT49OTg/J3ZhcigtLWdyZWVuKSc6J3ZhcigtLWFtYmVyKSd9Ij4ke2wueWllbGRSYXRlfSU8L3RkPgogICAgICAgICAgICAgICAgPHRkIHN0eWxlPSJmb250LXdlaWdodDo3MDA7Y29sb3I6JHtwYXJzZUZsb2F0KGwuYWNoaWV2ZVJhdGUpPj0xMDA/J3ZhcigtLWdyZWVuKSc6J3ZhcigtLWFtYmVyKSd9Ij4ke2wuYWNoaWV2ZVJhdGV9JTwvdGQ+CiAgICAgICAgICAgICAgICA8dGQ+JHtsLnVwdGltZX0lPC90ZD4KICAgICAgICAgICAgICAgIDx0ZCBzdHlsZT0iY29sb3I6JHtsLmNsYWltcz4wPyd2YXIoLS1yZWQpJzonJ30iPiR7bC5jbGFpbXN9PC90ZD4KICAgICAgICAgICAgICA8L3RyPmApLmpvaW4oJycpfQogICAgICAgICAgICA8dHI+CiAgICAgICAgICAgICAgPHRkPjxiPu2VqeqzhDwvYj48L3RkPgogICAgICAgICAgICAgIDx0ZD48Yj4ke3RvdGFsLnRhcmdldC50b0xvY2FsZVN0cmluZygpfTwvYj48L3RkPjx0ZD48Yj4ke3RvdGFsLnByb2R1Y2VkLnRvTG9jYWxlU3RyaW5nKCl9PC9iPjwvdGQ+CiAgICAgICAgICAgICAgPHRkPjxiIHN0eWxlPSJjb2xvcjp2YXIoLS1yZWQpIj4ke3RvdGFsLmRlZmVjdC50b0xvY2FsZVN0cmluZygpfTwvYj48L3RkPgogICAgICAgICAgICAgIDx0ZD48YiBzdHlsZT0iY29sb3I6JHtwYXJzZUZsb2F0KHRvdGFsLnlpZWxkUmF0ZSk+PTk4Pyd2YXIoLS1ncmVlbiknOid2YXIoLS1hbWJlciknfSI+JHt0b3RhbC55aWVsZFJhdGV9JTwvYj48L3RkPgogICAgICAgICAgICAgIDx0ZD48YiBzdHlsZT0iY29sb3I6JHtwYXJzZUZsb2F0KHRvdGFsLmFjaGlldmVSYXRlKT49MTAwPyd2YXIoLS1ncmVlbiknOid2YXIoLS1hbWJlciknfSI+JHt0b3RhbC5hY2hpZXZlUmF0ZX0lPC9iPjwvdGQ+CiAgICAgICAgICAgICAgPHRkPi08L3RkPgogICAgICAgICAgICAgIDx0ZD48YiBzdHlsZT0iY29sb3I6JHt0b3RhbC5jbGFpbXM+MD8ndmFyKC0tcmVkKSc6Jyd9Ij4ke3RvdGFsLmNsYWltc308L2I+PC90ZD4KICAgICAgICAgICAgPC90cj4KICAgICAgICAgIDwvdGJvZHk+CiAgICAgICAgPC90YWJsZT4KICAgICAgPC9kaXY+CiAgICAgIDxkaXYgY2xhc3M9InBhbmVsIj48ZGl2IGNsYXNzPSJwYW5lbC10aXRsZSI+65287J2467OEIOyDneyCsOufiSDruYTqtZA8L2Rpdj48ZGl2IGNsYXNzPSJjaGFydC1oMjAwIj48Y2FudmFzIGlkPSJsaW5lQ2hhcnQiPjwvY2FudmFzPjwvZGl2PjwvZGl2PgogICAgPC9kaXY+CgogICAgPGRpdiBjbGFzcz0iY2hhcnQtZ3JpZDIiPgogICAgICA8ZGl2IGNsYXNzPSJwYW5lbCI+CiAgICAgICAgPGRpdiBjbGFzcz0icGFuZWwtdGl0bGUiPuu2iOufiSDsnKDtmJXrs4Qg7ZiE7ZmpPC9kaXY+CiAgICAgICAgPHRhYmxlIGNsYXNzPSJkZWYtdGFibGUiPgogICAgICAgICAgPHRoZWFkPjx0cj48dGg+67aI65+JIOycoO2YlTwvdGg+PHRoIHN0eWxlPSJ0ZXh0LWFsaWduOnJpZ2h0Ij7qsbTsiJg8L3RoPjx0aCBzdHlsZT0idGV4dC1hbGlnbjpyaWdodCI+67mE7JyoPC90aD48dGggc3R5bGU9InRleHQtYWxpZ246cmlnaHQiPuuIhOyggTwvdGg+PC90cj48L3RoZWFkPgogICAgICAgICAgPHRib2R5PgogICAgICAgICAgICAke2RlZmVjdFR5cGVzLm1hcCgoZCxpKT0+YAogICAgICAgICAgICAgIDx0cj4KICAgICAgICAgICAgICAgIDx0ZD4ke2k9PT0wPyfwn5S0ICc6aTw9MT8n8J+foCAnOifimqsgJ30ke2QubmFtZX08L3RkPgogICAgICAgICAgICAgICAgPHRkIHN0eWxlPSJ0ZXh0LWFsaWduOnJpZ2h0O2ZvbnQtd2VpZ2h0OjcwMCI+JHtkLmNudH08L3RkPgogICAgICAgICAgICAgICAgPHRkIHN0eWxlPSJ0ZXh0LWFsaWduOnJpZ2h0Ij4ke2QucGN0fSU8L3RkPgogICAgICAgICAgICAgICAgPHRkIHN0eWxlPSJ0ZXh0LWFsaWduOnJpZ2h0O2NvbG9yOiR7ZC5jdW1QY3Q8PTgwPyd2YXIoLS1yZWQpJzondmFyKC0tbXV0ZSknfTtmb250LXdlaWdodDoke2QuY3VtUGN0PD04MD83MDA6NDAwfSI+JHtkLmN1bVBjdH0lPC90ZD4KICAgICAgICAgICAgICA8L3RyPmApLmpvaW4oJycpfQogICAgICAgICAgPC90Ym9keT4KICAgICAgICA8L3RhYmxlPgogICAgICA8L2Rpdj4KICAgICAgPGRpdiBjbGFzcz0icGFuZWwiPgogICAgICAgIDxkaXYgY2xhc3M9InBhbmVsLXRpdGxlIj7ri7nsm5Qg7IOd7IKwIOuLrOyEsSDtmITtmak8L2Rpdj4KICAgICAgICA8ZGl2IGNsYXNzPSJjaGFydC1oMTYwIj48Y2FudmFzIGlkPSJnYXVnZUNoYXJ0Ij48L2NhbnZhcz48L2Rpdj4KICAgICAgPC9kaXY+CiAgICAgIDxkaXYgY2xhc3M9InBhbmVsIj4KICAgICAgICA8ZGl2IGNsYXNzPSJwYW5lbC10aXRsZSI+7KKF7ZWpIOydmOqyrCDrsI8g7LCo7JuUIOykkeygkCDqs7zsoJw8L2Rpdj4KICAgICAgICA8ZGl2IGNsYXNzPSJoaWdobGlnaHQtYm94Ij7wn5OIIDxiPuuLueyblCDshLHqs7wuPC9iPiDstJ0gJHt0b3RhbC5wcm9kdWNlZC50b0xvY2FsZVN0cmluZygpfeunpCDsg53sgrAsIOqzhO2ajSDrjIDruYQgJHt0b3RhbC5hY2hpZXZlUmF0ZX0lIOuLrOyEsS4g7KCE7JuUIOuMgOu5hCDsg53sgrDrn4kgJHtwcm9kVnM+PTA/J+ymneqwgCc6J+qwkOyGjCd9ICR7TWF0aC5hYnMocHJvZFZzKX0lLjwvZGl2PgogICAgICAgIDxkaXYgY2xhc3M9ImhpZ2hsaWdodC1ib3giIHN0eWxlPSJib3JkZXItY29sb3I6JHtwYXJzZUZsb2F0KHRvdGFsLnlpZWxkUmF0ZSk+PTk4Pyd2YXIoLS1ncmVlbiknOid2YXIoLS1yZWQpJ30iPgogICAgICAgICAgJHtwYXJzZUZsb2F0KHRvdGFsLnlpZWxkUmF0ZSk+PTk4PyfinIUnOifimqAnfSA8Yj7tkojsp4gg7ZiE7ZmpLjwvYj4g7KKF7ZWpIOyWke2SiOuloCAke3RvdGFsLnlpZWxkUmF0ZX0lICjrqqntkZwgOTguMCUpLiDso7zsmpQg67aI65+J7J2AICR7ZGVmZWN0VHlwZXNbMF0ubmFtZX0oJHtkZWZlY3RUeXBlc1swXS5wY3R9JSkuCiAgICAgICAgPC9kaXY+CiAgICAgICAgPGRpdiBjbGFzcz0iaGlnaGxpZ2h0LWJveCIgc3R5bGU9ImJvcmRlci1jb2xvcjp2YXIoLS1hbWJlcikiPvCfk4sgPGI+7LCo7JuUIOqzvOygnC48L2I+ICR7ZGVmZWN0VHlwZXNbMF0ubmFtZX0g7KeR7KSRIOqwnOyEoCwg6rO17KCVIO2MjOudvOuvuO2EsCDstZzsoIHtmZQsIOyEpOu5hCBQTSDsnbzsoJUg7KSA7IiYLjwvZGl2PgogICAgICA8L2Rpdj4KICAgIDwvZGl2PgoKICAgIDxkaXYgY2xhc3M9InNlYy10aXRsZSI+7KCE7JuUIOuMgOu5hCDshLHqs7wg67mE6rWQPC9kaXY+CiAgICA8ZGl2IGNsYXNzPSJwYW5lbCIgc3R5bGU9Im1hcmdpbi1ib3R0b206MjBweCI+JHtjb21wYXJlVGFibGV9PC9kaXY+YDsKCiAgY29uc3QgbGFiZWxzPWRhaWx5RGF0YS5tYXAoZD0+YCR7ZC5kYXl97J28YCk7CiAgY2hhcnRzLmRhaWx5PW5ldyBDaGFydChkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnZGFpbHlDaGFydCcpLHsKICAgIHR5cGU6J2JhcicsCiAgICBkYXRhOntsYWJlbHMsZGF0YXNldHM6WwogICAgICB7dHlwZTonYmFyJyxsYWJlbDon7IOd7IKw65+JJyxkYXRhOmRhaWx5RGF0YS5tYXAoZD0+ZC5wcm9kdWNlZCksYmFja2dyb3VuZENvbG9yOidyZ2JhKDM3LDk5LDIzNSwuNiknLHlBeGlzSUQ6J3knfSwKICAgICAge3R5cGU6J2xpbmUnLGxhYmVsOifslpHtkojrpaAoJSknLGRhdGE6ZGFpbHlEYXRhLm1hcChkPT5kLnlpZWxkUmF0ZSksYm9yZGVyQ29sb3I6JyMwNTk2NjknLGJhY2tncm91bmRDb2xvcjondHJhbnNwYXJlbnQnLHBvaW50UmFkaXVzOjIseUF4aXNJRDoneTInLHRlbnNpb246LjR9LAogICAgXX0sCiAgICBvcHRpb25zOntyZXNwb25zaXZlOnRydWUsbWFpbnRhaW5Bc3BlY3RSYXRpbzpmYWxzZSwKICAgICAgc2NhbGVzOnt5OntiZWdpbkF0WmVybzp0cnVlLHRpdGxlOntkaXNwbGF5OnRydWUsdGV4dDon7IOd7IKw65+JKOunpCknLGZvbnQ6e3NpemU6MTB9fX0sCiAgICAgICAgeTI6e3Bvc2l0aW9uOidyaWdodCcsbWluOjk1LG1heDoxMDAsdGl0bGU6e2Rpc3BsYXk6dHJ1ZSx0ZXh0OifslpHtkojrpaAoJSknLGZvbnQ6e3NpemU6MTB9fSxncmlkOntkaXNwbGF5OmZhbHNlfX19LAogICAgICBwbHVnaW5zOntsZWdlbmQ6e3Bvc2l0aW9uOid0b3AnLGxhYmVsczp7Ym94V2lkdGg6MTAsZm9udDp7c2l6ZToxMH19fX19LAogIH0pOwogIGNoYXJ0cy5wYXJldG89bmV3IENoYXJ0KGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdwYXJldG9DaGFydCcpLHsKICAgIHR5cGU6J2JhcicsCiAgICBkYXRhOntsYWJlbHM6ZGVmZWN0VHlwZXMubWFwKGQ9PmQubmFtZSksZGF0YXNldHM6WwogICAgICB7dHlwZTonYmFyJyxsYWJlbDon6rG07IiYJyxkYXRhOmRlZmVjdFR5cGVzLm1hcChkPT5kLmNudCksYmFja2dyb3VuZENvbG9yOidyZ2JhKDIyMCwzOCwzOCwuNyknLHlBeGlzSUQ6J3knfSwKICAgICAge3R5cGU6J2xpbmUnLGxhYmVsOifriITsoIElJyxkYXRhOmRlZmVjdFR5cGVzLm1hcChkPT5kLmN1bVBjdCksYm9yZGVyQ29sb3I6JyMyNTYzZWInLHBvaW50UmFkaXVzOjQseUF4aXNJRDoneTInfSwKICAgIF19LAogICAgb3B0aW9uczp7cmVzcG9uc2l2ZTp0cnVlLG1haW50YWluQXNwZWN0UmF0aW86ZmFsc2UsCiAgICAgIHNjYWxlczp7eTp7YmVnaW5BdFplcm86dHJ1ZX0seTI6e3Bvc2l0aW9uOidyaWdodCcsbWluOjAsbWF4OjEwMCxncmlkOntkaXNwbGF5OmZhbHNlfX19LAogICAgICBwbHVnaW5zOntsZWdlbmQ6e3Bvc2l0aW9uOid0b3AnLGxhYmVsczp7Ym94V2lkdGg6MTAsZm9udDp7c2l6ZToxMH19fX19LAogIH0pOwogIGNoYXJ0cy5saW5lPW5ldyBDaGFydChkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnbGluZUNoYXJ0JyksewogICAgdHlwZTonYmFyJywKICAgIGRhdGE6e2xhYmVsczpMSU5FUyxkYXRhc2V0czpbCiAgICAgIHtsYWJlbDon6rOE7ZqNJyxkYXRhOmxpbmVEYXRhLm1hcChsPT5sLnRhcmdldCksYmFja2dyb3VuZENvbG9yOidyZ2JhKDEwMCwxMTYsMTM5LC4zKScsYm9yZGVyQ29sb3I6JyM2NDc0OGInLGJvcmRlcldpZHRoOjF9LAogICAgICB7bGFiZWw6J+yDneyCsCcsZGF0YTpsaW5lRGF0YS5tYXAobD0+bC5wcm9kdWNlZCksYmFja2dyb3VuZENvbG9yOkxJTkVfQ09MT1JTLm1hcChjPT5jKydjYycpLGJvcmRlckNvbG9yOkxJTkVfQ09MT1JTLGJvcmRlcldpZHRoOjF9LAogICAgXX0sCiAgICBvcHRpb25zOntyZXNwb25zaXZlOnRydWUsbWFpbnRhaW5Bc3BlY3RSYXRpbzpmYWxzZSwKICAgICAgcGx1Z2luczp7bGVnZW5kOntwb3NpdGlvbjondG9wJyxsYWJlbHM6e2JveFdpZHRoOjEwLGZvbnQ6e3NpemU6MTB9fX19fSwKICB9KTsKICBjaGFydHMuZ2F1Z2U9bmV3IENoYXJ0KGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdnYXVnZUNoYXJ0JyksewogICAgdHlwZTonZG91Z2hudXQnLAogICAgZGF0YTp7bGFiZWxzOlsn64us7ISxJywn66+464usJ10sZGF0YXNldHM6W3tkYXRhOltwYXJzZUZsb2F0KHRvdGFsLmFjaGlldmVSYXRlKSxNYXRoLm1heCgwLDEwMC1wYXJzZUZsb2F0KHRvdGFsLmFjaGlldmVSYXRlKSldLGJhY2tncm91bmRDb2xvcjpbcGFyc2VGbG9hdCh0b3RhbC5hY2hpZXZlUmF0ZSk+PTEwMD8nIzA1OTY2OSc6JyMyNTYzZWInLCcjZTJlOGYwJ10sYm9yZGVyV2lkdGg6MCxjdXRvdXQ6Jzc4JSd9XX0sCiAgICBvcHRpb25zOntyZXNwb25zaXZlOnRydWUsbWFpbnRhaW5Bc3BlY3RSYXRpbzpmYWxzZSwKICAgICAgcGx1Z2luczp7bGVnZW5kOntkaXNwbGF5OmZhbHNlfSx0b29sdGlwOntjYWxsYmFja3M6e2xhYmVsOmk9PmkubGFiZWw9PT0n64us7ISxJz9g64us7ISxOiAke3RvdGFsLmFjaGlldmVSYXRlfSVgOicnfX19fSwKICAgIHBsdWdpbnM6W3tpZDonY2VudGVyJyxiZWZvcmVEcmF3KGMpe2NvbnN0e3dpZHRoOncsaGVpZ2h0OmgsY3R4fT1jO2N0eC5zYXZlKCk7Y3R4LnRleHRBbGlnbj0nY2VudGVyJztjdHgudGV4dEJhc2VsaW5lPSdtaWRkbGUnO2NvbnN0IHk9aC8yKzg7Y3R4LmZvbnQ9YGJvbGQgMS4zcmVtIHNhbnMtc2VyaWZgO2N0eC5maWxsU3R5bGU9cGFyc2VGbG9hdCh0b3RhbC5hY2hpZXZlUmF0ZSk+PTEwMD8nIzA1OTY2OSc6JyMyNTYzZWInO2N0eC5maWxsVGV4dChgJHt0b3RhbC5hY2hpZXZlUmF0ZX0lYCx3LzIseS04KTtjdHguZm9udD1gLjY1cmVtIHNhbnMtc2VyaWZgO2N0eC5maWxsU3R5bGU9JyNhMGFlYzAnO2N0eC5maWxsVGV4dCgn6rOE7ZqN64us7ISx66WgJyx3LzIseSsxNik7Y3R4LnJlc3RvcmUoKTt9fV0sCiAgfSk7Cn0KCmZ1bmN0aW9uIGV4cG9ydENTVigpewogIGNvbnN0IHllYXI9cGFyc2VJbnQoZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3llYXJTZWwnKS52YWx1ZSk7CiAgY29uc3QgbW9udGg9cGFyc2VJbnQoZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ21vbnRoU2VsJykudmFsdWUpOwogIGNvbnN0IGRhdGE9Z2VuTW9udGhEYXRhKHllYXIsbW9udGgpOwogIGNvbnN0IHJvd3M9WyfqtazrtoQs65287J24LOqzhO2ajSzsg53sgrAs7JaR7ZKILOu2iOufiSzslpHtkojrpaAs64us7ISx66WgLO2BtOugiOyehCddOwogIGRhdGEubGluZURhdGEuZm9yRWFjaChsPT5yb3dzLnB1c2goYOudvOyduOuzhCwke2wubGluZX0sJHtsLnRhcmdldH0sJHtsLnByb2R1Y2VkfSwke2wuZ29vZH0sJHtsLmRlZmVjdH0sJHtsLnlpZWxkUmF0ZX0lLCR7bC5hY2hpZXZlUmF0ZX0lLCR7bC5jbGFpbXN9YCkpOwogIHJvd3MucHVzaChg7ZWp6rOELCwke2RhdGEudG90YWwudGFyZ2V0fSwke2RhdGEudG90YWwucHJvZHVjZWR9LCR7ZGF0YS50b3RhbC5nb29kfSwke2RhdGEudG90YWwuZGVmZWN0fSwke2RhdGEudG90YWwueWllbGRSYXRlfSUsJHtkYXRhLnRvdGFsLmFjaGlldmVSYXRlfSUsJHtkYXRhLnRvdGFsLmNsYWltc31gKTsKICBjb25zdCBibG9iPW5ldyBCbG9iKFsn77u/Jytyb3dzLmpvaW4oJ1xuJyldLHt0eXBlOid0ZXh0L2NzdjtjaGFyc2V0PXV0Zi04Oyd9KTsKICBjb25zdCBhPWRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoJ2EnKTthLmhyZWY9VVJMLmNyZWF0ZU9iamVjdFVSTChibG9iKTthLmRvd25sb2FkPWAke3llYXJ964WEJHttb250aH3sm5Rf7IOd7IKw67O06rOg7IScLmNzdmA7YS5jbGljaygpOwp9CgpyZW5kZXIoKTsKPC9zY3JpcHQ+CjwvYm9keT4KPC9odG1sPgo=";
+function b64ToUtf8(b64){const bin=atob(b64);const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));return new TextDecoder('utf-8').decode(bytes);}
+function openResultPopup(){const w=window.open('','resultPopup','left=0,top=0,resizable=yes,scrollbars=yes');w.moveTo(0,0);w.resizeTo(screen.availWidth,screen.availHeight);w.document.open();w.document.write(b64ToUtf8(RESULT_HTML_B64));w.document.close();}
+const slides=Array.from(document.querySelectorAll('.slide'));
+const total=slides.length;let current=0;
+const dotsWrap=document.getElementById('navDots');
+slides.forEach((_,i)=>{const dot=document.createElement('button');dot.className='nav-dot'+(i===0?' active':'');dot.setAttribute('aria-label',`${i+1}번 슬라이드로 이동`);dot.onclick=()=>goTo(i);dotsWrap.appendChild(dot);});
+function goTo(idx){if(idx<0||idx>=total)return;const prev=current;current=idx;slides[prev].classList.remove('active');slides[prev].classList.add('exit');setTimeout(()=>slides[prev].classList.remove('exit'),420);slides[current].classList.add('active');document.getElementById('counter')&&(document.getElementById('counter').textContent=`${current+1} / ${total}`);document.getElementById('slideLabel').textContent=`${current+1} / ${total}`;document.getElementById('progressBar').style.width=`${(current+1)/total*100}%`;document.getElementById('prevBtn').disabled=current===0;document.getElementById('nextBtn').disabled=current===total-1;document.querySelectorAll('.nav-dot').forEach((d,i)=>d.classList.toggle('active',i===current));const isDark=slides[current].classList.contains('s-dark')||slides[current].classList.contains('s-title')||slides[current].classList.contains('s-end');document.getElementById('slideLabel').style.color=isDark?'rgba(255,255,255,.4)':'rgba(0,0,0,.25)';}
+function changeSlide(dir){goTo(current+dir);}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){e.preventDefault();changeSlide(1);}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();changeSlide(-1);}});
+goTo(0);
+</script>
+</body>
+</html>

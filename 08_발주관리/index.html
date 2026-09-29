@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>발주 관리 | PCB 제조</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+  <h1>🛒 발주 관리 <span style="font-size:.8rem;opacity:.7;font-weight:400;"> — PCB Manufacturing</span></h1>
+  <button class="btn btn-report no-print" onclick="openReport()">🖨 보고서 출력</button>
+  <button class="btn btn-ghost no-print" onclick="exportCSV()">📥 저장</button>
+  <button class="btn btn-white no-print" onclick="openPoModal()">+ 발주서 작성</button>
+</div>
+
+<!-- 미션 1: 납기 초과 발주 경보 배너 -->
+<div class="overdue-banner" id="overdueBanner" style="display:none;"></div>
+
+<div class="filter-bar no-print">
+  <input type="text" id="searchQ" placeholder="발주번호·자재명·업체명 검색..." style="width:220px" oninput="render()">
+  <select id="statusFilter" onchange="render()">
+    <option value="">전체 상태</option>
+    <option value="ordered">발주완료</option><option value="partial">부분입고</option>
+    <option value="received">입고완료</option><option value="cancelled">취소</option>
+  </select>
+  <input type="month" id="monthFilter" onchange="render()">
+  <div class="tab-row" style="margin-left:auto;border-bottom:2px solid var(--border)">
+    <button class="tab-btn active" id="t-list" onclick="switchTab('list')">📋 목록</button>
+    <button class="tab-btn" id="t-vendor" onclick="switchTab('vendor')">🏭 업체별</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="kpi-row" id="kpiRow"></div>
+  <div id="listView"></div>
+  <div id="vendorView" style="display:none"></div>
+</div>
+
+<!-- 인쇄용 발주서 -->
+<div class="po-print" id="printArea"></div>
+
+<!-- 발주 모달 -->
+<div class="modal-overlay" id="poModal">
+  <div class="modal">
+    <h2 id="modalTitle">발주서 작성</h2>
+    <div class="form-row">
+      <div class="form-group"><label>발주 번호</label><input id="p-no" readonly></div>
+      <div class="form-group"><label>발주일</label><input type="date" id="p-date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>공급업체</label><input id="p-vendor" list="vendorList" placeholder="(주)일신소재"></div>
+      <div class="form-group"><label>납기 요청일</label><input type="date" id="p-dueDate"></div>
+    </div>
+    <datalist id="vendorList">
+      <option value="(주)일신소재"><option value="(주)동양CCL"><option value="코리아동박(주)">
+      <option value="(주)한국솔더마스크"><option value="(주)대흥드릴"><option value="(주)성신화학">
+    </datalist>
+    <div class="form-row">
+      <div class="form-group"><label>결제 조건</label>
+        <select id="p-payment"><option>월말 30일 결제</option><option>현금</option><option>60일 어음</option><option>선불</option></select>
+      </div>
+      <div class="form-group"><label>담당자</label><input id="p-manager" placeholder="김구매"></div>
+    </div>
+    <div class="section-label">발주 품목</div>
+    <table class="item-input-table">
+      <thead><tr><th>자재명</th><th>규격</th><th>단위</th><th>수량</th><th>단가(원)</th><th>금액</th><th></th></tr></thead>
+      <tbody id="itemRows"></tbody>
+    </table>
+    <button class="btn btn-outline" style="margin-top:6px;width:100%" onclick="addItemRow()">+ 품목 추가</button>
+    <div style="text-align:right;margin-top:8px;font-size:.85rem;font-weight:700">
+      합계: <span id="totalAmount" style="color:var(--orange);font-size:1rem">₩0</span>
+    </div>
+    <div class="form-group" style="margin-top:8px"><label>비고</label><textarea id="p-note" style="height:50px" placeholder="특이사항..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-red" id="delPoBtn" style="display:none" onclick="deletePO()">삭제</button>
+      <button class="btn" style="background:#f0fdf4;color:var(--green);border:1px solid var(--green)" onclick="printPO()">🖨 출력</button>
+      <button class="btn btn-outline" onclick="closePoModal()">취소</button>
+      <button class="btn btn-blue" onclick="savePO()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 입고 처리 모달 -->
+<div class="modal-overlay" id="receiveModal">
+  <div class="modal" style="width:500px">
+    <h2>입고 처리</h2>
+    <div id="receiveInfo" style="font-size:.8rem;color:var(--sub);margin-bottom:10px"></div>
+    <table class="receive-table">
+      <thead><tr><th>자재명</th><th>발주수량</th><th>기입고</th><th>이번 입고</th></tr></thead>
+      <tbody id="receiveRows"></tbody>
+    </table>
+    <div class="form-row" style="margin-top:10px">
+      <div class="form-group"><label>입고일</label><input type="date" id="r-date"></div>
+      <div class="form-group"><label>입고 담당자</label><input id="r-worker" placeholder="박창고"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeReceive()">취소</button>
+      <button class="btn btn-green" onclick="saveReceive()">입고 확인</button>
+    </div>
+  </div>
+</div>
+
+<div class="rpt-overlay" id="rptOverlay">
+  <div class="rpt-toolbar">
+    <span style="color:#fff;font-weight:700;font-size:.95rem">🛒 발주 현황 보고서</span>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-white" onclick="window.print()">🖨 인쇄/PDF</button>
+      <button class="btn btn-ghost" onclick="closeReport()">✕ 닫기</button>
+    </div>
+  </div>
+  <div class="rpt-page" id="rptPage"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>

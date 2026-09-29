@@ -1,0 +1,169 @@
+/* 설비 점검 체크리스트 스타일시트 */
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--border:#d1d9e0;--border2:#c4cdd6;
+  --text:#1a202c;--sub:#4a5568;--mute:#a0aec0;
+  --blue:#2563eb;--green:#059669;--amber:#d97706;--red:#dc2626;--teal:#0d9488;
+  --rad:10px;--shadow:0 1px 3px rgba(0,0,0,.1),0 2px 8px rgba(0,0,0,.06);
+}
+body{font-family:'맑은 고딕','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── 헤더 ── */
+.header{background:linear-gradient(135deg,#134e4a,#0d9488 60%,#0f766e);color:#fff;padding:0 28px;height:58px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,.2);}
+.header h1{font-size:1rem;font-weight:700;flex:1;}
+.header h1 small{font-weight:400;opacity:.7;font-size:.8rem;margin-left:8px;}
+.btn{padding:7px 16px;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
+.btn-white{background:#fff;color:var(--teal);}
+.btn-white:hover{background:#f0fdfa;}
+.btn-ghost{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);}
+.btn-ghost:hover{background:rgba(255,255,255,.25);}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-blue:hover{background:#1d4ed8;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{background:#047857;}
+.btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border2);}
+.btn-outline:hover{background:var(--bg);}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover{background:#b91c1c;}
+
+/* ── 레이아웃 ── */
+.layout{display:grid;grid-template-columns:270px 1fr;height:calc(100vh - 58px);}
+
+/* ── 사이드바 ── */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.sb-header{padding:14px 16px;border-bottom:1px solid var(--border);}
+.sb-title{font-size:.85rem;font-weight:700;margin-bottom:10px;}
+.sb-date{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+.sb-date input{flex:1;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:.82rem;font-family:inherit;outline:none;background:var(--bg);}
+.sb-date input:focus{border-color:var(--teal);}
+
+/* ── 미션 1: 전체 점검 현황 배너 ── */
+.summary-banner{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:.75rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.sb-stat{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.sb-stat-v{font-size:.95rem;font-weight:900;}
+.sb-stat-l{font-size:.62rem;color:var(--mute);}
+.sb-divider{width:1px;height:24px;background:var(--border);}
+.sb-prog-wrap{flex:1;min-width:80px;}
+.sb-prog-track{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:2px;}
+.sb-prog-fill{height:100%;background:var(--teal);border-radius:3px;transition:width .4s;}
+
+.eq-list{flex:1;overflow-y:auto;padding:8px;}
+.eq-item{padding:11px 12px;border-radius:9px;cursor:pointer;margin-bottom:4px;border:1px solid transparent;transition:all .15s;}
+.eq-item:hover{background:var(--bg);}
+.eq-item.active{background:#f0fdfa;border-color:#99f6e4;}
+.eq-name{font-size:.88rem;font-weight:700;margin-bottom:3px;}
+.eq-type{font-size:.72rem;color:var(--mute);}
+.eq-prog{display:flex;align-items:center;gap:6px;margin-top:6px;}
+.prog-bar{flex:1;height:5px;background:#e2e8f0;border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:3px;transition:width .3s;}
+.prog-pct{font-size:.7rem;font-weight:700;min-width:28px;text-align:right;}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* ── 메인 ── */
+.main{overflow-y:auto;padding:18px 24px;display:flex;flex-direction:column;gap:14px;}
+.eq-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:18px 22px;box-shadow:var(--shadow);display:flex;align-items:center;gap:18px;}
+.eq-icon{width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;}
+.eq-info h2{font-size:1.05rem;font-weight:800;}
+.eq-info p{font-size:.82rem;color:var(--sub);margin-top:2px;}
+.eq-stats{display:flex;gap:18px;margin-left:auto;}
+.stat{text-align:center;}
+.stat-v{font-size:1.2rem;font-weight:900;}
+.stat-l{font-size:.7rem;color:var(--mute);}
+
+/* ── 미션 2: NG 요약 패널 ── */
+.ng-panel{background:#fff5f5;border:1px solid #fecaca;border-radius:var(--rad);padding:14px 18px;}
+.ng-panel-title{font-size:.85rem;font-weight:800;color:var(--red);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.ng-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid #fecaca;font-size:.8rem;}
+.ng-row:last-child{border-bottom:none;}
+.ng-badge{background:var(--red);color:#fff;padding:1px 6px;border-radius:4px;font-size:.68rem;font-weight:700;flex-shrink:0;}
+.ng-name{flex:1;font-weight:600;}
+.ng-note{font-size:.72rem;color:var(--sub);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ── 점검 섹션 ── */
+.check-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:16px 20px;box-shadow:var(--shadow);}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.section-title{font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:8px;}
+.section-pct{font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:10px;}
+.check-list{display:flex;flex-direction:column;gap:6px;}
+.check-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:9px;transition:all .15s;}
+.check-item.checked{background:#f0fdf4;border-color:#bbf7d0;}
+.check-item.abnormal{background:#fff5f5;border-color:#fecaca;}
+.check-circle{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s;margin-top:1px;}
+.check-circle.ok{background:var(--green);border-color:var(--green);color:#fff;}
+.check-circle.ng{background:var(--red);border-color:var(--red);color:#fff;}
+.check-body{flex:1;}
+.check-name{font-size:.85rem;font-weight:600;}
+.check-desc{font-size:.75rem;color:var(--mute);margin-top:2px;}
+.check-actions{display:flex;gap:6px;margin-top:8px;align-items:center;}
+.result-btn{padding:3px 10px;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;border:1px solid;font-family:inherit;transition:all .15s;}
+.btn-ok{color:var(--green);border-color:var(--green);background:transparent;}
+.btn-ok:hover{background:#f0fdf4;}
+.btn-ok.active{background:var(--green);color:#fff;}
+.btn-ng{color:var(--red);border-color:var(--red);background:transparent;}
+.btn-ng:hover{background:#fff5f5;}
+.btn-ng.active{background:var(--red);color:#fff;}
+.check-note{width:100%;margin-top:8px;padding:6px 8px;border:1px solid var(--border2);border-radius:6px;font-size:.78rem;font-family:inherit;resize:none;height:48px;outline:none;background:var(--bg);}
+.check-note:focus{border-color:var(--teal);}
+.priority-badge{padding:2px 7px;border-radius:5px;font-size:.68rem;font-weight:700;}
+.p-high{background:#fee2e2;color:#b91c1c;}
+.p-mid{background:#fef3c7;color:#b45309;}
+.p-low{background:#dcfce7;color:#15803d;}
+.cycle-tag{padding:2px 7px;border-radius:5px;font-size:.68rem;background:#e0f2fe;color:#0369a1;}
+
+/* ── 이력 테이블 ── */
+.hist-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.hist-table th{background:var(--bg);padding:8px 10px;text-align:left;font-weight:700;color:var(--sub);border-bottom:2px solid var(--border);}
+.hist-table td{padding:8px 10px;border-bottom:1px solid var(--border);}
+
+/* ── 토스트 ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:#1e293b;color:#f1f5f9;padding:10px 22px;border-radius:30px;font-size:.85rem;opacity:0;transition:all .3s;pointer-events:none;z-index:500;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── 보고서 출력 버튼 ── */
+.btn-report{background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.4);}
+.btn-report:hover{background:rgba(255,255,255,.32);}
+
+/* ── 보고서 오버레이 ── */
+.rpt-overlay{display:none;position:fixed;inset:0;z-index:200;background:#6b7280;overflow-y:auto;}
+.rpt-overlay.show{display:block;}
+.rpt-toolbar{position:sticky;top:0;z-index:10;background:#374151;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+
+/* ── 보고서 페이지 ── */
+.rpt-page{width:210mm;min-height:297mm;margin:20px auto;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.25);padding:18mm 16mm 18mm 20mm;font-family:'맑은 고딕','Malgun Gothic','Segoe UI',sans-serif;font-size:9pt;color:#111;line-height:1.5;}
+.rpt-company{text-align:right;font-size:8pt;color:#555;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:14px;}
+.rpt-company strong{font-size:10pt;color:#111;}
+.rpt-doc-title{text-align:center;margin-bottom:16px;}
+.rpt-doc-title h1{font-size:16pt;font-weight:900;letter-spacing:2px;color:#111;margin-bottom:4px;}
+.rpt-doc-title p{font-size:9pt;color:#555;}
+.rpt-info-box{border:1px solid #bbb;border-collapse:collapse;width:100%;margin-bottom:16px;}
+.rpt-info-box td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;}
+.rpt-info-box .rpt-label{background:#f5f5f5;font-weight:700;width:80px;color:#333;}
+.rpt-sec{margin-bottom:14px;}
+.rpt-sec-title{font-size:10pt;font-weight:900;background:#1e3a5f;color:#fff;padding:5px 10px;margin-bottom:8px;letter-spacing:.5px;}
+.rpt-table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:4px;}
+.rpt-table th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:center;font-weight:700;border:1px solid #bbb;}
+.rpt-table td{padding:5px 8px;border:1px solid #ddd;text-align:center;vertical-align:middle;}
+.rpt-table tr:nth-child(even) td{background:#f8f9fa;}
+.rpt-table .rpt-total td{background:#e8edf5;font-weight:800;border-top:2px solid #1e3a5f;}
+.rpt-table .num{text-align:right;}
+.rpt-table .rpt-good{color:#059669;font-weight:700;}
+.rpt-table .rpt-bad{color:#dc2626;font-weight:700;}
+.rpt-table .rpt-warn{color:#d97706;font-weight:700;}
+.rpt-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.rpt-kpi-card{border:1px solid #bbb;border-top:3px solid #1e3a5f;padding:8px;text-align:center;border-radius:2px;}
+.rpt-kpi-card .rk-label{font-size:7.5pt;color:#555;margin-bottom:4px;}
+.rpt-kpi-card .rk-val{font-size:13pt;font-weight:900;color:#1e3a5f;line-height:1;}
+.rpt-kpi-card .rk-unit{font-size:7pt;color:#888;margin-top:2px;}
+.rpt-sign{width:100%;border-collapse:collapse;margin-top:16px;}
+.rpt-sign td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;text-align:center;}
+.rpt-sign .rpt-label{background:#f5f5f5;font-weight:700;width:70px;}
+.rpt-sign .sign-box{height:48px;vertical-align:bottom;padding-bottom:4px;}
+.rpt-footer{margin-top:18px;border-top:1px solid #ccc;padding-top:6px;font-size:7.5pt;color:#888;text-align:center;}
+
+/* ── 인쇄 시 ── */
+@media print{
+  .no-print,.header,.layout,.rpt-toolbar{display:none!important;}
+  .rpt-overlay{display:block!important;position:static;background:none;overflow:visible;}
+  .rpt-page{width:100%;margin:0;box-shadow:none;padding:10mm 12mm;}
+  body{background:#fff;}
+}

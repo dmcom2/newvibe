@@ -1,0 +1,152 @@
+﻿*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--border:#d1d9e0;
+  --text:#1a202c;--sub:#4a5568;--mute:#a0aec0;
+  --blue:#2563eb;--green:#059669;--amber:#d97706;--red:#dc2626;--orange:#ea580c;
+  --rad:10px;--shadow:0 1px 3px rgba(0,0,0,.1),0 2px 8px rgba(0,0,0,.06);
+}
+body{font-family:'맑은 고딕','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.header{background:linear-gradient(135deg,#431407,#ea580c);color:#fff;padding:0 28px;height:58px;display:flex;align-items:center;gap:12px;}
+.header h1{font-size:1rem;font-weight:700;flex:1;}
+.btn{padding:7px 16px;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-white{background:#fff;color:var(--orange);}
+.btn-ghost{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border);}
+.btn-red{background:var(--red);color:#fff;}
+.btn-green{background:var(--green);color:#fff;}
+
+.filter-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.filter-bar input,.filter-bar select{padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:.82rem;font-family:inherit;outline:none;}
+.tab-row{display:flex;gap:0;}
+.tab-btn{padding:10px 20px;font-size:.85rem;font-weight:700;border:none;background:var(--surface);cursor:pointer;color:var(--mute);font-family:inherit;border-bottom:3px solid transparent;}
+.tab-btn.active{color:var(--orange);border-bottom-color:var(--orange);}
+.layout{padding:18px 28px;}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;}
+.kpi{background:var(--surface);border-radius:var(--rad);padding:14px 16px;box-shadow:var(--shadow);border-top:3px solid transparent;}
+.kpi-l{font-size:.72rem;color:var(--mute);margin-bottom:4px;}
+.kpi-v{font-size:1.4rem;font-weight:900;}
+.kpi-sub{font-size:.72rem;color:var(--mute);margin-top:3px;}
+
+/* 발주서 카드 */
+.po-table-wrap{background:var(--surface);border-radius:var(--rad);box-shadow:var(--shadow);overflow:hidden;}
+.po-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.po-table th{background:var(--bg);padding:10px 12px;text-align:left;font-size:.72rem;font-weight:700;color:var(--sub);border-bottom:2px solid var(--border);}
+.po-table td{padding:10px 12px;border-bottom:1px solid var(--border);}
+.po-table tr:hover td{background:#fafbfc;cursor:pointer;}
+.status-chip{padding:3px 9px;border-radius:12px;font-size:.72rem;font-weight:700;}
+.progress-cell{display:flex;align-items:center;gap:6px;}
+.mini-bar{flex:1;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;min-width:60px;}
+.mini-fill{height:100%;border-radius:3px;}
+
+/* 인쇄용 발주서 */
+.po-print{display:none;padding:30px;}
+.po-print-title{text-align:center;margin-bottom:20px;}
+.po-print-title h2{font-size:1.3rem;font-weight:900;letter-spacing:3px;}
+.po-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);margin-bottom:16px;}
+.pm-row{display:grid;grid-template-columns:110px 1fr;border-bottom:1px solid var(--border);}
+.pm-label{padding:7px 10px;background:#f9fafb;font-size:.75rem;font-weight:700;color:var(--sub);border-right:1px solid var(--border);}
+.pm-value{padding:7px 10px;font-size:.78rem;}
+.po-items-table{width:100%;border-collapse:collapse;font-size:.8rem;margin-bottom:12px;}
+.po-items-table th{background:#f9fafb;padding:8px 10px;border:1px solid var(--border);text-align:center;font-weight:700;}
+.po-items-table td{padding:8px 10px;border:1px solid var(--border);text-align:center;}
+.total-row td{font-weight:900;background:#f0fdf4;}
+
+/* 모달 */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--surface);border-radius:14px;padding:24px;width:660px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.2);}
+.modal h2{font-size:.95rem;font-weight:800;margin-bottom:14px;}
+.form-group{margin-bottom:10px;}
+.form-group label{display:block;font-size:.75rem;font-weight:700;color:var(--sub);margin-bottom:3px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:.85rem;outline:none;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+.item-input-table{width:100%;border-collapse:collapse;font-size:.78rem;}
+.item-input-table th{background:var(--bg);padding:7px 8px;border:1px solid var(--border);font-size:.7rem;text-align:center;}
+.item-input-table td{padding:4px;border:1px solid var(--border);}
+.item-input-table input,.item-input-table select{width:100%;padding:5px 6px;border:1px solid var(--border);border-radius:4px;font-size:.75rem;font-family:inherit;}
+.section-label{font-size:.8rem;font-weight:800;color:var(--sub);margin:12px 0 6px;padding-bottom:4px;border-bottom:2px solid var(--orange);}
+
+/* 입고 모달 */
+.receive-table{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px;}
+.receive-table th{background:var(--bg);padding:8px;border:1px solid var(--border);font-size:.72rem;}
+.receive-table td{padding:6px 8px;border:1px solid var(--border);}
+.receive-table input{width:100%;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:.78rem;font-family:inherit;}
+
+@media print{
+  .header,.filter-bar,.po-table-wrap,.no-print,.tab-row,.kpi-row,.overdue-banner,.toast{display:none!important;}
+  .po-print{display:block!important;}
+}
+
+/* 버튼 hover 개선 */
+.btn{transition:all .15s;}
+.btn-white:hover{background:#fff7ed;}
+.btn-ghost:hover{background:rgba(255,255,255,.25);}
+.btn-blue:hover{background:#1d4ed8;}
+.btn-green:hover{background:#047857;}
+.btn-red:hover{background:#b91c1c;}
+.btn-outline:hover{background:var(--bg);}
+.header{box-shadow:0 2px 10px rgba(0,0,0,.2);}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--orange);}
+
+/* 미션 1: 납기 초과 경보 배너 */
+.overdue-banner{background:linear-gradient(90deg,#7c2d12,#ea580c);color:#fff;padding:10px 28px;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap;animation:blink-ov 2s infinite;}
+@keyframes blink-ov{0%,100%{opacity:1;}50%{opacity:.88;}}
+
+/* 미션 2: 업체별 발주금액 바 차트 */
+.vendor-chart-wrap{background:var(--surface);border-radius:var(--rad);padding:16px;box-shadow:var(--shadow);margin-bottom:14px;}
+.vendor-chart-title{font-size:.85rem;font-weight:700;margin-bottom:12px;}
+.vc-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:.78rem;}
+.vc-label{width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-weight:600;}
+.vc-bar{flex:1;height:18px;background:#e2e8f0;border-radius:4px;overflow:hidden;}
+.vc-fill{height:100%;border-radius:4px;transition:width .4s;}
+.vc-amt{width:70px;text-align:right;font-weight:700;font-size:.75rem;color:var(--orange);}
+
+/* 미션 3: 업체 입고 이행률 등급 */
+.rate-badge{padding:2px 8px;border-radius:5px;font-size:.7rem;font-weight:700;}
+.rate-a{background:#dcfce7;color:#15803d;}
+.rate-b{background:#fef3c7;color:#b45309;}
+.rate-c{background:#fee2e2;color:#b91c1c;}
+
+/* 토스트 */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:#1e293b;color:#f1f5f9;padding:10px 22px;border-radius:30px;font-size:.85rem;opacity:0;transition:all .3s;pointer-events:none;z-index:500;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.btn-report{background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.4);}
+.btn-report:hover{background:rgba(255,255,255,.32);}
+.rpt-overlay{display:none;position:fixed;inset:0;z-index:200;background:#6b7280;overflow-y:auto;}
+.rpt-overlay.show{display:block;}
+.rpt-toolbar{position:sticky;top:0;z-index:10;background:#374151;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+.rpt-page{width:210mm;min-height:297mm;margin:20px auto;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.25);padding:18mm 16mm 18mm 20mm;font-family:'맑은 고딕','Malgun Gothic','Segoe UI',sans-serif;font-size:9pt;color:#111;line-height:1.5;}
+.rpt-company{text-align:right;font-size:8pt;color:#555;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:14px;}
+.rpt-company strong{font-size:10pt;color:#111;}
+.rpt-doc-title{text-align:center;margin-bottom:16px;}
+.rpt-doc-title h1{font-size:16pt;font-weight:900;letter-spacing:2px;color:#111;margin-bottom:4px;}
+.rpt-doc-title p{font-size:9pt;color:#555;}
+.rpt-info-box{border:1px solid #bbb;border-collapse:collapse;width:100%;margin-bottom:16px;}
+.rpt-info-box td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;}
+.rpt-info-box .rpt-label{background:#f5f5f5;font-weight:700;width:80px;color:#333;}
+.rpt-sec{margin-bottom:14px;}
+.rpt-sec-title{font-size:10pt;font-weight:900;background:#1e3a5f;color:#fff;padding:5px 10px;margin-bottom:8px;letter-spacing:.5px;}
+.rpt-table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:4px;}
+.rpt-table th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:center;font-weight:700;border:1px solid #bbb;}
+.rpt-table td{padding:5px 8px;border:1px solid #ddd;text-align:center;vertical-align:middle;}
+.rpt-table tr:nth-child(even) td{background:#f8f9fa;}
+.rpt-table .rpt-total td{background:#e8edf5;font-weight:800;border-top:2px solid #1e3a5f;}
+.rpt-table .num{text-align:right;}
+.rpt-table .rpt-good{color:#059669;font-weight:700;}
+.rpt-table .rpt-bad{color:#dc2626;font-weight:700;}
+.rpt-table .rpt-warn{color:#d97706;font-weight:700;}
+.rpt-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+.rpt-kpi-card{border:1px solid #bbb;border-top:3px solid #1e3a5f;padding:8px;text-align:center;border-radius:2px;}
+.rpt-kpi-card .rk-label{font-size:7.5pt;color:#555;margin-bottom:4px;}
+.rpt-kpi-card .rk-val{font-size:13pt;font-weight:900;color:#1e3a5f;line-height:1;}
+.rpt-kpi-card .rk-unit{font-size:7pt;color:#888;margin-top:2px;}
+.rpt-sign{width:100%;border-collapse:collapse;margin-top:16px;}
+.rpt-sign td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;text-align:center;}
+.rpt-sign .rpt-label{background:#f5f5f5;font-weight:700;width:70px;}
+.rpt-sign .sign-box{height:48px;vertical-align:bottom;padding-bottom:4px;}
+.rpt-footer{margin-top:18px;border-top:1px solid #ccc;padding-top:6px;font-size:7.5pt;color:#888;text-align:center;}
+@media print{.no-print,.header,.filter-bar,.layout,.rpt-toolbar{display:none!important;}.rpt-overlay{display:block!important;position:static;background:none;overflow:visible;}.rpt-page{width:100%;margin:0;box-shadow:none;padding:10mm 12mm;}body{background:#fff;}}

@@ -1,0 +1,106 @@
+﻿*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f0f4f8;--surface:#fff;--border:#d1d9e0;
+  --text:#1a202c;--sub:#4a5568;--mute:#a0aec0;
+  --blue:#2563eb;--green:#059669;--amber:#d97706;--red:#dc2626;--rose:#be185d;
+  --rad:10px;--shadow:0 1px 3px rgba(0,0,0,.1),0 2px 8px rgba(0,0,0,.06);
+}
+body{font-family:'맑은 고딕','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.header{background:linear-gradient(135deg,#4a044e,#be185d);color:#fff;padding:0 28px;height:58px;display:flex;align-items:center;gap:12px;}
+.header h1{font-size:1rem;font-weight:700;flex:1;}
+.btn{padding:7px 16px;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-white{background:#fff;color:var(--rose);}
+.btn-ghost{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border);}
+.btn-red{background:var(--red);color:#fff;}
+.btn-green{background:var(--green);color:#fff;}
+
+.layout{padding:18px 28px;display:grid;grid-template-columns:1fr 380px;gap:16px;align-items:start;}
+.panel{background:var(--surface);border-radius:var(--rad);box-shadow:var(--shadow);overflow:hidden;}
+.panel-header{padding:12px 16px;background:var(--bg);border-bottom:2px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.panel-title{font-size:.85rem;font-weight:800;}
+.panel-body{padding:16px;}
+
+/* 입력 섹션 */
+.section{margin-bottom:16px;}
+.section-title{font-size:.78rem;font-weight:800;color:#fff;padding:6px 12px;border-radius:6px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.field{display:flex;flex-direction:column;gap:3px;}
+.field label{font-size:.72rem;font-weight:700;color:var(--sub);}
+.field input,.field select{padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:.83rem;outline:none;width:100%;}
+.field input:focus,.field select:focus{border-color:var(--rose);}
+.field-unit{display:flex;align-items:center;gap:4px;}
+.field-unit input{flex:1;}
+.field-unit span{font-size:.75rem;color:var(--mute);white-space:nowrap;}
+
+/* 재료비 항목 */
+.material-row{display:grid;grid-template-columns:1fr 80px 80px 70px 24px;gap:4px;align-items:center;margin-bottom:4px;}
+.material-row input,.material-row select{padding:5px 7px;border:1px solid var(--border);border-radius:5px;font-size:.75rem;font-family:inherit;width:100%;}
+.del-btn{width:24px;height:24px;background:#fee2e2;color:var(--red);border:none;border-radius:4px;cursor:pointer;font-size:.85rem;font-family:inherit;}
+
+/* 결과 패널 */
+.result-cost{margin-bottom:16px;}
+.cost-bar{margin-bottom:8px;}
+.cb-header{display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px;}
+.cb-name{font-weight:700;}
+.cb-amount{font-weight:700;}
+.cb-track{height:10px;background:#e2e8f0;border-radius:5px;overflow:hidden;}
+.cb-fill{height:100%;border-radius:5px;transition:width .4s;}
+.cb-pct{font-size:.7rem;color:var(--mute);margin-top:2px;text-align:right;}
+
+.total-box{background:linear-gradient(135deg,#fdf2f8,#fce7f3);border:2px solid var(--rose);border-radius:10px;padding:14px 16px;text-align:center;margin-bottom:12px;}
+.total-label{font-size:.75rem;color:var(--sub);}
+.total-unit{font-size:1.8rem;font-weight:900;color:var(--rose);}
+.total-batch{font-size:.75rem;color:var(--sub);}
+
+.breakdown{border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.breakdown-row{display:grid;grid-template-columns:1fr 1fr 60px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:.78rem;}
+.breakdown-row:last-child{border-bottom:none;}
+.breakdown-row.header{background:var(--bg);font-size:.72rem;font-weight:700;color:var(--sub);}
+.breakdown-row.total-row{background:#fdf2f8;font-weight:800;}
+
+/* 비교 저장 */
+.saved-list{max-height:200px;overflow-y:auto;}
+.saved-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border);font-size:.78rem;cursor:pointer;}
+.saved-item:hover{background:var(--bg);}
+.saved-item-name{font-weight:700;}
+.saved-item-cost{color:var(--rose);font-weight:700;}
+
+/* 도넛 차트 */
+.donut-wrap{position:relative;width:140px;height:140px;margin:0 auto 12px;}
+.donut-wrap svg{width:100%;height:100%;}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.donut-center span{font-size:.65rem;color:var(--mute);}
+.donut-center b{font-size:.85rem;font-weight:900;color:var(--text);}
+
+.legend-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:.75rem;}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* 버튼 hover */
+.btn:hover{filter:brightness(.92);}
+.header{box-shadow:0 2px 8px rgba(0,0,0,.15);}
+
+/* 미션1: 재료비 과다 경보 배너 */
+@keyframes blink-cost{0%,100%{opacity:1}50%{opacity:.88}}
+.cost-alert-banner{padding:9px 28px;background:linear-gradient(90deg,#fdf2f8,#fff1f2);border-bottom:2px solid #f9a8d4;color:#7f1d1d;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:10px;animation:blink-cost 2s infinite;}
+.cost-alert-banner span{background:#be185d;color:#fff;padding:2px 8px;border-radius:10px;font-size:.72rem;}
+
+/* 미션2: 비교 저장 바 차트 */
+.compare-bar{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.compare-bar-label{width:100px;font-size:.73rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.compare-bar-track{flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;}
+.compare-bar-fill{height:100%;border-radius:4px;background:var(--rose);}
+.compare-bar-val{width:80px;text-align:right;font-size:.72rem;font-weight:700;color:var(--rose);}
+
+/* 미션3: 원가 등급 */
+.cost-grade-badge{display:inline-block;padding:4px 12px;border-radius:10px;font-size:.76rem;font-weight:700;}
+.cost-grade-a{background:#dcfce7;color:#059669;}
+.cost-grade-b{background:#fef9c3;color:#d97706;}
+.cost-grade-c{background:#fee2e2;color:#dc2626;}
+
+/* 토스트 */
+.toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:#fff;padding:10px 18px;border-radius:9px;font-size:.82rem;font-weight:600;z-index:999;opacity:0;pointer-events:none;transition:opacity .3s;}
+.toast.show{opacity:1;}
+
+@media print{.cost-alert-banner,.toast{display:none;}}
