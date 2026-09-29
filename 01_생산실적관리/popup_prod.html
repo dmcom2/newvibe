@@ -1,166 +1,281 @@
 <!DOCTYPE html>
+<!-- 생산 실적 관리 시스템 메인 HTML -->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>생산 실적 관리 | PCB 제조</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-/* 생산 실적 관리 시스템 스타일시트 */
+/* 생산 실적 관리 시스템 스타일시트 — 공장 MES 현황판 스타일 */
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg:#f0f4f8;--surface:#fff;--border:#d1d9e0;--border2:#c4cdd6;
-  --text:#1a202c;--sub:#4a5568;--mute:#a0aec0;
-  --blue:#2563eb;--green:#059669;--amber:#d97706;--red:#dc2626;--purple:#7c3aed;
-  --rad:10px;--shadow:0 1px 3px rgba(0,0,0,.1),0 2px 8px rgba(0,0,0,.06);
+  --bg:#eef1f5;--surface:#fff;--surface2:#f7f9fb;--border:#dde3ea;--border2:#c9d2dc;
+  --text:#0f172a;--sub:#475569;--mute:#94a3b8;
+  --navy:#0b1629;--navy2:#13223b;
+  --blue:#2563eb;--blue-soft:#e8efff;
+  --green:#059669;--green-soft:#dcfce7;--amber:#d97706;--amber-soft:#fef3c7;--red:#dc2626;--red-soft:#fee2e2;
+  --purple:#7c3aed;
+  --rad:10px;--shadow:0 1px 2px rgba(15,23,42,.06),0 2px 6px rgba(15,23,42,.04);
+  --mono:'Consolas','D2Coding',ui-monospace,monospace;
 }
-body{font-family:'맑은 고딕','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+body{font-family:'Pretendard','맑은 고딕','Malgun Gothic','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+.mono,.num{font-variant-numeric:tabular-nums;}
+.spacer{flex:1;}
 
 /* ── 헤더 ── */
-.header{background:linear-gradient(135deg,#1e3a5f,#2563eb 60%,#1d4ed8);color:#fff;padding:0 28px;height:58px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 10px rgba(0,0,0,.2);}
-.header h1{font-size:1rem;font-weight:700;flex:1;}
-.header h1 small{font-weight:400;opacity:.7;font-size:.8rem;margin-left:8px;}
-.btn{padding:7px 16px;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
-.btn-white{background:#fff;color:var(--blue);}
-.btn-white:hover{background:#f0f4ff;}
-.btn-ghost{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);}
-.btn-ghost:hover{background:rgba(255,255,255,.25);}
-.btn-blue{background:var(--blue);color:#fff;}
-.btn-outline{background:transparent;color:var(--sub);border:1px solid var(--border2);}
-.btn-red{background:var(--red);color:#fff;}
+.header{background:var(--navy);color:#e2e8f0;padding:0 24px;height:64px;display:flex;align-items:center;gap:20px;border-bottom:3px solid var(--blue);position:sticky;top:0;z-index:50;}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-mark{width:40px;height:40px;border-radius:8px;background:var(--blue);color:#fff;font-weight:800;font-size:.78rem;letter-spacing:.5px;display:flex;align-items:center;justify-content:center;
+  background-image:linear-gradient(90deg,rgba(255,255,255,.14) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.14) 1px,transparent 1px);background-size:8px 8px;}
+.brand-txt h1{font-size:1.05rem;font-weight:800;color:#fff;letter-spacing:-.2px;}
+.brand-txt p{font-size:.72rem;color:#8ea0b8;margin-top:1px;}
+.status-strip{display:flex;gap:4px;margin-left:12px;flex:1;}
+.st-item{background:var(--navy2);border:1px solid #1f3353;border-radius:8px;padding:5px 12px;display:flex;flex-direction:column;min-width:108px;}
+.st-label{font-size:.66rem;color:#7d90ab;}
+.st-val{font-size:.86rem;font-weight:700;color:#fff;margin-top:1px;white-space:nowrap;}
+.st-val.ok{color:#4ade80;}
+.st-val.warn{color:#fbbf24;}
+.st-val.bad{color:#f87171;}
+.hd-actions{display:flex;gap:8px;}
 
-/* ── 미션 3: 불량률 경보 배너 ── */
-.alert-banner{background:linear-gradient(90deg,#dc2626,#b91c1c);color:#fff;padding:10px 28px;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:10px;animation:blink-bg 2s infinite;}
-@keyframes blink-bg{0%,100%{opacity:1;}50%{opacity:.85;}}
+/* ── 버튼 ── */
+.btn{padding:8px 15px;border:1px solid transparent;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s;white-space:nowrap;}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-primary:hover{background:#1d4ed8;}
+.btn-ghost{background:transparent;color:#cbd5e1;border-color:#2a3f60;}
+.btn-ghost:hover{background:#1a2b47;color:#fff;}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-blue:hover{background:#1d4ed8;}
+.btn-outline{background:#fff;color:var(--sub);border-color:var(--border2);}
+.btn-outline:hover{background:var(--surface2);}
+.btn-red{background:#fff;color:var(--red);border-color:#fecaca;}
+.btn-red:hover{background:var(--red-soft);}
 
 /* ── 날짜 네비 ── */
-.date-nav{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:12px;}
-.date-nav > button{padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-family:inherit;font-size:.85rem;transition:background .15s;}
-.date-nav > button:hover{background:var(--bg);}
-.current-date{font-size:.95rem;font-weight:700;min-width:110px;text-align:center;}
-.date-nav input[type=date]{padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:.85rem;outline:none;background:var(--bg);}
-.date-nav input[type=date]:focus{border-color:var(--blue);}
-.view-btns{display:flex;gap:4px;margin-left:auto;}
-.vb{padding:5px 14px;border-radius:7px;border:1px solid var(--border);background:var(--surface);font-size:.8rem;cursor:pointer;font-family:inherit;color:var(--sub);transition:all .15s;}
-.vb.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.date-nav{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.month-nav{display:flex;align-items:center;gap:4px;}
+.nav-btn{width:32px;height:32px;border:1px solid var(--border);border-radius:7px;background:var(--surface);cursor:pointer;font-size:.75rem;color:var(--sub);}
+.nav-btn:hover{background:var(--surface2);border-color:var(--border2);}
+.current-date{font-size:1.05rem;font-weight:800;min-width:120px;text-align:center;font-variant-numeric:tabular-nums;}
+.date-field{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--sub);font-weight:600;}
+.date-field input{padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:.85rem;outline:none;background:var(--surface2);color:var(--text);}
+.date-field input:focus{border-color:var(--blue);background:#fff;}
+.view-btns{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:3px;}
+.vb{padding:5px 16px;border-radius:6px;border:none;background:transparent;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;color:var(--sub);}
+.vb.active{background:var(--navy);color:#fff;}
+.period{margin-left:auto;font-size:.78rem;color:var(--mute);}
+
+/* ── 미션 3: 불량률 경보 배너 ── */
+.alert-banner{background:#fff7ed;border-bottom:1px solid #fed7aa;border-left:5px solid var(--red);color:#7c2d12;padding:10px 24px;font-size:.84rem;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.alert-banner .pulse{width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 0 0 rgba(220,38,38,.6);animation:pulse 1.6s infinite;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(220,38,38,.55);}70%{box-shadow:0 0 0 8px rgba(220,38,38,0);}100%{box-shadow:0 0 0 0 rgba(220,38,38,0);}}
+.alert-tag{background:#fff;border:1px solid #fecaca;color:var(--red);padding:2px 10px;border-radius:6px;font-weight:800;}
+.alert-tag b{font-variant-numeric:tabular-nums;}
+.alert-goal{margin-left:auto;font-size:.76rem;font-weight:500;color:#9a3412;}
 
 /* ── 레이아웃 ── */
-.layout{padding:18px 28px;display:flex;flex-direction:column;gap:14px;}
+.layout{padding:18px 24px 32px;display:flex;flex-direction:column;gap:16px;max-width:1600px;margin:0 auto;}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.sec-head h2,.panel-title h2{font-size:.9rem;font-weight:800;color:var(--text);}
+.legend{display:flex;gap:12px;font-size:.72rem;color:var(--sub);}
+.legend span{display:flex;align-items:center;gap:5px;}
 
 /* ── KPI 카드 ── */
 .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
-.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
-.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
-.kpi.k1::after{background:var(--blue);}
-.kpi.k2::after{background:var(--green);}
-.kpi.k3::after{background:var(--red);}
-.kpi.k4::after{background:var(--amber);}
-.kpi.k5::after{background:var(--purple);}
-.kpi-l{font-size:.72rem;color:var(--mute);margin-bottom:4px;}
-.kpi-v{font-size:1.5rem;font-weight:900;}
-.kpi.k1 .kpi-v{color:var(--blue);}
-.kpi.k2 .kpi-v{color:var(--green);}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:14px 16px 12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;}
+.kpi-top{display:flex;align-items:center;justify-content:space-between;}
+.kpi-l{font-size:.76rem;color:var(--sub);font-weight:600;}
+.kpi-v{font-size:1.75rem;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums;line-height:1.1;}
+.kpi-v small{font-size:.8rem;font-weight:600;color:var(--mute);margin-left:3px;}
+.kpi-sub{font-size:.72rem;color:var(--mute);}
+.kpi.good .kpi-v{color:var(--green);}
+.kpi.warn .kpi-v{color:var(--amber);}
+.kpi.bad .kpi-v{color:var(--red);}
 .kpi.k3 .kpi-v{color:var(--red);}
-.kpi.k4 .kpi-v{color:var(--amber);}
-.kpi.k5 .kpi-v{color:var(--purple);}
-.kpi-sub{font-size:.72rem;color:var(--mute);margin-top:3px;}
+.tag{font-size:.66rem;font-weight:800;padding:2px 7px;border-radius:5px;}
+.tag.good{background:var(--green-soft);color:#15803d;}
+.tag.warn{background:var(--amber-soft);color:#b45309;}
+.tag.bad{background:var(--red-soft);color:#b91c1c;}
+.tag.info{background:var(--blue-soft);color:var(--blue);}
+/* 목표 게이지 */
+.gauge{position:relative;height:6px;background:#edf1f6;border-radius:3px;margin-top:2px;}
+.gauge-fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--blue);}
+.gauge-goal{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text);}
+.good .gauge-fill{background:var(--green);}
+.warn .gauge-fill{background:var(--amber);}
+.bad .gauge-fill{background:var(--red);}
+.gauge-scale{display:flex;justify-content:space-between;font-size:.64rem;color:var(--mute);font-variant-numeric:tabular-nums;}
 
-/* ── 미션 2: 라인별 실적 카드 ── */
-.line-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
-.lc{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:13px 15px;box-shadow:var(--shadow);border-top-width:3px;}
-.lc-name{font-size:.82rem;font-weight:800;margin-bottom:8px;}
-.lc-main{font-size:1.3rem;font-weight:900;margin-bottom:4px;}
-.lc-unit{font-size:.7rem;color:var(--mute);margin-bottom:8px;}
-.lc-pills{display:flex;gap:5px;flex-wrap:wrap;}
-.lc-pill{padding:2px 8px;border-radius:5px;font-size:.68rem;font-weight:700;}
-.lc-pill.good{background:#dcfce7;color:#15803d;}
-.lc-pill.warn{background:#fef3c7;color:#b45309;}
-.lc-pill.bad{background:#fee2e2;color:#b91c1c;}
+/* ── 미션 2: 라인별 실적 카드 (라인 현황판) ── */
+.line-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+.lc{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;}
+.lc-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface2);}
+.lc-chip{width:4px;height:18px;border-radius:2px;}
+.lc-name{font-size:.88rem;font-weight:800;flex:1;}
+.lamp{display:inline-block;width:10px;height:10px;border-radius:50%;}
+.lamp.good{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18);}
+.lamp.warn{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.2);}
+.lamp.bad{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.2);}
+.lc-body{padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.lc-main{font-size:1.45rem;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.4px;}
+.lc-main small{font-size:.76rem;color:var(--mute);font-weight:600;margin-left:4px;}
+.lc-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.lc-stat{background:var(--surface2);border-radius:6px;padding:6px 8px;}
+.lc-stat span{display:block;font-size:.66rem;color:var(--mute);}
+.lc-stat b{font-size:.9rem;font-variant-numeric:tabular-nums;}
+.lc-stat.good b{color:var(--green);}
+.lc-stat.warn b{color:var(--amber);}
+.lc-stat.bad b{color:var(--red);}
+.lc-empty{grid-column:1/-1;background:var(--surface);border:1px dashed var(--border2);border-radius:var(--rad);padding:22px;text-align:center;color:var(--mute);font-size:.84rem;}
 
 /* ── 차트 패널 ── */
-.mid-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:16px 18px;box-shadow:var(--shadow);}
-.panel-title{font-size:.88rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
-.panel canvas{max-height:220px;}
+.mid-row{display:grid;grid-template-columns:3fr 2fr;gap:16px;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rad);padding:16px 18px;box-shadow:var(--shadow);min-width:0;}
+.panel-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+.hint{font-size:.72rem;color:var(--mute);}
+.chart-box{position:relative;height:240px;}
+.count{font-size:.74rem;font-weight:700;color:var(--blue);background:var(--blue-soft);padding:2px 8px;border-radius:10px;margin-left:6px;vertical-align:1px;}
+.search{padding:7px 12px;border:1px solid var(--border);border-radius:7px;font-size:.82rem;outline:none;width:240px;background:var(--surface2);font-family:inherit;}
+.search:focus{border-color:var(--blue);background:#fff;}
 
 /* ── 이력 테이블 ── */
+.table-wrap{max-height:460px;overflow:auto;border:1px solid var(--border);border-radius:8px;}
 .data-table{width:100%;border-collapse:collapse;font-size:.82rem;}
-.data-table th{background:var(--bg);padding:9px 10px;text-align:left;font-weight:700;color:var(--sub);border-bottom:2px solid var(--border);white-space:nowrap;}
-.data-table td{padding:9px 10px;border-bottom:1px solid var(--border);}
-.data-table tr:hover td{background:#f8fafc;}
-.data-table tr.row-alert td{background:#fff5f5;}
-.data-table tr.row-alert:hover td{background:#fee2e2;}
-.line-badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:.72rem;font-weight:700;color:#fff;}
-.status-chip{padding:2px 8px;border-radius:5px;font-size:.72rem;font-weight:700;}
-.chip-good{background:#dcfce7;color:#15803d;}
-.chip-warn{background:#fef3c7;color:#b45309;}
-.chip-bad{background:#fee2e2;color:#b91c1c;}
-.edit-btn{padding:3px 8px;border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:.75rem;background:var(--bg);font-family:inherit;transition:background .15s;}
-.edit-btn:hover{background:#dbeafe;border-color:var(--blue);color:var(--blue);}
+.data-table th{position:sticky;top:0;background:#f1f4f8;padding:9px 10px;text-align:left;font-weight:700;color:var(--sub);border-bottom:1px solid var(--border2);white-space:nowrap;font-size:.76rem;}
+.data-table th.num,.data-table td.num{text-align:right;}
+.data-table td{padding:8px 10px;border-bottom:1px solid #edf1f5;white-space:nowrap;}
+.data-table tbody tr{cursor:pointer;}
+.data-table tbody tr:hover td{background:#f5f8ff;}
+.data-table tr.row-alert td{background:#fffafa;}
+.data-table tr.row-alert td:first-child{box-shadow:inset 3px 0 0 var(--red);}
+.data-table tr.row-alert:hover td{background:#fff1f1;}
+.data-table .td-good{color:var(--green);}
+.data-table .td-bad{color:var(--red);}
+.data-table .td-mute{color:var(--sub);}
+.data-table .empty td{text-align:center;color:var(--mute);padding:30px;cursor:default;}
+.line-badge{display:inline-flex;align-items:center;gap:6px;font-weight:700;}
+.line-badge i{width:8px;height:8px;border-radius:2px;display:inline-block;}
+.status-chip{padding:2px 8px;border-radius:5px;font-size:.74rem;font-weight:700;font-variant-numeric:tabular-nums;}
+.chip-good{background:var(--green-soft);color:#15803d;}
+.chip-warn{background:var(--amber-soft);color:#b45309;}
+.chip-bad{background:var(--red-soft);color:#b91c1c;}
+.edit-btn{padding:3px 9px;border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:.74rem;background:#fff;font-family:inherit;color:var(--sub);}
+.edit-btn:hover{background:var(--blue-soft);border-color:var(--blue);color:var(--blue);}
 
 /* ── 미션 1: 실시간 양품률 계산 영역 ── */
-.realtime-calc{display:flex;gap:20px;align-items:center;padding:10px 14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;margin:6px 0 10px;font-size:.83rem;min-height:36px;}
+.realtime-calc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px;}
 .realtime-calc:empty{display:none;}
+.rc-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;}
+.rc-box span{display:block;font-size:.68rem;color:var(--mute);}
+.rc-box b{font-size:1.05rem;font-variant-numeric:tabular-nums;}
+.rc-box em{font-style:normal;font-size:.66rem;color:var(--mute);margin-left:4px;}
+.rc-box.good{border-color:#bbf7d0;background:#f0fdf4;}
+.rc-box.good b{color:var(--green);}
+.rc-box.warn{border-color:#fde68a;background:#fffbeb;}
+.rc-box.warn b{color:var(--amber);}
+.rc-box.bad{border-color:#fecaca;background:#fef2f2;}
+.rc-box.bad b{color:var(--red);}
 
 /* ── 모달 ── */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(11,22,41,.5);z-index:100;align-items:center;justify-content:center;padding:16px;}
 .modal-overlay.show{display:flex;}
-.modal{background:var(--surface);border-radius:14px;padding:24px;width:460px;box-shadow:0 20px 50px rgba(0,0,0,.2);}
-.modal h2{font-size:.95rem;font-weight:800;margin-bottom:16px;}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
-.form-group label{display:block;font-size:.75rem;font-weight:700;color:var(--sub);margin-bottom:3px;}
-.form-group input,.form-group select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:.85rem;outline:none;background:var(--bg);color:var(--text);}
-.form-group input:focus,.form-group select:focus{border-color:var(--blue);background:#fff;}
-.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+.modal{background:var(--surface);border-radius:12px;width:520px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(11,22,41,.3);overflow:hidden;}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--navy);color:#fff;}
+.modal-head h2{font-size:.98rem;font-weight:800;}
+.x-btn{background:none;border:none;color:#94a3b8;font-size:1rem;cursor:pointer;}
+.x-btn:hover{color:#fff;}
+.modal-body{padding:6px 20px 4px;overflow-y:auto;}
+fieldset{border:none;border-bottom:1px solid var(--border);padding:12px 0;}
+fieldset:last-child{border-bottom:none;}
+legend{font-size:.74rem;font-weight:800;color:var(--blue);margin-bottom:8px;float:left;width:100%;}
+legend small{color:var(--mute);font-weight:500;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;clear:both;}
+.form-group label{display:block;font-size:.74rem;font-weight:700;color:var(--sub);margin-bottom:4px;}
+.form-group input,.form-group select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-family:inherit;font-size:.88rem;outline:none;background:var(--surface2);color:var(--text);}
+.form-group input[type=number]{font-variant-numeric:tabular-nums;text-align:right;}
+.form-group input:focus,.form-group select:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.12);}
+.modal-footer{display:flex;gap:8px;align-items:center;padding:14px 20px;border-top:1px solid var(--border);background:var(--surface2);}
 
 /* ── 토스트 ── */
-.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:#1e293b;color:#f1f5f9;padding:10px 22px;border-radius:30px;font-size:.85rem;opacity:0;transition:all .3s;pointer-events:none;z-index:500;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--navy);color:#f1f5f9;padding:10px 22px;border-radius:8px;font-size:.85rem;opacity:0;transition:all .3s;pointer-events:none;z-index:500;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.25);border-left:4px solid var(--blue);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* ── 보고서 출력 버튼 ── */
-.btn-report{background:rgba(255,255,255,.22);color:#fff;border:1px solid rgba(255,255,255,.4);}
-.btn-report:hover{background:rgba(255,255,255,.32);}
-
 /* ── 보고서 오버레이 ── */
-.rpt-overlay{display:none;position:fixed;inset:0;z-index:200;background:#6b7280;overflow-y:auto;}
+.rpt-overlay{display:none;position:fixed;inset:0;z-index:200;background:#525c6b;overflow-y:auto;}
 .rpt-overlay.show{display:block;}
-.rpt-toolbar{position:sticky;top:0;z-index:10;background:#374151;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+.rpt-toolbar{position:sticky;top:0;z-index:10;background:var(--navy);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.3);border-bottom:3px solid var(--blue);}
+.rpt-toolbar-title{font-size:.88rem;font-weight:700;color:#fff;}
+.rpt-toolbar-btns{display:flex;gap:8px;}
 
 /* ── 보고서 페이지 ── */
-.rpt-page{width:210mm;min-height:297mm;margin:20px auto;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.25);padding:18mm 16mm 18mm 20mm;font-family:'맑은 고딕','Malgun Gothic','Segoe UI',sans-serif;font-size:9pt;color:#111;line-height:1.5;}
+.rpt-page{width:210mm;min-height:297mm;margin:20px auto;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.25);padding:18mm 16mm 18mm 20mm;font-family:'맑은 고딕','Malgun Gothic','Pretendard',sans-serif;font-size:9pt;color:#111;line-height:1.5;}
+
+/* 보고서 상단 */
 .rpt-company{text-align:right;font-size:8pt;color:#555;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:14px;}
 .rpt-company strong{font-size:10pt;color:#111;}
 .rpt-doc-title{text-align:center;margin-bottom:16px;}
 .rpt-doc-title h1{font-size:16pt;font-weight:900;letter-spacing:2px;color:#111;margin-bottom:4px;}
 .rpt-doc-title p{font-size:9pt;color:#555;}
+
+/* 문서 정보 박스 */
 .rpt-info-box{border:1px solid #bbb;border-collapse:collapse;width:100%;margin-bottom:16px;}
 .rpt-info-box td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;}
 .rpt-info-box .rpt-label{background:#f5f5f5;font-weight:700;width:80px;color:#333;}
+
+/* 섹션 제목 */
 .rpt-sec{margin-bottom:14px;}
-.rpt-sec-title{font-size:10pt;font-weight:900;background:#1e3a5f;color:#fff;padding:5px 10px;margin-bottom:8px;letter-spacing:.5px;}
+.rpt-sec-title{font-size:10pt;font-weight:900;border-left:4px solid #0b1629;background:#eef2f7;color:#0b1629;padding:5px 10px;margin-bottom:8px;letter-spacing:.5px;}
+
+/* 일반 보고서 테이블 */
 .rpt-table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:4px;}
-.rpt-table th{background:#1e3a5f;color:#fff;padding:6px 8px;text-align:center;font-weight:700;border:1px solid #bbb;}
+.rpt-table th{background:#0b1629;color:#fff;padding:6px 8px;text-align:center;font-weight:700;border:1px solid #bbb;}
 .rpt-table td{padding:5px 8px;border:1px solid #ddd;text-align:center;vertical-align:middle;}
 .rpt-table tr:nth-child(even) td{background:#f8f9fa;}
-.rpt-table .rpt-total td{background:#e8edf5;font-weight:800;border-top:2px solid #1e3a5f;}
+.rpt-table .rpt-total td{background:#e8edf5;font-weight:800;border-top:2px solid #0b1629;}
 .rpt-table .num{text-align:right;}
 .rpt-table .rpt-good{color:#059669;font-weight:700;}
 .rpt-table .rpt-bad{color:#dc2626;font-weight:700;}
 .rpt-table .rpt-warn{color:#d97706;font-weight:700;}
+
+/* KPI 요약 행 */
 .rpt-kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;}
-.rpt-kpi-card{border:1px solid #bbb;border-top:3px solid #1e3a5f;padding:8px;text-align:center;border-radius:2px;}
+.rpt-kpi-card{border:1px solid #bbb;border-top:3px solid #0b1629;padding:8px;text-align:center;border-radius:2px;}
 .rpt-kpi-card .rk-label{font-size:7.5pt;color:#555;margin-bottom:4px;}
-.rpt-kpi-card .rk-val{font-size:13pt;font-weight:900;color:#1e3a5f;line-height:1;}
+.rpt-kpi-card .rk-val{font-size:13pt;font-weight:900;color:#0b1629;line-height:1;}
 .rpt-kpi-card .rk-unit{font-size:7pt;color:#888;margin-top:2px;}
+
+/* 서명란 */
 .rpt-sign{width:100%;border-collapse:collapse;margin-top:16px;}
 .rpt-sign td{border:1px solid #bbb;padding:5px 10px;font-size:8.5pt;text-align:center;}
 .rpt-sign .rpt-label{background:#f5f5f5;font-weight:700;width:70px;}
 .rpt-sign .sign-box{height:48px;vertical-align:bottom;padding-bottom:4px;}
+
+/* 하단 주석 */
 .rpt-footer{margin-top:18px;border-top:1px solid #ccc;padding-top:6px;font-size:7.5pt;color:#888;text-align:center;}
+
+/* ── 반응형 ── */
+@media (max-width:1200px){
+  .status-strip{display:none;}
+  .kpi-row{grid-template-columns:repeat(3,1fr);}
+  .mid-row{grid-template-columns:1fr;}
+}
+@media (max-width:720px){
+  .header{height:auto;flex-wrap:wrap;padding:12px 16px;gap:10px;position:static;}
+  .hd-actions{width:100%;overflow-x:auto;}
+  .date-nav,.layout{padding-left:16px;padding-right:16px;}
+  .period{margin-left:0;width:100%;}
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .panel-title{flex-wrap:wrap;}
+  .search{width:100%;}
+  .form-row{grid-template-columns:1fr;}
+  .realtime-calc{grid-template-columns:1fr;}
+}
 
 /* ── 인쇄 시 ── */
 @media print{
-  .no-print,.header,.date-nav,.layout,.rpt-toolbar{display:none!important;}
+  .no-print,.header,.date-nav,.alert-banner,.layout,.rpt-toolbar,.toast{display:none!important;}
   .rpt-overlay{display:block!important;position:static;background:none;overflow:visible;}
   .rpt-page{width:100%;margin:0;box-shadow:none;padding:10mm 12mm;}
   body{background:#fff;}
@@ -169,122 +284,175 @@ body{font-family:'맑은 고딕','Segoe UI',sans-serif;background:var(--bg);colo
 </head>
 <body>
 
-<div class="header">
-  <h1>📊 생산 실적 관리 <small>PCB Manufacturing</small></h1>
-  <button class="btn btn-report" onclick="openReport()">🖨 보고서 출력</button>
-  <button class="btn btn-ghost" onclick="exportCSV()">📥 Excel 저장</button>
-  <button class="btn btn-white" onclick="openModal()">+ 실적 입력</button>
-</div>
+<!-- 상단 헤더: 시스템명 + 보고 마감 상태 + 주요 액션 -->
+<header class="header">
+  <div class="brand">
+    <div class="brand-mark">PCB</div>
+    <div class="brand-txt">
+      <h1>생산 실적 관리</h1>
+      <p>SMT 제조라인 · 생산관리팀</p>
+    </div>
+  </div>
+  <div class="status-strip">
+    <div class="st-item"><span class="st-label">현재 시각</span><span class="st-val mono" id="clock">--:--</span></div>
+    <div class="st-item"><span class="st-label">보고 마감 09:00</span><span class="st-val" id="deadline">-</span></div>
+    <div class="st-item"><span class="st-label">금일 입력</span><span class="st-val" id="todayInput">-</span></div>
+  </div>
+  <div class="hd-actions">
+    <button class="btn btn-ghost" onclick="openReport()">🖨 보고서 출력</button>
+    <button class="btn btn-ghost" onclick="exportCSV()">📥 Excel 저장</button>
+    <button class="btn btn-primary" onclick="openModal()">＋ 실적 입력</button>
+  </div>
+</header>
+
+<!-- 날짜 네비게이션 -->
+<nav class="date-nav">
+  <div class="month-nav">
+    <button class="nav-btn" onclick="changeMonth(-1)" aria-label="이전 달">◀</button>
+    <div class="current-date" id="currentDateLabel"></div>
+    <button class="nav-btn" onclick="changeMonth(1)" aria-label="다음 달">▶</button>
+  </div>
+  <label class="date-field">조회일<input type="date" id="singleDate" onchange="renderAll()"></label>
+  <div class="view-btns" role="tablist">
+    <button class="vb active" id="vb-month" onclick="switchView('month',this)">월간</button>
+    <button class="vb" id="vb-day" onclick="switchView('day',this)">일간</button>
+  </div>
+  <div class="period" id="periodLabel"></div>
+</nav>
 
 <!-- 미션 3: 불량률 경보 배너 -->
 <div class="alert-banner" id="alertBanner" style="display:none;"></div>
 
-<div class="date-nav">
-  <button onclick="changeMonth(-1)">◀</button>
-  <div class="current-date" id="currentDateLabel"></div>
-  <button onclick="changeMonth(1)">▶</button>
-  <input type="date" id="singleDate" onchange="renderAll()">
-  <div class="view-btns">
-    <button class="vb active" id="vb-month" onclick="switchView('month',this)">월간</button>
-    <button class="vb" id="vb-day" onclick="switchView('day',this)">일간</button>
-  </div>
-</div>
-
-<div class="layout">
+<main class="layout">
   <!-- KPI -->
-  <div class="kpi-row" id="kpiRow"></div>
+  <section class="kpi-row" id="kpiRow"></section>
 
-  <!-- 미션 2: 라인별 실적 카드 -->
-  <div class="line-cards" id="lineCards"></div>
+  <!-- 미션 2: 라인별 실적 카드 (라인 현황판) -->
+  <section>
+    <div class="sec-head">
+      <h2>라인 현황판</h2>
+      <div class="legend">
+        <span><i class="lamp good"></i>정상</span>
+        <span><i class="lamp warn"></i>주의</span>
+        <span><i class="lamp bad"></i>경보</span>
+      </div>
+    </div>
+    <div class="line-cards" id="lineCards"></div>
+  </section>
 
   <!-- 차트 -->
-  <div class="mid-row">
+  <section class="mid-row">
     <div class="panel">
-      <div class="panel-title">📈 일별 생산량 추이</div>
-      <canvas id="trendChart"></canvas>
+      <div class="panel-title"><h2>일별 생산량 추이</h2><span class="hint">생산량 · 계획량</span></div>
+      <div class="chart-box"><canvas id="trendChart"></canvas></div>
     </div>
     <div class="panel">
-      <div class="panel-title">🏭 라인별 양품률</div>
-      <canvas id="yieldChart"></canvas>
+      <div class="panel-title"><h2>라인별 양품률</h2><span class="hint">목표선 97.0%</span></div>
+      <div class="chart-box"><canvas id="yieldChart"></canvas></div>
     </div>
-  </div>
+  </section>
 
   <!-- 이력 테이블 -->
-  <div class="panel">
-    <div class="panel-title" style="justify-content:space-between;">
-      <span>📋 생산 실적 이력</span>
-      <input type="text" id="tableSearch" placeholder="라인·제품명·작업자 검색..."
-        style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:.8rem;outline:none;width:220px;background:var(--bg);"
-        oninput="renderTable()">
+  <section class="panel">
+    <div class="panel-title">
+      <h2>생산 실적 이력 <span class="count" id="rowCount"></span></h2>
+      <input type="search" id="tableSearch" class="search" placeholder="라인·제품명·작업자 검색" oninput="renderTable()">
     </div>
-    <table class="data-table" id="recordTable"></table>
-  </div>
-</div>
+    <div class="table-wrap">
+      <table class="data-table" id="recordTable"></table>
+    </div>
+  </section>
+</main>
 
 <!-- 입력 모달 -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
-    <h2 id="modalTitle">생산 실적 입력</h2>
-    <div class="form-row">
-      <div class="form-group"><label>날짜</label><input type="date" id="f-date"></div>
-      <div class="form-group"><label>라인</label>
-        <select id="f-line">
-          <option>1호기</option><option>2호기</option><option>3호기</option><option>4호기</option><option>5호기</option>
-        </select>
-      </div>
+    <div class="modal-head">
+      <h2 id="modalTitle">생산 실적 입력</h2>
+      <button class="x-btn" onclick="closeModal()" aria-label="닫기">✕</button>
     </div>
-    <div class="form-row">
-      <div class="form-group"><label>제품명/모델</label><input id="f-product" placeholder="예) PCB-A2401"></div>
-      <div class="form-group"><label>층수</label>
-        <select id="f-layer"><option>단면</option><option>양면</option><option>4층</option><option>6층</option><option>8층</option><option>기타</option></select>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>생산 지시량 (매)</label><input type="number" id="f-planned" placeholder="1000" oninput="calcRealtime()"></div>
-      <div class="form-group"><label>생산량 (매)</label><input type="number" id="f-produced" placeholder="980" oninput="calcRealtime()"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>양품수 (매)</label><input type="number" id="f-good" placeholder="960" oninput="calcRealtime()"></div>
-      <div class="form-group"><label>불량수 (매)</label><input type="number" id="f-defect" placeholder="20" oninput="autoFillGood();calcRealtime()"></div>
-    </div>
-    <!-- 미션 1: 실시간 양품률 계산 결과 -->
-    <div class="realtime-calc" id="realtimeCalc"></div>
-    <div class="form-row">
-      <div class="form-group"><label>작업자</label><input id="f-worker" placeholder="홍길동"></div>
-      <div class="form-group"><label>비고</label><input id="f-note" placeholder="특이사항"></div>
+    <div class="modal-body">
+      <fieldset>
+        <legend>기본 정보</legend>
+        <div class="form-row">
+          <div class="form-group"><label>날짜</label><input type="date" id="f-date"></div>
+          <div class="form-group"><label>라인</label>
+            <select id="f-line">
+              <option>1호기</option><option>2호기</option><option>3호기</option><option>4호기</option><option>5호기</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>제품명/모델</label><input id="f-product" placeholder="예) PCB-A2401"></div>
+          <div class="form-group"><label>층수</label>
+            <select id="f-layer"><option>단면</option><option>양면</option><option>4층</option><option>6층</option><option>8층</option><option>기타</option></select>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>수량 <small>(단위: 매)</small></legend>
+        <div class="form-row">
+          <div class="form-group"><label>생산 지시량</label><input type="number" id="f-planned" placeholder="1000" oninput="calcRealtime()"></div>
+          <div class="form-group"><label>생산량</label><input type="number" id="f-produced" placeholder="980" oninput="calcRealtime()"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>양품수</label><input type="number" id="f-good" placeholder="960" oninput="calcRealtime()"></div>
+          <div class="form-group"><label>불량수</label><input type="number" id="f-defect" placeholder="20" oninput="autoFillGood();calcRealtime()"></div>
+        </div>
+        <!-- 미션 1: 실시간 양품률 계산 결과 -->
+        <div class="realtime-calc" id="realtimeCalc"></div>
+      </fieldset>
+      <fieldset>
+        <legend>작업 정보</legend>
+        <div class="form-row">
+          <div class="form-group"><label>작업자</label><input id="f-worker" placeholder="홍길동"></div>
+          <div class="form-group"><label>비고</label><input id="f-note" placeholder="설비 정지, 자재 대기 등"></div>
+        </div>
+      </fieldset>
     </div>
     <div class="modal-footer">
       <button class="btn btn-red" id="delBtn" style="display:none" onclick="deleteRecord()">삭제</button>
+      <span class="spacer"></span>
       <button class="btn btn-outline" onclick="closeModal()">취소</button>
       <button class="btn btn-blue" onclick="saveRecord()">저장</button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
-
 <!-- 보고서 출력 오버레이 -->
 <div class="rpt-overlay" id="rptOverlay">
   <div class="rpt-toolbar no-print">
-    <span style="font-size:.85rem;font-weight:700;color:#fff">생산 실적 보고서 미리보기</span>
-    <div style="display:flex;gap:8px;">
-      <button class="btn btn-white" onclick="window.print()">🖨 인쇄 / PDF 저장</button>
+    <span class="rpt-toolbar-title">생산 실적 보고서 미리보기</span>
+    <div class="rpt-toolbar-btns">
+      <button class="btn btn-primary" onclick="window.print()">🖨 인쇄 / PDF 저장</button>
       <button class="btn btn-ghost" onclick="closeReport()">✕ 닫기</button>
     </div>
   </div>
   <div class="rpt-page" id="rptPage"></div>
 </div>
 
+<div class="toast" id="toast"></div>
 <script>
 /* 생산 실적 관리 시스템 전체 로직 */
 
-Chart.defaults.color = '#718096';
-Chart.defaults.borderColor = '#e2e8f0';
+Chart.defaults.color = '#64748b';
+Chart.defaults.borderColor = '#edf1f5';
+Chart.defaults.font.family = "'Pretendard','맑은 고딕',sans-serif";
 
+/* ── 라인 색상 ── */
 const LINE_COLORS = {'1호기':'#2563eb','2호기':'#059669','3호기':'#d97706','4호기':'#7c3aed','5호기':'#dc2626'};
 
+/* ── 목표 기준값 ── */
+const YIELD_TARGET = 97.0;   // 양품률 목표(%)
+const ACH_TARGET   = 98.0;   // 계획달성률 목표(%)
+const yieldLevel = y => y >= YIELD_TARGET ? 'good' : y >= 94 ? 'warn' : 'bad';
+const achLevel   = a => a >= ACH_TARGET   ? 'good' : a >= 90 ? 'warn' : 'bad';
+const LEVEL_TEXT = {good:'달성', warn:'주의', bad:'미달'};
+
+/* ── 샘플 데이터 생성 ── */
 function makeId() { return Date.now() + Math.random(); }
-const today = new Date().toISOString().slice(0, 10);
+// 로컬(한국) 날짜 기준 YYYY-MM-DD — toISOString()은 UTC라 오전 9시 이전엔 전날로 나옴
+const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 const Y = today.slice(0, 4), M = today.slice(5, 7);
 
 function sampleData() {
@@ -316,6 +484,7 @@ let trendChart = null, yieldChart = null;
 
 function save() { localStorage.setItem('pcbProd', JSON.stringify(records)); }
 
+/* ── 토스트 ── */
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -324,6 +493,7 @@ function showToast(msg) {
   t._timer = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
+/* ── 날짜 네비 ── */
 function updateDateLabel() {
   const [y, m] = currentYM.split('-');
   document.getElementById('currentDateLabel').textContent = `${y}년 ${m}월`;
@@ -341,12 +511,50 @@ function switchView(v, btn) {
   renderAll();
 }
 
+/* ── 필터된 레코드 ── */
 function getRecords() {
   if (viewMode === 'month') return records.filter(r => r.date.startsWith(currentYM));
   const d = document.getElementById('singleDate').value || today;
   return records.filter(r => r.date === d);
 }
 
+/* ── 조회 기간 라벨 ── */
+function renderPeriod() {
+  const rs = getRecords();
+  const label = viewMode === 'month'
+    ? `${currentYM.replace('-', '년 ')}월 월간 집계`
+    : `${document.getElementById('singleDate').value || today} 일간 집계`;
+  const days = new Set(rs.map(r => r.date)).size;
+  document.getElementById('periodLabel').textContent = `${label} · 가동 ${days}일 · 실적 ${rs.length}건`;
+}
+
+/* ── 헤더 상태: 시계 · 보고 마감 · 금일 입력 라인 수 ── */
+function renderStatus() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit', hour12:false});
+
+  // 매일 09:00 보고 마감까지 남은 시간
+  const due  = new Date(now); due.setHours(9, 0, 0, 0);
+  const left = Math.round((due - now) / 60000);
+  const dl   = document.getElementById('deadline');
+  if (left > 0) {
+    dl.textContent = `${Math.floor(left / 60)}시간 ${left % 60}분 남음`;
+    dl.className = 'st-val ' + (left <= 30 ? 'bad' : left <= 90 ? 'warn' : 'ok');
+  } else {
+    dl.textContent = '금일 마감 경과';
+    dl.className = 'st-val';
+  }
+
+  // 오늘 날짜로 실적이 입력된 라인 수 / 전체 운영 라인 수
+  const allLines   = new Set(records.map(r => r.line));
+  const todayLines = new Set(records.filter(r => r.date === today).map(r => r.line));
+  const ti = document.getElementById('todayInput');
+  ti.textContent = `${todayLines.size} / ${allLines.size} 라인`;
+  ti.className = 'st-val ' + (allLines.size && todayLines.size >= allLines.size ? 'ok' : 'warn');
+}
+
+/* ── KPI ── */
 function renderKPI() {
   const rs           = getRecords();
   const totalProduced = rs.reduce((s, r) => s + r.produced, 0);
@@ -355,14 +563,46 @@ function renderKPI() {
   const totalPlanned  = rs.reduce((s, r) => s + r.planned, 0);
   const yieldRate     = totalProduced ? (totalGood / totalProduced * 100) : 0;
   const achRate       = totalPlanned  ? (totalProduced / totalPlanned * 100) : 0;
+  const defectRate    = totalProduced ? (totalDefect / totalProduced * 100) : 0;
+  const yl = rs.length ? yieldLevel(yieldRate) : '';
+  const al = rs.length ? achLevel(achRate) : '';
+
+  // 목표 게이지: 표시 범위(min~max) 안에서 현재값·목표선 위치를 %로 환산
+  const gauge = (v, goal, min, max) => {
+    const pos = x => Math.max(0, Math.min(100, (x - min) / (max - min) * 100));
+    return `<div class="gauge"><div class="gauge-fill" style="width:${pos(v)}%"></div><div class="gauge-goal" style="left:${pos(goal)}%"></div></div>
+      <div class="gauge-scale"><span>${min}%</span><span>목표 ${goal.toFixed(1)}%</span><span>${max}%</span></div>`;
+  };
+
   document.getElementById('kpiRow').innerHTML = `
-    <div class="kpi k1"><div class="kpi-l">총 생산량</div><div class="kpi-v">${totalProduced.toLocaleString()}</div><div class="kpi-sub">매</div></div>
-    <div class="kpi k2"><div class="kpi-l">총 양품수</div><div class="kpi-v">${totalGood.toLocaleString()}</div><div class="kpi-sub">매</div></div>
-    <div class="kpi k3"><div class="kpi-l">총 불량수</div><div class="kpi-v">${totalDefect.toLocaleString()}</div><div class="kpi-sub">매</div></div>
-    <div class="kpi k4"><div class="kpi-l">양품률</div><div class="kpi-v">${yieldRate.toFixed(2)}%</div><div class="kpi-sub">목표 97.0%</div></div>
-    <div class="kpi k5"><div class="kpi-l">계획 달성률</div><div class="kpi-v">${achRate.toFixed(1)}%</div><div class="kpi-sub">목표 98.0%</div></div>`;
+    <div class="kpi k1">
+      <div class="kpi-top"><span class="kpi-l">총 생산량</span><span class="tag info">계획 ${totalPlanned.toLocaleString()}</span></div>
+      <div class="kpi-v">${totalProduced.toLocaleString()}<small>매</small></div>
+      <div class="kpi-sub">계획 대비 ${(totalProduced - totalPlanned).toLocaleString()}매</div>
+    </div>
+    <div class="kpi k2">
+      <div class="kpi-top"><span class="kpi-l">총 양품수</span></div>
+      <div class="kpi-v" style="color:var(--green)">${totalGood.toLocaleString()}<small>매</small></div>
+      <div class="kpi-sub">출하 가능 수량</div>
+    </div>
+    <div class="kpi k3">
+      <div class="kpi-top"><span class="kpi-l">총 불량수</span><span class="tag bad">불량률 ${defectRate.toFixed(2)}%</span></div>
+      <div class="kpi-v">${totalDefect.toLocaleString()}<small>매</small></div>
+      <div class="kpi-sub">재작업·폐기 대상</div>
+    </div>
+    <div class="kpi ${yl}">
+      <div class="kpi-top"><span class="kpi-l">양품률</span>${yl ? `<span class="tag ${yl}">${LEVEL_TEXT[yl]}</span>` : ''}</div>
+      <div class="kpi-v">${yieldRate.toFixed(2)}<small>%</small></div>
+      ${gauge(yieldRate, YIELD_TARGET, 90, 100)}
+    </div>
+    <div class="kpi ${al}">
+      <div class="kpi-top"><span class="kpi-l">계획 달성률</span>${al ? `<span class="tag ${al}">${LEVEL_TEXT[al]}</span>` : ''}</div>
+      <div class="kpi-v">${achRate.toFixed(1)}<small>%</small></div>
+      ${gauge(achRate, ACH_TARGET, 80, 110)}
+    </div>`;
 }
 
+/* ── 미션 2: 라인별 실적 카드 ── */
 function renderLineCards() {
   const rs = getRecords();
   const byLine = {};
@@ -372,28 +612,38 @@ function renderLineCards() {
     byLine[r.line].good     += r.good;
     byLine[r.line].planned  += r.planned;
   });
-  const lines = Object.keys(byLine);
+  const lines = Object.keys(byLine).sort();
   const el = document.getElementById('lineCards');
-  if (!lines.length) { el.innerHTML = ''; return; }
+  if (!lines.length) { el.innerHTML = '<div class="lc-empty">조회 기간에 입력된 실적이 없습니다. 상단 [＋ 실적 입력]으로 등록하세요.</div>'; return; }
   el.innerHTML = lines.map(line => {
     const d         = byLine[line];
     const yieldRate = d.produced ? (d.good / d.produced * 100) : 0;
     const achRate   = d.planned  ? (d.produced / d.planned * 100) : 0;
     const color     = LINE_COLORS[line] || '#64748b';
-    const yClass    = yieldRate >= 97 ? 'good' : yieldRate >= 94 ? 'warn' : 'bad';
-    const aClass    = achRate   >= 98 ? 'good' : achRate   >= 90 ? 'warn' : 'bad';
-    return `<div class="lc" style="border-top-color:${color}">
-      <div class="lc-name" style="color:${color}">${line}</div>
-      <div class="lc-main">${d.produced.toLocaleString()}</div>
-      <div class="lc-unit">생산량 (매)</div>
-      <div class="lc-pills">
-        <span class="lc-pill ${yClass}">양품률 ${yieldRate.toFixed(1)}%</span>
-        <span class="lc-pill ${aClass}">달성률 ${achRate.toFixed(1)}%</span>
+    const yClass    = yieldLevel(yieldRate);
+    const aClass    = achLevel(achRate);
+    // 램프 색: 양품률·달성률 중 더 나쁜 상태를 표시
+    const order     = ['good', 'warn', 'bad'];
+    const lamp      = order[Math.max(order.indexOf(yClass), order.indexOf(aClass))];
+    return `<div class="lc">
+      <div class="lc-head">
+        <i class="lc-chip" style="background:${color}"></i>
+        <span class="lc-name">${line}</span>
+        <i class="lamp ${lamp}" title="${LEVEL_TEXT[lamp]}"></i>
+      </div>
+      <div class="lc-body">
+        <div class="lc-main">${d.produced.toLocaleString()}<small>/ ${d.planned.toLocaleString()} 매</small></div>
+        <div class="gauge ${aClass}"><div class="gauge-fill" style="width:${Math.min(100, achRate)}%"></div></div>
+        <div class="lc-stats">
+          <div class="lc-stat ${yClass}"><span>양품률</span><b>${yieldRate.toFixed(2)}%</b></div>
+          <div class="lc-stat ${aClass}"><span>달성률</span><b>${achRate.toFixed(1)}%</b></div>
+        </div>
       </div>
     </div>`;
   }).join('');
 }
 
+/* ── 미션 3: 불량률 경보 배너 ── */
 function renderAlertBanner() {
   const rs = getRecords();
   const byLine = {};
@@ -410,34 +660,47 @@ function renderAlertBanner() {
   const banner = document.getElementById('alertBanner');
   if (!alerts.length) { banner.style.display = 'none'; return; }
   banner.style.display = 'flex';
-  banner.innerHTML = `⚠️ 불량률 경보 — 즉시 점검 필요:
-    ${alerts.map(a => `<span style="background:rgba(255,255,255,.2);padding:2px 10px;border-radius:5px;">
-      ${a.line} <strong>${a.rate.toFixed(2)}%</strong>
-    </span>`).join('')}
-    <span style="margin-left:auto;font-size:.78rem;font-weight:400;opacity:.85;">목표: 97.0% 이상</span>`;
+  banner.innerHTML = `<i class="pulse"></i> 불량률 경보 · 양품률 목표 미달 라인 즉시 점검 필요
+    ${alerts.map(a => `<span class="alert-tag">${a.line} <b>${a.rate.toFixed(2)}%</b></span>`).join('')}
+    <span class="alert-goal">기준: 양품률 ${YIELD_TARGET.toFixed(1)}% 이상</span>`;
 }
 
+/* ── 트렌드 차트 ── */
 function renderTrend() {
   if (trendChart) trendChart.destroy();
-  const rs = getRecords();
-  const byDate = {};
-  rs.forEach(r => { byDate[r.date] = (byDate[r.date] || 0) + r.produced; });
+  // 일간 뷰에서도 해당 월 전체 추이를 보여주고, 조회일을 강조
+  const rs = records.filter(r => r.date.startsWith(currentYM));
+  const sel = viewMode === 'day' ? document.getElementById('singleDate').value : null;
+  const byDate = {}, planDate = {};
+  rs.forEach(r => {
+    byDate[r.date]   = (byDate[r.date]   || 0) + r.produced;
+    planDate[r.date] = (planDate[r.date] || 0) + r.planned;
+  });
   const labels = Object.keys(byDate).sort();
   const ctx = document.getElementById('trendChart').getContext('2d');
   trendChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: labels.map(d => d.slice(5)),
-      datasets: [{label:'생산량', data:labels.map(d => byDate[d]),
-        borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,.1)',
-        fill:true, tension:.3, pointRadius:3}]
+      datasets: [
+        {label:'생산량', data:labels.map(d => byDate[d]),
+          borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,.08)', borderWidth:2,
+          fill:true, tension:.3,
+          pointRadius:labels.map(d => d === sel ? 6 : 2.5),
+          pointBackgroundColor:labels.map(d => d === sel ? '#0b1629' : '#2563eb')},
+        {label:'계획량', data:labels.map(d => planDate[d]),
+          borderColor:'#94a3b8', borderDash:[5, 4], borderWidth:1.5, pointRadius:0, fill:false, tension:.3}
+      ]
     },
-    options: {responsive:true, maintainAspectRatio:true,
-      plugins: {legend:{display:false}},
-      scales: {y:{ticks:{callback:v => v.toLocaleString()}}}}
+    options: {responsive:true, maintainAspectRatio:false,
+      interaction: {mode:'index', intersect:false},
+      plugins: {legend:{position:'top', align:'end', labels:{boxWidth:10, boxHeight:10, usePointStyle:true}},
+        tooltip:{callbacks:{label:c => `${c.dataset.label}: ${c.parsed.y.toLocaleString()}매`}}},
+      scales: {x:{grid:{display:false}}, y:{ticks:{callback:v => v.toLocaleString()}}}}
   });
 }
 
+/* ── 양품률 차트 ── */
 function renderYield() {
   if (yieldChart) yieldChart.destroy();
   const rs = getRecords();
@@ -447,23 +710,30 @@ function renderYield() {
     byLine[r.line].good     += r.good;
     byLine[r.line].produced += r.produced;
   });
-  const lines  = Object.keys(byLine);
+  const lines  = Object.keys(byLine).sort();
   const yields = lines.map(l => +(byLine[l].produced ? byLine[l].good / byLine[l].produced * 100 : 0).toFixed(2));
   const ctx = document.getElementById('yieldChart').getContext('2d');
   yieldChart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: lines,
-      datasets: [{label:'양품률(%)', data:yields,
-        backgroundColor: lines.map(l => (LINE_COLORS[l] || '#64748b') + 'cc'),
-        borderRadius: 6}]
+      datasets: [
+        {label:'양품률(%)', data:yields,
+          // 목표 미달 라인은 빨간색으로 강조
+          backgroundColor: lines.map((l, i) => yields[i] < YIELD_TARGET ? '#ef4444' : (LINE_COLORS[l] || '#64748b')),
+          borderRadius:4, maxBarThickness:44},
+        {type:'line', label:'목표', data:lines.map(() => YIELD_TARGET),
+          borderColor:'#0b1629', borderDash:[4, 4], borderWidth:1.5, pointRadius:0}
+      ]
     },
-    options: {responsive:true, maintainAspectRatio:true,
-      plugins: {legend:{display:false}},
-      scales: {y:{min:90, max:100, ticks:{callback:v => v + '%'}}}}
+    options: {responsive:true, maintainAspectRatio:false,
+      plugins: {legend:{display:false},
+        tooltip:{callbacks:{label:c => `${c.dataset.label}: ${c.parsed.y.toFixed(2)}%`}}},
+      scales: {x:{grid:{display:false}}, y:{min:90, max:100, ticks:{callback:v => v + '%'}}}}
   });
 }
 
+/* ── 이력 테이블 ── */
 function renderTable() {
   const q  = document.getElementById('tableSearch').value.toLowerCase();
   const rs = getRecords().filter(r =>
@@ -471,31 +741,38 @@ function renderTable() {
   ).sort((a, b) => b.date.localeCompare(a.date));
 
   const yieldRate = r => r.produced ? (r.good / r.produced * 100) : 0;
-  const chipClass = y => y >= 97 ? 'chip-good' : y >= 94 ? 'chip-warn' : 'chip-bad';
+  const achRate   = r => r.planned  ? (r.produced / r.planned * 100) : 0;
+  const chipClass = y => 'chip-' + yieldLevel(y);
 
+  document.getElementById('rowCount').textContent = `${rs.length}건`;
   document.getElementById('recordTable').innerHTML =
     `<thead><tr>
       <th>날짜</th><th>라인</th><th>제품명</th><th>층수</th>
-      <th>계획</th><th>생산</th><th>양품</th><th>불량</th><th>양품률</th><th>작업자</th><th>편집</th>
+      <th class="num">계획</th><th class="num">생산</th><th class="num">양품</th><th class="num">불량</th>
+      <th class="num">달성률</th><th>양품률</th><th>작업자</th><th>비고</th><th></th>
     </tr></thead>
-    <tbody>${rs.map(r => {
+    <tbody>${rs.length ? rs.map(r => {
       const y = yieldRate(r);
-      const rowClass = y < 97 ? 'row-alert' : '';
-      return `<tr class="${rowClass}">
-        <td>${r.date}</td>
-        <td><span class="line-badge" style="background:${LINE_COLORS[r.line]||'#64748b'}">${r.line}</span></td>
-        <td>${r.product}</td><td>${r.layer}</td>
-        <td style="text-align:right">${r.planned.toLocaleString()}</td>
-        <td style="text-align:right">${r.produced.toLocaleString()}</td>
-        <td style="text-align:right;color:var(--green)">${r.good.toLocaleString()}</td>
-        <td style="text-align:right;color:var(--red)">${r.defect.toLocaleString()}</td>
+      const rowClass = y < YIELD_TARGET ? 'row-alert' : '';
+      // 행 전체 클릭 시 수정 모달 열기
+      return `<tr class="${rowClass}" onclick="editRecord(${r.id})">
+        <td class="mono">${r.date}</td>
+        <td><span class="line-badge"><i style="background:${LINE_COLORS[r.line]||'#64748b'}"></i>${r.line}</span></td>
+        <td>${r.product}</td><td class="td-mute">${r.layer}</td>
+        <td class="num td-mute">${r.planned.toLocaleString()}</td>
+        <td class="num"><b>${r.produced.toLocaleString()}</b></td>
+        <td class="num td-good">${r.good.toLocaleString()}</td>
+        <td class="num td-bad">${r.defect.toLocaleString()}</td>
+        <td class="num">${achRate(r).toFixed(1)}%</td>
         <td><span class="status-chip ${chipClass(y)}">${y.toFixed(2)}%</span></td>
         <td>${r.worker}</td>
-        <td><button class="edit-btn" onclick="editRecord(${r.id})">편집</button></td>
+        <td class="td-mute">${r.note || ''}</td>
+        <td><button class="edit-btn" onclick="event.stopPropagation();editRecord(${r.id})">편집</button></td>
       </tr>`;
-    }).join('')}</tbody>`;
+    }).join('') : '<tr class="empty"><td colspan="13">조회된 실적이 없습니다.</td></tr>'}</tbody>`;
 }
 
+/* ── 미션 1: 실시간 양품률 자동 계산 ── */
 function autoFillGood() {
   const produced = parseInt(document.getElementById('f-produced').value) || 0;
   const defect   = parseInt(document.getElementById('f-defect').value)   || 0;
@@ -517,18 +794,14 @@ function calcRealtime() {
 
   const yieldRate = (good / produced * 100);
   const achRate   = planned ? (produced / planned * 100) : 0;
-  const yColor    = yieldRate >= 97 ? '#059669' : yieldRate >= 94 ? '#d97706' : '#dc2626';
-  const aColor    = achRate   >= 98 ? '#059669' : achRate   >= 90 ? '#d97706' : '#dc2626';
 
   calc.innerHTML = `
-    <span>📊 실시간 계산</span>
-    <span>양품률: <strong style="color:${yColor};font-size:.95rem">${yieldRate.toFixed(2)}%</strong>
-      <small style="color:var(--mute)">(목표 97%)</small></span>
-    ${planned ? `<span>달성률: <strong style="color:${aColor};font-size:.95rem">${achRate.toFixed(1)}%</strong>
-      <small style="color:var(--mute)">(목표 98%)</small></span>` : ''}
-    <span style="color:var(--mute);font-size:.75rem">불량수: ${(produced - good).toLocaleString()}매</span>`;
+    <div class="rc-box ${yieldLevel(yieldRate)}"><span>양품률 <em>목표 ${YIELD_TARGET}%</em></span><b>${yieldRate.toFixed(2)}%</b></div>
+    <div class="rc-box ${planned ? achLevel(achRate) : ''}"><span>달성률 <em>목표 ${ACH_TARGET}%</em></span><b>${planned ? achRate.toFixed(1) + '%' : '-'}</b></div>
+    <div class="rc-box"><span>불량(생산-양품)</span><b>${(produced - good).toLocaleString()}매</b></div>`;
 }
 
+/* ── 모달 ── */
 function openModal(id = null) {
   editId = id;
   const r = id ? records.find(x => x.id === id) : null;
@@ -585,6 +858,211 @@ function deleteRecord() {
   showToast('🗑 실적이 삭제되었습니다.');
 }
 
+/* ── 보고서 출력 ── */
+function openReport() {
+  const rs = getRecords().sort((a, b) => a.date.localeCompare(b.date));
+  if (!rs.length) { showToast('⚠ 표시할 데이터가 없습니다.'); return; }
+
+  const [y, m] = currentYM.split('-');
+  const periodLabel = viewMode === 'month'
+    ? `${y}년 ${m}월 (${rs[0].date} ~ ${rs[rs.length-1].date})`
+    : `${rs[0].date}`;
+
+  /* 집계 */
+  const totalProduced = rs.reduce((s,r)=>s+r.produced,0);
+  const totalGood     = rs.reduce((s,r)=>s+r.good,0);
+  const totalDefect   = rs.reduce((s,r)=>s+r.defect,0);
+  const totalPlanned  = rs.reduce((s,r)=>s+r.planned,0);
+  const yieldRate     = totalProduced ? (totalGood/totalProduced*100) : 0;
+  const achRate       = totalPlanned  ? (totalProduced/totalPlanned*100) : 0;
+  const defectRate    = totalProduced ? (totalDefect/totalProduced*100) : 0;
+
+  /* 라인별 집계 */
+  const byLine = {};
+  rs.forEach(r => {
+    if (!byLine[r.line]) byLine[r.line] = {planned:0, produced:0, good:0, defect:0, days:new Set()};
+    byLine[r.line].planned  += r.planned;
+    byLine[r.line].produced += r.produced;
+    byLine[r.line].good     += r.good;
+    byLine[r.line].defect   += r.defect;
+    byLine[r.line].days.add(r.date);
+  });
+
+  /* 제품별 집계 */
+  const byProd = {};
+  rs.forEach(r => {
+    if (!byProd[r.product]) byProd[r.product] = {produced:0, good:0, defect:0};
+    byProd[r.product].produced += r.produced;
+    byProd[r.product].good     += r.good;
+    byProd[r.product].defect   += r.defect;
+  });
+
+  const fmtN = n => n.toLocaleString();
+  const yColor = v => v>=97?'rpt-good':v>=94?'rpt-warn':'rpt-bad';
+  const aColor = v => v>=98?'rpt-good':v>=90?'rpt-warn':'rpt-bad';
+
+  /* 라인별 테이블 행 */
+  const lineRows = Object.entries(byLine).map(([line, d]) => {
+    const yr = d.produced ? (d.good/d.produced*100) : 0;
+    const ar = d.planned  ? (d.produced/d.planned*100) : 0;
+    return `<tr>
+      <td style="font-weight:700;color:${LINE_COLORS[line]||'#333'}">${line}</td>
+      <td class="num">${fmtN(d.planned)}</td>
+      <td class="num">${fmtN(d.produced)}</td>
+      <td class="num rpt-good">${fmtN(d.good)}</td>
+      <td class="num rpt-bad">${fmtN(d.defect)}</td>
+      <td class="${yColor(yr)}">${yr.toFixed(2)}%</td>
+      <td class="${aColor(ar)}">${ar.toFixed(1)}%</td>
+      <td>${d.days.size}일</td>
+    </tr>`;
+  }).join('');
+
+  /* 제품별 테이블 행 */
+  const prodRows = Object.entries(byProd).sort((a,b)=>b[1].produced-a[1].produced).map(([prod, d]) => {
+    const yr = d.produced ? (d.good/d.produced*100) : 0;
+    const pct= (d.produced/totalProduced*100).toFixed(1);
+    return `<tr>
+      <td style="text-align:left">${prod}</td>
+      <td class="num">${fmtN(d.produced)}</td>
+      <td>${pct}%</td>
+      <td class="num rpt-good">${fmtN(d.good)}</td>
+      <td class="num rpt-bad">${fmtN(d.defect)}</td>
+      <td class="${yColor(yr)}">${yr.toFixed(2)}%</td>
+    </tr>`;
+  }).join('');
+
+  /* 종합 의견 */
+  const opinions = [];
+  if (yieldRate >= 97) opinions.push(`✅ 종합 양품률 <strong>${yieldRate.toFixed(2)}%</strong>로 목표(97.0%)를 달성했습니다.`);
+  else opinions.push(`⚠ 종합 양품률 <strong>${yieldRate.toFixed(2)}%</strong>로 목표(97.0%)에 미달합니다. 불량 원인 분석 및 개선 조치가 필요합니다.`);
+  if (achRate >= 98) opinions.push(`✅ 계획 달성률 <strong>${achRate.toFixed(1)}%</strong>로 목표(98.0%)를 달성했습니다.`);
+  else opinions.push(`⚠ 계획 달성률 <strong>${achRate.toFixed(1)}%</strong>로 목표(98.0%)에 미달합니다.`);
+  const worstLine = Object.entries(byLine).sort((a,b)=>{
+    const ya = a[1].produced ? a[1].good/a[1].produced*100 : 100;
+    const yb = b[1].produced ? b[1].good/b[1].produced*100 : 100;
+    return ya-yb;
+  })[0];
+  if (worstLine) {
+    const wr = worstLine[1].produced ? (worstLine[1].good/worstLine[1].produced*100) : 100;
+    if (wr < 97) opinions.push(`🔴 <strong>${worstLine[0]}</strong> 라인 양품률(${wr.toFixed(2)}%)이 가장 낮아 집중 점검이 필요합니다.`);
+  }
+
+  document.getElementById('rptPage').innerHTML = `
+    <div class="rpt-company">
+      <strong>PCB Manufacturing Co., Ltd.</strong>&nbsp;&nbsp;|&nbsp;&nbsp;생산관리
+    </div>
+
+    <div class="rpt-doc-title">
+      <h1>생 산 실 적 보 고 서</h1>
+      <p>Production Performance Report</p>
+    </div>
+
+    <table class="rpt-info-box">
+      <tr>
+        <td class="rpt-label">보고 기간</td><td>${periodLabel}</td>
+        <td class="rpt-label">작성일</td><td>${today}</td>
+      </tr>
+      <tr>
+        <td class="rpt-label">보고 구분</td><td>${viewMode==='month'?'월간 보고':'일간 보고'}</td>
+        <td class="rpt-label">작성 부서</td><td>생산관리팀</td>
+      </tr>
+    </table>
+
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">1. 핵심 생산 지표 (Key Performance Indicators)</div>
+      <div class="rpt-kpi-grid">
+        <div class="rpt-kpi-card">
+          <div class="rk-label">총 생산량</div>
+          <div class="rk-val">${(totalProduced/1000).toFixed(1)}K</div>
+          <div class="rk-unit">매 (${fmtN(totalProduced)})</div>
+        </div>
+        <div class="rpt-kpi-card">
+          <div class="rk-label">총 양품수</div>
+          <div class="rk-val" style="color:#059669">${(totalGood/1000).toFixed(1)}K</div>
+          <div class="rk-unit">매 (${fmtN(totalGood)})</div>
+        </div>
+        <div class="rpt-kpi-card">
+          <div class="rk-label">총 불량수</div>
+          <div class="rk-val" style="color:#dc2626">${fmtN(totalDefect)}</div>
+          <div class="rk-unit">매 (불량률 ${defectRate.toFixed(2)}%)</div>
+        </div>
+        <div class="rpt-kpi-card" style="border-top-color:${yieldRate>=97?'#059669':yieldRate>=94?'#d97706':'#dc2626'}">
+          <div class="rk-label">종합 양품률</div>
+          <div class="rk-val" style="color:${yieldRate>=97?'#059669':yieldRate>=94?'#d97706':'#dc2626'}">${yieldRate.toFixed(2)}%</div>
+          <div class="rk-unit">목표 97.0%</div>
+        </div>
+        <div class="rpt-kpi-card" style="border-top-color:${achRate>=98?'#059669':achRate>=90?'#d97706':'#dc2626'}">
+          <div class="rk-label">계획 달성률</div>
+          <div class="rk-val" style="color:${achRate>=98?'#059669':achRate>=90?'#d97706':'#dc2626'}">${achRate.toFixed(1)}%</div>
+          <div class="rk-unit">목표 98.0%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">2. 라인별 생산 실적</div>
+      <table class="rpt-table">
+        <thead><tr>
+          <th>라인</th><th>계획량(매)</th><th>생산량(매)</th><th>양품수(매)</th><th>불량수(매)</th><th>양품률</th><th>달성률</th><th>가동일수</th>
+        </tr></thead>
+        <tbody>
+          ${lineRows}
+          <tr class="rpt-total">
+            <td>합 계</td>
+            <td class="num">${fmtN(totalPlanned)}</td>
+            <td class="num">${fmtN(totalProduced)}</td>
+            <td class="num rpt-good">${fmtN(totalGood)}</td>
+            <td class="num rpt-bad">${fmtN(totalDefect)}</td>
+            <td class="${yColor(yieldRate)}">${yieldRate.toFixed(2)}%</td>
+            <td class="${aColor(achRate)}">${achRate.toFixed(1)}%</td>
+            <td>-</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">3. 제품별 생산 현황</div>
+      <table class="rpt-table">
+        <thead><tr>
+          <th>제품명/모델</th><th>생산량(매)</th><th>생산 비중</th><th>양품수(매)</th><th>불량수(매)</th><th>양품률</th>
+        </tr></thead>
+        <tbody>${prodRows}</tbody>
+      </table>
+    </div>
+
+    <div class="rpt-sec">
+      <div class="rpt-sec-title">4. 종합 의견 및 조치 사항</div>
+      <table class="rpt-table">
+        <thead><tr><th style="width:30px">No.</th><th style="text-align:left">내용</th></tr></thead>
+        <tbody>
+          ${opinions.map((o,i)=>`<tr><td>${i+1}</td><td style="text-align:left;padding-left:12px">${o}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <table class="rpt-sign">
+      <tr>
+        <td class="rpt-label">작성</td><td class="sign-box"></td>
+        <td class="rpt-label">검토</td><td class="sign-box"></td>
+        <td class="rpt-label">승인</td><td class="sign-box"></td>
+      </tr>
+    </table>
+
+    <div class="rpt-footer">
+      본 보고서는 PCB Manufacturing 생산관리 시스템에서 자동 생성되었습니다. &nbsp;|&nbsp; 출력일시: ${new Date().toLocaleString('ko-KR')}
+    </div>`;
+
+  document.getElementById('rptOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeReport() {
+  document.getElementById('rptOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+/* ── CSV 내보내기 ── */
 function exportCSV() {
   const rs   = getRecords().sort((a, b) => a.date.localeCompare(b.date));
   const rows = ['날짜,라인,제품명,층수,계획량,생산량,양품수,불량수,양품률(%),작업자,비고'];
@@ -601,6 +1079,8 @@ function exportCSV() {
 }
 
 function renderAll() {
+  renderPeriod();
+  renderStatus();
   renderKPI();
   renderLineCards();
   renderAlertBanner();
@@ -609,116 +1089,19 @@ function renderAll() {
   renderTable();
 }
 
-function openReport() {
-  const rs = getRecords().sort((a, b) => a.date.localeCompare(b.date));
-  if (!rs.length) { showToast('⚠ 표시할 데이터가 없습니다.'); return; }
-  const [y, m] = currentYM.split('-');
-  const periodLabel = viewMode === 'month'
-    ? `${y}년 ${m}월 (${rs[0].date} ~ ${rs[rs.length-1].date})`
-    : `${rs[0].date}`;
-  const totalProduced = rs.reduce((s,r)=>s+r.produced,0);
-  const totalGood     = rs.reduce((s,r)=>s+r.good,0);
-  const totalDefect   = rs.reduce((s,r)=>s+r.defect,0);
-  const totalPlanned  = rs.reduce((s,r)=>s+r.planned,0);
-  const yieldRate     = totalProduced ? (totalGood/totalProduced*100) : 0;
-  const achRate       = totalPlanned  ? (totalProduced/totalPlanned*100) : 0;
-  const defectRate    = totalProduced ? (totalDefect/totalProduced*100) : 0;
-  const byLine = {};
-  rs.forEach(r => {
-    if (!byLine[r.line]) byLine[r.line] = {planned:0,produced:0,good:0,defect:0,days:new Set()};
-    byLine[r.line].planned+=r.planned; byLine[r.line].produced+=r.produced;
-    byLine[r.line].good+=r.good; byLine[r.line].defect+=r.defect; byLine[r.line].days.add(r.date);
-  });
-  const byProd = {};
-  rs.forEach(r => {
-    if (!byProd[r.product]) byProd[r.product]={produced:0,good:0,defect:0};
-    byProd[r.product].produced+=r.produced; byProd[r.product].good+=r.good; byProd[r.product].defect+=r.defect;
-  });
-  const fmtN = n => n.toLocaleString();
-  const yColor = v => v>=97?'rpt-good':v>=94?'rpt-warn':'rpt-bad';
-  const aColor = v => v>=98?'rpt-good':v>=90?'rpt-warn':'rpt-bad';
-  const lineRows = Object.entries(byLine).map(([line,d])=>{
-    const yr=d.produced?(d.good/d.produced*100):0; const ar=d.planned?(d.produced/d.planned*100):0;
-    return `<tr><td style="font-weight:700;color:${LINE_COLORS[line]||'#333'}">${line}</td>
-      <td class="num">${fmtN(d.planned)}</td><td class="num">${fmtN(d.produced)}</td>
-      <td class="num rpt-good">${fmtN(d.good)}</td><td class="num rpt-bad">${fmtN(d.defect)}</td>
-      <td class="${yColor(yr)}">${yr.toFixed(2)}%</td><td class="${aColor(ar)}">${ar.toFixed(1)}%</td>
-      <td>${d.days.size}일</td></tr>`;
-  }).join('');
-  const prodRows = Object.entries(byProd).sort((a,b)=>b[1].produced-a[1].produced).map(([prod,d])=>{
-    const yr=d.produced?(d.good/d.produced*100):0; const pct=(d.produced/totalProduced*100).toFixed(1);
-    return `<tr><td style="text-align:left">${prod}</td><td class="num">${fmtN(d.produced)}</td>
-      <td>${pct}%</td><td class="num rpt-good">${fmtN(d.good)}</td>
-      <td class="num rpt-bad">${fmtN(d.defect)}</td><td class="${yColor(yr)}">${yr.toFixed(2)}%</td></tr>`;
-  }).join('');
-  const opinions=[];
-  if(yieldRate>=97) opinions.push(`✅ 종합 양품률 <strong>${yieldRate.toFixed(2)}%</strong>로 목표(97.0%)를 달성했습니다.`);
-  else opinions.push(`⚠ 종합 양품률 <strong>${yieldRate.toFixed(2)}%</strong>로 목표(97.0%)에 미달합니다. 불량 원인 분석 및 개선 조치가 필요합니다.`);
-  if(achRate>=98) opinions.push(`✅ 계획 달성률 <strong>${achRate.toFixed(1)}%</strong>로 목표(98.0%)를 달성했습니다.`);
-  else opinions.push(`⚠ 계획 달성률 <strong>${achRate.toFixed(1)}%</strong>로 목표(98.0%)에 미달합니다.`);
-  const worstLine=Object.entries(byLine).sort((a,b)=>{const ya=a[1].produced?a[1].good/a[1].produced*100:100;const yb=b[1].produced?b[1].good/b[1].produced*100:100;return ya-yb;})[0];
-  if(worstLine){const wr=worstLine[1].produced?(worstLine[1].good/worstLine[1].produced*100):100;if(wr<97)opinions.push(`🔴 <strong>${worstLine[0]}</strong> 라인 양품률(${wr.toFixed(2)}%)이 가장 낮아 집중 점검이 필요합니다.`);}
-  document.getElementById('rptPage').innerHTML = `
-    <div class="rpt-company"><strong>PCB Manufacturing Co., Ltd.</strong>&nbsp;&nbsp;|&nbsp;&nbsp;생산관리</div>
-    <div class="rpt-doc-title"><h1>생 산 실 적 보 고 서</h1><p>Production Performance Report</p></div>
-    <table class="rpt-info-box">
-      <tr><td class="rpt-label">보고 기간</td><td>${periodLabel}</td><td class="rpt-label">작성일</td><td>${today}</td></tr>
-      <tr><td class="rpt-label">보고 구분</td><td>${viewMode==='month'?'월간 보고':'일간 보고'}</td><td class="rpt-label">작성 부서</td><td>생산관리팀</td></tr>
-    </table>
-    <div class="rpt-sec">
-      <div class="rpt-sec-title">1. 핵심 생산 지표 (Key Performance Indicators)</div>
-      <div class="rpt-kpi-grid">
-        <div class="rpt-kpi-card"><div class="rk-label">총 생산량</div><div class="rk-val">${(totalProduced/1000).toFixed(1)}K</div><div class="rk-unit">매 (${fmtN(totalProduced)})</div></div>
-        <div class="rpt-kpi-card"><div class="rk-label">총 양품수</div><div class="rk-val" style="color:#059669">${(totalGood/1000).toFixed(1)}K</div><div class="rk-unit">매 (${fmtN(totalGood)})</div></div>
-        <div class="rpt-kpi-card"><div class="rk-label">총 불량수</div><div class="rk-val" style="color:#dc2626">${fmtN(totalDefect)}</div><div class="rk-unit">매 (불량률 ${defectRate.toFixed(2)}%)</div></div>
-        <div class="rpt-kpi-card" style="border-top-color:${yieldRate>=97?'#059669':yieldRate>=94?'#d97706':'#dc2626'}"><div class="rk-label">종합 양품률</div><div class="rk-val" style="color:${yieldRate>=97?'#059669':yieldRate>=94?'#d97706':'#dc2626'}">${yieldRate.toFixed(2)}%</div><div class="rk-unit">목표 97.0%</div></div>
-        <div class="rpt-kpi-card" style="border-top-color:${achRate>=98?'#059669':achRate>=90?'#d97706':'#dc2626'}"><div class="rk-label">계획 달성률</div><div class="rk-val" style="color:${achRate>=98?'#059669':achRate>=90?'#d97706':'#dc2626'}">${achRate.toFixed(1)}%</div><div class="rk-unit">목표 98.0%</div></div>
-      </div>
-    </div>
-    <div class="rpt-sec">
-      <div class="rpt-sec-title">2. 라인별 생산 실적</div>
-      <table class="rpt-table">
-        <thead><tr><th>라인</th><th>계획량(매)</th><th>생산량(매)</th><th>양품수(매)</th><th>불량수(매)</th><th>양품률</th><th>달성률</th><th>가동일수</th></tr></thead>
-        <tbody>${lineRows}
-          <tr class="rpt-total"><td>합 계</td><td class="num">${fmtN(totalPlanned)}</td><td class="num">${fmtN(totalProduced)}</td><td class="num rpt-good">${fmtN(totalGood)}</td><td class="num rpt-bad">${fmtN(totalDefect)}</td><td class="${yColor(yieldRate)}">${yieldRate.toFixed(2)}%</td><td class="${aColor(achRate)}">${achRate.toFixed(1)}%</td><td>-</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="rpt-sec">
-      <div class="rpt-sec-title">3. 제품별 생산 현황</div>
-      <table class="rpt-table">
-        <thead><tr><th>제품명/모델</th><th>생산량(매)</th><th>생산 비중</th><th>양품수(매)</th><th>불량수(매)</th><th>양품률</th></tr></thead>
-        <tbody>${prodRows}</tbody>
-      </table>
-    </div>
-    <div class="rpt-sec">
-      <div class="rpt-sec-title">4. 종합 의견 및 조치 사항</div>
-      <table class="rpt-table">
-        <thead><tr><th style="width:30px">No.</th><th style="text-align:left">내용</th></tr></thead>
-        <tbody>${opinions.map((o,i)=>`<tr><td>${i+1}</td><td style="text-align:left;padding-left:12px">${o}</td></tr>`).join('')}</tbody>
-      </table>
-    </div>
-    <table class="rpt-sign">
-      <tr><td class="rpt-label">작성</td><td class="sign-box"></td><td class="rpt-label">검토</td><td class="sign-box"></td><td class="rpt-label">승인</td><td class="sign-box"></td></tr>
-    </table>
-    <div class="rpt-footer">본 보고서는 PCB Manufacturing 생산관리 시스템에서 자동 생성되었습니다. &nbsp;|&nbsp; 출력일시: ${new Date().toLocaleString('ko-KR')}</div>
-  `;
-  document.getElementById('rptOverlay').classList.add('show');
-  document.body.style.overflow = 'hidden';
-}
-function closeReport() {
-  document.getElementById('rptOverlay').classList.remove('show');
-  document.body.style.overflow = '';
-}
-
+/* ── 단축키 ── */
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && document.getElementById('rptOverlay').classList.contains('show')) { closeReport(); return; }
-  if (e.key === 'Escape' && document.getElementById('modal').classList.contains('show')) closeModal();
+  if (e.key === 'Escape') {
+    if (document.getElementById('rptOverlay').classList.contains('show')) closeReport();
+    else if (document.getElementById('modal').classList.contains('show')) closeModal();
+  }
 });
 
+/* ── 초기화 ── */
 document.getElementById('singleDate').value = today;
 updateDateLabel();
 renderAll();
+setInterval(renderStatus, 30000);   // 시계·마감 표시 30초마다 갱신
 </script>
 </body>
 </html>

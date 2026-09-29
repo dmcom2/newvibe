@@ -1,14 +1,23 @@
 /* 생산 실적 관리 시스템 전체 로직 */
 
-Chart.defaults.color = '#718096';
-Chart.defaults.borderColor = '#e2e8f0';
+Chart.defaults.color = '#64748b';
+Chart.defaults.borderColor = '#edf1f5';
+Chart.defaults.font.family = "'Pretendard','맑은 고딕',sans-serif";
 
 /* ── 라인 색상 ── */
 const LINE_COLORS = {'1호기':'#2563eb','2호기':'#059669','3호기':'#d97706','4호기':'#7c3aed','5호기':'#dc2626'};
 
+/* ── 목표 기준값 ── */
+const YIELD_TARGET = 97.0;   // 양품률 목표(%)
+const ACH_TARGET   = 98.0;   // 계획달성률 목표(%)
+const yieldLevel = y => y >= YIELD_TARGET ? 'good' : y >= 94 ? 'warn' : 'bad';
+const achLevel   = a => a >= ACH_TARGET   ? 'good' : a >= 90 ? 'warn' : 'bad';
+const LEVEL_TEXT = {good:'달성', warn:'주의', bad:'미달'};
+
 /* ── 샘플 데이터 생성 ── */
 function makeId() { return Date.now() + Math.random(); }
-const today = new Date().toISOString().slice(0, 10);
+// 로컬(한국) 날짜 기준 YYYY-MM-DD — toISOString()은 UTC라 오전 9시 이전엔 전날로 나옴
+const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 const Y = today.slice(0, 4), M = today.slice(5, 7);
 
 function sampleData() {
@@ -74,6 +83,42 @@ function getRecords() {
   return records.filter(r => r.date === d);
 }
 
+/* ── 조회 기간 라벨 ── */
+function renderPeriod() {
+  const rs = getRecords();
+  const label = viewMode === 'month'
+    ? `${currentYM.replace('-', '년 ')}월 월간 집계`
+    : `${document.getElementById('singleDate').value || today} 일간 집계`;
+  const days = new Set(rs.map(r => r.date)).size;
+  document.getElementById('periodLabel').textContent = `${label} · 가동 ${days}일 · 실적 ${rs.length}건`;
+}
+
+/* ── 헤더 상태: 시계 · 보고 마감 · 금일 입력 라인 수 ── */
+function renderStatus() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit', hour12:false});
+
+  // 매일 09:00 보고 마감까지 남은 시간
+  const due  = new Date(now); due.setHours(9, 0, 0, 0);
+  const left = Math.round((due - now) / 60000);
+  const dl   = document.getElementById('deadline');
+  if (left > 0) {
+    dl.textContent = `${Math.floor(left / 60)}시간 ${left % 60}분 남음`;
+    dl.className = 'st-val ' + (left <= 30 ? 'bad' : left <= 90 ? 'warn' : 'ok');
+  } else {
+    dl.textContent = '금일 마감 경과';
+    dl.className = 'st-val';
+  }
+
+  // 오늘 날짜로 실적이 입력된 라인 수 / 전체 운영 라인 수
+  const allLines   = new Set(records.map(r => r.line));
+  const todayLines = new Set(records.filter(r => r.date === today).map(r => r.line));
+  const ti = document.getElementById('todayInput');
+  ti.textContent = `${todayLines.size} / ${allLines.size} 라인`;
+  ti.className = 'st-val ' + (allLines.size && todayLines.size >= allLines.size ? 'ok' : 'warn');
+}
+
 /* ── KPI ── */
 function renderKPI() {
   const rs           = getRecords();
@@ -83,12 +128,43 @@ function renderKPI() {
   const totalPlanned  = rs.reduce((s, r) => s + r.planned, 0);
   const yieldRate     = totalProduced ? (totalGood / totalProduced * 100) : 0;
   const achRate       = totalPlanned  ? (totalProduced / totalPlanned * 100) : 0;
+  const defectRate    = totalProduced ? (totalDefect / totalProduced * 100) : 0;
+  const yl = rs.length ? yieldLevel(yieldRate) : '';
+  const al = rs.length ? achLevel(achRate) : '';
+
+  // 목표 게이지: 표시 범위(min~max) 안에서 현재값·목표선 위치를 %로 환산
+  const gauge = (v, goal, min, max) => {
+    const pos = x => Math.max(0, Math.min(100, (x - min) / (max - min) * 100));
+    return `<div class="gauge"><div class="gauge-fill" style="width:${pos(v)}%"></div><div class="gauge-goal" style="left:${pos(goal)}%"></div></div>
+      <div class="gauge-scale"><span>${min}%</span><span>목표 ${goal.toFixed(1)}%</span><span>${max}%</span></div>`;
+  };
+
   document.getElementById('kpiRow').innerHTML = `
-    <div class="kpi k1"><div class="kpi-l">총 생산량</div><div class="kpi-v">${totalProduced.toLocaleString()}</div><div class="kpi-sub">매</div></div>
-    <div class="kpi k2"><div class="kpi-l">총 양품수</div><div class="kpi-v">${totalGood.toLocaleString()}</div><div class="kpi-sub">매</div></div>
-    <div class="kpi k3"><div class="kpi-l">총 불량수</div><div class="kpi-v">${totalDefect.toLocaleString()}</div><div class="kpi-sub">매</div></div>
-    <div class="kpi k4"><div class="kpi-l">양품률</div><div class="kpi-v">${yieldRate.toFixed(2)}%</div><div class="kpi-sub">목표 97.0%</div></div>
-    <div class="kpi k5"><div class="kpi-l">계획 달성률</div><div class="kpi-v">${achRate.toFixed(1)}%</div><div class="kpi-sub">목표 98.0%</div></div>`;
+    <div class="kpi k1">
+      <div class="kpi-top"><span class="kpi-l">총 생산량</span><span class="tag info">계획 ${totalPlanned.toLocaleString()}</span></div>
+      <div class="kpi-v">${totalProduced.toLocaleString()}<small>매</small></div>
+      <div class="kpi-sub">계획 대비 ${(totalProduced - totalPlanned).toLocaleString()}매</div>
+    </div>
+    <div class="kpi k2">
+      <div class="kpi-top"><span class="kpi-l">총 양품수</span></div>
+      <div class="kpi-v" style="color:var(--green)">${totalGood.toLocaleString()}<small>매</small></div>
+      <div class="kpi-sub">출하 가능 수량</div>
+    </div>
+    <div class="kpi k3">
+      <div class="kpi-top"><span class="kpi-l">총 불량수</span><span class="tag bad">불량률 ${defectRate.toFixed(2)}%</span></div>
+      <div class="kpi-v">${totalDefect.toLocaleString()}<small>매</small></div>
+      <div class="kpi-sub">재작업·폐기 대상</div>
+    </div>
+    <div class="kpi ${yl}">
+      <div class="kpi-top"><span class="kpi-l">양품률</span>${yl ? `<span class="tag ${yl}">${LEVEL_TEXT[yl]}</span>` : ''}</div>
+      <div class="kpi-v">${yieldRate.toFixed(2)}<small>%</small></div>
+      ${gauge(yieldRate, YIELD_TARGET, 90, 100)}
+    </div>
+    <div class="kpi ${al}">
+      <div class="kpi-top"><span class="kpi-l">계획 달성률</span>${al ? `<span class="tag ${al}">${LEVEL_TEXT[al]}</span>` : ''}</div>
+      <div class="kpi-v">${achRate.toFixed(1)}<small>%</small></div>
+      ${gauge(achRate, ACH_TARGET, 80, 110)}
+    </div>`;
 }
 
 /* ── 미션 2: 라인별 실적 카드 ── */
@@ -101,23 +177,32 @@ function renderLineCards() {
     byLine[r.line].good     += r.good;
     byLine[r.line].planned  += r.planned;
   });
-  const lines = Object.keys(byLine);
+  const lines = Object.keys(byLine).sort();
   const el = document.getElementById('lineCards');
-  if (!lines.length) { el.innerHTML = ''; return; }
+  if (!lines.length) { el.innerHTML = '<div class="lc-empty">조회 기간에 입력된 실적이 없습니다. 상단 [＋ 실적 입력]으로 등록하세요.</div>'; return; }
   el.innerHTML = lines.map(line => {
     const d         = byLine[line];
     const yieldRate = d.produced ? (d.good / d.produced * 100) : 0;
     const achRate   = d.planned  ? (d.produced / d.planned * 100) : 0;
     const color     = LINE_COLORS[line] || '#64748b';
-    const yClass    = yieldRate >= 97 ? 'good' : yieldRate >= 94 ? 'warn' : 'bad';
-    const aClass    = achRate   >= 98 ? 'good' : achRate   >= 90 ? 'warn' : 'bad';
-    return `<div class="lc" style="border-top-color:${color}">
-      <div class="lc-name" style="color:${color}">${line}</div>
-      <div class="lc-main">${d.produced.toLocaleString()}</div>
-      <div class="lc-unit">생산량 (매)</div>
-      <div class="lc-pills">
-        <span class="lc-pill ${yClass}">양품률 ${yieldRate.toFixed(1)}%</span>
-        <span class="lc-pill ${aClass}">달성률 ${achRate.toFixed(1)}%</span>
+    const yClass    = yieldLevel(yieldRate);
+    const aClass    = achLevel(achRate);
+    // 램프 색: 양품률·달성률 중 더 나쁜 상태를 표시
+    const order     = ['good', 'warn', 'bad'];
+    const lamp      = order[Math.max(order.indexOf(yClass), order.indexOf(aClass))];
+    return `<div class="lc">
+      <div class="lc-head">
+        <i class="lc-chip" style="background:${color}"></i>
+        <span class="lc-name">${line}</span>
+        <i class="lamp ${lamp}" title="${LEVEL_TEXT[lamp]}"></i>
+      </div>
+      <div class="lc-body">
+        <div class="lc-main">${d.produced.toLocaleString()}<small>/ ${d.planned.toLocaleString()} 매</small></div>
+        <div class="gauge ${aClass}"><div class="gauge-fill" style="width:${Math.min(100, achRate)}%"></div></div>
+        <div class="lc-stats">
+          <div class="lc-stat ${yClass}"><span>양품률</span><b>${yieldRate.toFixed(2)}%</b></div>
+          <div class="lc-stat ${aClass}"><span>달성률</span><b>${achRate.toFixed(1)}%</b></div>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -140,32 +225,43 @@ function renderAlertBanner() {
   const banner = document.getElementById('alertBanner');
   if (!alerts.length) { banner.style.display = 'none'; return; }
   banner.style.display = 'flex';
-  banner.innerHTML = `⚠️ 불량률 경보 — 즉시 점검 필요:
-    ${alerts.map(a => `<span style="background:rgba(255,255,255,.2);padding:2px 10px;border-radius:5px;">
-      ${a.line} <strong>${a.rate.toFixed(2)}%</strong>
-    </span>`).join('')}
-    <span style="margin-left:auto;font-size:.78rem;font-weight:400;opacity:.85;">목표: 97.0% 이상</span>`;
+  banner.innerHTML = `<i class="pulse"></i> 불량률 경보 · 양품률 목표 미달 라인 즉시 점검 필요
+    ${alerts.map(a => `<span class="alert-tag">${a.line} <b>${a.rate.toFixed(2)}%</b></span>`).join('')}
+    <span class="alert-goal">기준: 양품률 ${YIELD_TARGET.toFixed(1)}% 이상</span>`;
 }
 
 /* ── 트렌드 차트 ── */
 function renderTrend() {
   if (trendChart) trendChart.destroy();
-  const rs = getRecords();
-  const byDate = {};
-  rs.forEach(r => { byDate[r.date] = (byDate[r.date] || 0) + r.produced; });
+  // 일간 뷰에서도 해당 월 전체 추이를 보여주고, 조회일을 강조
+  const rs = records.filter(r => r.date.startsWith(currentYM));
+  const sel = viewMode === 'day' ? document.getElementById('singleDate').value : null;
+  const byDate = {}, planDate = {};
+  rs.forEach(r => {
+    byDate[r.date]   = (byDate[r.date]   || 0) + r.produced;
+    planDate[r.date] = (planDate[r.date] || 0) + r.planned;
+  });
   const labels = Object.keys(byDate).sort();
   const ctx = document.getElementById('trendChart').getContext('2d');
   trendChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: labels.map(d => d.slice(5)),
-      datasets: [{label:'생산량', data:labels.map(d => byDate[d]),
-        borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,.1)',
-        fill:true, tension:.3, pointRadius:3}]
+      datasets: [
+        {label:'생산량', data:labels.map(d => byDate[d]),
+          borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,.08)', borderWidth:2,
+          fill:true, tension:.3,
+          pointRadius:labels.map(d => d === sel ? 6 : 2.5),
+          pointBackgroundColor:labels.map(d => d === sel ? '#0b1629' : '#2563eb')},
+        {label:'계획량', data:labels.map(d => planDate[d]),
+          borderColor:'#94a3b8', borderDash:[5, 4], borderWidth:1.5, pointRadius:0, fill:false, tension:.3}
+      ]
     },
-    options: {responsive:true, maintainAspectRatio:true,
-      plugins: {legend:{display:false}},
-      scales: {y:{ticks:{callback:v => v.toLocaleString()}}}}
+    options: {responsive:true, maintainAspectRatio:false,
+      interaction: {mode:'index', intersect:false},
+      plugins: {legend:{position:'top', align:'end', labels:{boxWidth:10, boxHeight:10, usePointStyle:true}},
+        tooltip:{callbacks:{label:c => `${c.dataset.label}: ${c.parsed.y.toLocaleString()}매`}}},
+      scales: {x:{grid:{display:false}}, y:{ticks:{callback:v => v.toLocaleString()}}}}
   });
 }
 
@@ -179,20 +275,26 @@ function renderYield() {
     byLine[r.line].good     += r.good;
     byLine[r.line].produced += r.produced;
   });
-  const lines  = Object.keys(byLine);
+  const lines  = Object.keys(byLine).sort();
   const yields = lines.map(l => +(byLine[l].produced ? byLine[l].good / byLine[l].produced * 100 : 0).toFixed(2));
   const ctx = document.getElementById('yieldChart').getContext('2d');
   yieldChart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: lines,
-      datasets: [{label:'양품률(%)', data:yields,
-        backgroundColor: lines.map(l => (LINE_COLORS[l] || '#64748b') + 'cc'),
-        borderRadius: 6}]
+      datasets: [
+        {label:'양품률(%)', data:yields,
+          // 목표 미달 라인은 빨간색으로 강조
+          backgroundColor: lines.map((l, i) => yields[i] < YIELD_TARGET ? '#ef4444' : (LINE_COLORS[l] || '#64748b')),
+          borderRadius:4, maxBarThickness:44},
+        {type:'line', label:'목표', data:lines.map(() => YIELD_TARGET),
+          borderColor:'#0b1629', borderDash:[4, 4], borderWidth:1.5, pointRadius:0}
+      ]
     },
-    options: {responsive:true, maintainAspectRatio:true,
-      plugins: {legend:{display:false}},
-      scales: {y:{min:90, max:100, ticks:{callback:v => v + '%'}}}}
+    options: {responsive:true, maintainAspectRatio:false,
+      plugins: {legend:{display:false},
+        tooltip:{callbacks:{label:c => `${c.dataset.label}: ${c.parsed.y.toFixed(2)}%`}}},
+      scales: {x:{grid:{display:false}}, y:{min:90, max:100, ticks:{callback:v => v + '%'}}}}
   });
 }
 
@@ -204,29 +306,35 @@ function renderTable() {
   ).sort((a, b) => b.date.localeCompare(a.date));
 
   const yieldRate = r => r.produced ? (r.good / r.produced * 100) : 0;
-  const chipClass = y => y >= 97 ? 'chip-good' : y >= 94 ? 'chip-warn' : 'chip-bad';
+  const achRate   = r => r.planned  ? (r.produced / r.planned * 100) : 0;
+  const chipClass = y => 'chip-' + yieldLevel(y);
 
+  document.getElementById('rowCount').textContent = `${rs.length}건`;
   document.getElementById('recordTable').innerHTML =
     `<thead><tr>
       <th>날짜</th><th>라인</th><th>제품명</th><th>층수</th>
-      <th>계획</th><th>생산</th><th>양품</th><th>불량</th><th>양품률</th><th>작업자</th><th>편집</th>
+      <th class="num">계획</th><th class="num">생산</th><th class="num">양품</th><th class="num">불량</th>
+      <th class="num">달성률</th><th>양품률</th><th>작업자</th><th>비고</th><th></th>
     </tr></thead>
-    <tbody>${rs.map(r => {
+    <tbody>${rs.length ? rs.map(r => {
       const y = yieldRate(r);
-      const rowClass = y < 97 ? 'row-alert' : '';
-      return `<tr class="${rowClass}">
-        <td>${r.date}</td>
-        <td><span class="line-badge" style="background:${LINE_COLORS[r.line]||'#64748b'}">${r.line}</span></td>
-        <td>${r.product}</td><td>${r.layer}</td>
-        <td style="text-align:right">${r.planned.toLocaleString()}</td>
-        <td style="text-align:right">${r.produced.toLocaleString()}</td>
-        <td style="text-align:right;color:var(--green)">${r.good.toLocaleString()}</td>
-        <td style="text-align:right;color:var(--red)">${r.defect.toLocaleString()}</td>
+      const rowClass = y < YIELD_TARGET ? 'row-alert' : '';
+      // 행 전체 클릭 시 수정 모달 열기
+      return `<tr class="${rowClass}" onclick="editRecord(${r.id})">
+        <td class="mono">${r.date}</td>
+        <td><span class="line-badge"><i style="background:${LINE_COLORS[r.line]||'#64748b'}"></i>${r.line}</span></td>
+        <td>${r.product}</td><td class="td-mute">${r.layer}</td>
+        <td class="num td-mute">${r.planned.toLocaleString()}</td>
+        <td class="num"><b>${r.produced.toLocaleString()}</b></td>
+        <td class="num td-good">${r.good.toLocaleString()}</td>
+        <td class="num td-bad">${r.defect.toLocaleString()}</td>
+        <td class="num">${achRate(r).toFixed(1)}%</td>
         <td><span class="status-chip ${chipClass(y)}">${y.toFixed(2)}%</span></td>
         <td>${r.worker}</td>
-        <td><button class="edit-btn" onclick="editRecord(${r.id})">편집</button></td>
+        <td class="td-mute">${r.note || ''}</td>
+        <td><button class="edit-btn" onclick="event.stopPropagation();editRecord(${r.id})">편집</button></td>
       </tr>`;
-    }).join('')}</tbody>`;
+    }).join('') : '<tr class="empty"><td colspan="13">조회된 실적이 없습니다.</td></tr>'}</tbody>`;
 }
 
 /* ── 미션 1: 실시간 양품률 자동 계산 ── */
@@ -251,16 +359,11 @@ function calcRealtime() {
 
   const yieldRate = (good / produced * 100);
   const achRate   = planned ? (produced / planned * 100) : 0;
-  const yColor    = yieldRate >= 97 ? '#059669' : yieldRate >= 94 ? '#d97706' : '#dc2626';
-  const aColor    = achRate   >= 98 ? '#059669' : achRate   >= 90 ? '#d97706' : '#dc2626';
 
   calc.innerHTML = `
-    <span>📊 실시간 계산</span>
-    <span>양품률: <strong style="color:${yColor};font-size:.95rem">${yieldRate.toFixed(2)}%</strong>
-      <small style="color:var(--mute)">(목표 97%)</small></span>
-    ${planned ? `<span>달성률: <strong style="color:${aColor};font-size:.95rem">${achRate.toFixed(1)}%</strong>
-      <small style="color:var(--mute)">(목표 98%)</small></span>` : ''}
-    <span style="color:var(--mute);font-size:.75rem">불량수: ${(produced - good).toLocaleString()}매</span>`;
+    <div class="rc-box ${yieldLevel(yieldRate)}"><span>양품률 <em>목표 ${YIELD_TARGET}%</em></span><b>${yieldRate.toFixed(2)}%</b></div>
+    <div class="rc-box ${planned ? achLevel(achRate) : ''}"><span>달성률 <em>목표 ${ACH_TARGET}%</em></span><b>${planned ? achRate.toFixed(1) + '%' : '-'}</b></div>
+    <div class="rc-box"><span>불량(생산-양품)</span><b>${(produced - good).toLocaleString()}매</b></div>`;
 }
 
 /* ── 모달 ── */
@@ -541,6 +644,8 @@ function exportCSV() {
 }
 
 function renderAll() {
+  renderPeriod();
+  renderStatus();
   renderKPI();
   renderLineCards();
   renderAlertBanner();
@@ -561,3 +666,4 @@ document.addEventListener('keydown', e => {
 document.getElementById('singleDate').value = today;
 updateDateLabel();
 renderAll();
+setInterval(renderStatus, 30000);   // 시계·마감 표시 30초마다 갱신
